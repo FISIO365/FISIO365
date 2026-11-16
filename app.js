@@ -75,7 +75,7 @@ async function arranca(){const {data:{session}}=await sb.auth.getSession();if(!s
  if(!me||!me.activo)return pantallaSinEquipo(session.user,me);
  S.yo=me;await cargaEquipo();pinta();guiaPrimeraVez();}
 async function cargaEquipo(){const [e,m,p,x]=await Promise.all([sb.from('pb_equipos').select('*').eq('id',S.yo.equipo_id).single(),sb.from('pb_miembros').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_permisos').select('*').eq('equipo_id',S.yo.equipo_id),sb.from('pb_ve_extra').select('*').eq('equipo_id',S.yo.equipo_id)]);
- S.equipo=e.data;S.miembros=m.data||[];S.permisos=p.data||[];S.veExtra=(x.data)||[];S.yo=M(S.yo.id)||S.yo;}
+ S.equipo=e.data;S.miembros=m.data||[];S.permisos=p.data||[];S.veExtra=(x.data)||[];S.yo=M(S.yo.id)||S.yo;try{await cargaProductos();}catch(_){}}
 sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){S.yo=null;pantallaEntrar();}});
 
 // ── Entrar / crear equipo
@@ -132,11 +132,15 @@ function badge(n){window._pend=n;const e=document.getElementById('nPend');if(e){
 
 function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo.email)}</p><div style="margin-top:10px">
  <button class="op" data-a="guia"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6M12 17.2v.1"/></svg>Cómo funciona Rumbo</button>
+ <button class="op" data-a="avi">${IC_RELOJ}Avisos en este móvil</button>
+ <button class="op" data-a="prod">${IC_PR}Productos de mi puesto</button>
  <button class="op" data-a="foto"><svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>${S.yo.foto?'Cambiar mi foto':'Poner mi foto'}</button>
  <button class="op" data-a="clave"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Cambiar mi contraseña</button>
  <button class="op" data-a="inst"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Instalar en el móvil</button>
  <button class="op rojo" data-a="salir"><svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg>Salir</button></div>`);
  m.querySelector('[data-a="guia"]').onclick=()=>{m.remove();guia();};
+ m.querySelector('[data-a="avi"]').onclick=()=>{m.remove();menuAvisos();};
+ m.querySelector('[data-a="prod"]').onclick=()=>{m.remove();abreProductos(S.yo.id);};
  m.querySelector('[data-a="salir"]').onclick=()=>{m.remove();sb.auth.signOut();};
  m.querySelector('[data-a="foto"]').onclick=async()=>{m.remove();const u=await subirFoto('p-'+S.yo.id);if(!u)return;const {error}=await sb.rpc('pb_mi_foto',{url:u});if(error){toast('No se ha podido guardar',false);return;}await cargaEquipo();pinta();toast('Foto puesta');};
  m.querySelector('[data-a="inst"]').onclick=()=>{m.remove();modal(`<h3>Instalar en el móvil</h3><p><b>iPhone:</b> en Safari, toca el botón Compartir y luego «Añadir a pantalla de inicio».<br><br><b>Android:</b> en Chrome, toca los tres puntos y luego «Instalar aplicación» o «Añadir a pantalla de inicio».</p><div class="bts"><button class="bt" onclick="this.closest('.mod').remove()">Entendido</button></div>`);};
@@ -148,11 +152,11 @@ function menuCuenta(){const m=modal(`<h3>${escH(S.yo.nombre)}</h3><p>${escH(S.yo
 // Cada uno se apunta las suyas; quien tiene permiso elige a quién mira y le puede poner tareas.
 const PB={persona:leeLS('persona',''),dia:leeLS('dia',''),d:null,sem:0};
 const pbGuarda=()=>{guardaLS('persona',PB.persona);guardaLS('dia',PB.dia);};
-async function datosPlan(p){const hoy=hoyMad(),cols='id,persona,dia,texto,hecha,hecha_en,por,creado,nota';
+async function datosPlan(p){const hoy=hoyMad(),cols='id,persona,dia,texto,hecha,hecha_en,por,creado,nota,hora,aviso';
  const [a,b]=await Promise.all([sb.from('pb_tareas').select(cols).eq('persona',p).eq('hecha',false).order('dia').order('creado'),
   sb.from('pb_tareas').select(cols).eq('persona',p).eq('hecha',true).gte('hecha_en',new Date(Date.now()-40*36e5).toISOString()).order('hecha_en')]);
  if(a.error||b.error)throw new Error('carga');
- const it=x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:x.hecha,hechaEn:x.hecha_en,por:x.por,nota:x.nota||''});
+ const it=x=>({id:x.id,persona:x.persona,dia:x.dia,t:x.texto,hecha:x.hecha,hechaEn:x.hecha_en,por:x.por,nota:x.nota||'',hora:x.hora?hhmm5(x.hora):'',aviso:x.aviso});
  const P=(a.data||[]).map(it);
  return {hoy,persona:p,pendientes:P.filter(x=>x.dia<=hoy),proximas:P.filter(x=>x.dia>hoy),hechas:(b.data||[]).map(it).filter(x=>diaMad(x.hechaEn)===hoy)};}
 async function datosPasado(p,dia){const ini=new Date(pbIso(dia,-1)+'T00:00:00Z').toISOString(),fin=new Date(pbIso(dia,2)+'T00:00:00Z').toISOString();
@@ -194,13 +198,14 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
  // Quién puede cambiar, mover o quitar una tarea: quien revisa a esa persona, o la propia persona si se la puso ella
  const puede=x=>supervisa(x.persona)||(x.persona===yo&&(!x.por||x.por===yo));
  const fila=(x,hoy,solo)=>{const tags=[];if(solo&&x.hechaEn)tags.push(`<i>${new Date(x.hechaEn).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'})}</i>`);
+  if(x.hora&&!x.hecha)tags.unshift(`<i class="hr">${IC_RELOJ}${escH(x.hora)}${x.aviso!=null?' · '+escH(avisoTxt(x.aviso)):''}</i>`);
   if(x.por&&x.por!==x.persona)tags.push(`<i class="dir">Puesta por ${x.por===yo?'ti':escH(pri(nomDe(x.por)))}</i>`);
   const v=!x.hecha&&pbViene(x.dia,hoy);if(v)tags.push(`<i class="arr">${v}</i>`);
   const p=puede(x);
   return `<div class="pb-it${x.hecha?' ok':''}${solo?' solo':''}" data-id="${x.id}"><button type="button" class="pb-ck" aria-label="${x.hecha?'Desmarcar':'Hecha'}"${solo?' disabled':''}>${IC.ck}</button>
    <div class="pb-tx"><div class="pb-t${p?'':' fija'}"${x.hecha||!p?'':' title="Toca para escribir o dar formato"'}>${fmt(x.t)}</div>${tags.length?`<div class="pb-tg">${tags.join('')}</div>`:''}${x.nota?`<button type="button" class="pb-nv"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 15h6"/></svg><span>${escH(x.nota)}</span></button>`:''}</div>
    ${puedeEst(x.persona)||x.nota?`<button type="button" class="pb-nb${x.nota?' con':''}" title="${x.nota?'Ver la nota':'Añadir una nota'}" aria-label="Nota"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 15h4"/></svg></button>`:''}
-   ${!x.hecha&&p?`<div class="pb-ac"><button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`:''}</div>`;};
+   ${!x.hecha&&p?`<div class="pb-ac"><button type="button" class="pb-hr${x.hora?' con':''}" title="Hora y aviso" aria-label="Hora y aviso">${IC_RELOJ}</button><button type="button" class="pb-man" title="Pasar al día siguiente" aria-label="Pasar al día siguiente"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button type="button" class="pb-del" title="Quitar" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`:''}</div>`;};
  // Lee lo escrito (con su formato) y lo pasa a texto con marcas
  const lee=el=>{const R=[],st=n=>{let b=false,u=false,h=false;for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){const c=getComputedStyle(e);if(!b&&(+c.fontWeight>=600||c.fontWeight==='bold'))b=true;if(String(c.textDecorationLine||c.textDecoration).includes('underline'))u=true;if(e===el)break;}h=fosAnc(n.parentElement,el)!=null;return {b,u,h};};
   const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const s=n.nodeValue.replace(/\s+/g,' ');if(!s)continue;const e=st(n),l=R[R.length-1];if(l&&l.b===e.b&&l.u===e.u&&l.h===e.h)l.t+=s;else R.push({...e,t:s});}
@@ -236,7 +241,8 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
   const sel=PB.dia,enHoy=sel===hoy,enPas=sel<hoy,enMan=sel>hoy;
   PB.pas=PB.pas||{};if(enPas&&!PB.pas[sel]){PB.pas[sel]='cargando';datosPasado(r.persona,sel).then(L=>{PB.pas[sel]=L;if(box.isConnected&&PB.dia===sel)pinta2();}).catch(()=>{PB.pas[sel]=[];toast('No se ha podido cargar ese día',false);});}
   const PH=enPas&&Array.isArray(PB.pas[sel])?PB.pas[sel]:[];
-  const P=enHoy?(r.pendientes||[]):enPas?[]:X0.filter(x=>x.dia===sel),H=enHoy?(r.hechas||[]):enPas?PH:[];
+  const porHora=L=>L.map((x,i)=>[x,i]).sort((a,b)=>(a[0].hora&&b[0].hora?a[0].hora.localeCompare(b[0].hora):a[0].hora?-1:b[0].hora?1:0)||a[1]-b[1]).map(z=>z[0]);
+  const P=porHora(enHoy?(r.pendientes||[]):enPas?[]:X0.filter(x=>x.dia===sel)),H=enHoy?(r.hechas||[]):enPas?PH:[];
   const totH=(r.pendientes||[]).length+(r.hechas||[]).length,hechH=(r.hechas||[]).length,yoMismo=r.persona===yo;
   const nom=pri(nomDe(r.persona));
   const fechaTxt=new Date(sel+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
@@ -282,6 +288,8 @@ function renderPlan(wrap){const box=ce('div','pb');wrap.appendChild(box);
    x.hecha=!x.hecha;x.hechaEn=x.hecha?new Date().toISOString():'';l.splice(i,1);
    if(x.hecha)PB.d.hechas.push(x);else (x.dia>hoy?PB.d.proximas:PB.d.pendientes).push(x);
    b.closest('.pb-it').classList.toggle('ok',x.hecha);setTimeout(pinta2,x.hecha?350:0);guardaBD(sb.from('pb_tareas').update({hecha:x.hecha}).eq('id',id));});
+  box.querySelectorAll('.pb-hr').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l[i];
+   eligeHora(x,async v=>{const ant={hora:x.hora,aviso:x.aviso};x.hora=v.hora||'';x.aviso=v.hora?v.aviso:null;pinta2();if(!(await guardaBD(sb.from('pb_tareas').update({hora:v.hora,aviso:v.hora?v.aviso:null}).eq('id',id)))){Object.assign(x,ant);pinta2();}else toast(v.hora?'Hora '+v.hora+(x.aviso!=null?' · '+avisoTxt(x.aviso):''):'Hora quitada');});});
   box.querySelectorAll('.pb-man').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id,[l,i]=buscar(id);if(!l)return;const x=l.splice(i,1)[0];x.dia=pbIso(x.dia<hoy?hoy:x.dia,1);PB.d.proximas.push(x);pinta2();
    guardaBD(sb.from('pb_tareas').update({dia:x.dia}).eq('id',id)).then(ok=>ok&&toast('Pasada al día siguiente'));});
   box.querySelectorAll('.pb-del').forEach(b=>b.onclick=()=>{const id=b.closest('.pb-it').dataset.id;pregunta('¿Quitar esta tarea del plan?',{si:'Quitar'}).then(ok=>{if(!ok)return;const [l,i]=buscar(id);if(l)l.splice(i,1);pinta2();guardaBD(sb.from('pb_tareas').delete().eq('id',id));});});
@@ -320,7 +328,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
  const baja=S.miembros.filter(m=>!m.activo).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
  const fila=m=>{const ac=m.activo?aCargo(m.id):[],de=m.activo?dependeDe(m.id):[];
   return `<div class="mi${m.activo?'':' baja'}" data-id="${m.id}">${avHTML(m)}<div class="tx"><b>${escH(m.nombre)}${m.id===S.yo.id?' <span style="color:var(--mut);font-weight:500">(tú)</span>':''}${m.admin?'<i class="bdg">ADMIN</i>':''}${m.activo?'':'<i class="bdg off">DE BAJA</i>'}</b>${pTag(m,adm&&m.activo)}<small>${escH(m.email||'')}</small>
-   ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
+   ${m.grupo?`<small class="rv-g">Grupo: ${escH(m.grupo)}</small>`:''}${de.length?`<small class="rv-d">Depende de ${nombres(de)}</small>`:''}${ac.length?`<small class="rv-a">A su cargo: ${nombres(ac)}</small>`:''}${m.activo&&(prDe(m.id).length||puedePr(m.id))?chipProductos(m.id):''}</div>${adm?'<button class="mas3" aria-label="Opciones">⋯</button>':''}</div>`;};
  wrap.innerHTML=`<div class="rp-c"><div class="eq-h"><div class="top-e">${S.equipo.foto?`<img class="top-f" src="${escH(S.equipo.foto)}" alt="">`:''}<div><small>Equipo</small><b>${escH(S.equipo.nombre)}</b></div><button class="eq-lapiz" id="eqMas" aria-label="Cambiar el nombre o la foto del equipo"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button></div>${adm?'<button class="bt" id="alta">+ Añadir</button>':''}</div>
    <div style="margin-top:10px">${act.map(fila).join('')}${baja.length&&adm?`<details style="margin-top:6px"><summary class="eq-p" style="cursor:pointer">De baja (${baja.length})</summary>${baja.map(fila).join('')}</details>`:''}</div></div>
   <div class="rp-c"><div class="eq-h"><div><small>Organigrama</small><b>Quién depende de quién</b></div></div>
@@ -332,6 +340,7 @@ function renderEquipo(wrap){const adm=S.yo.admin;
    ${adm?'<p>Para poner a alguien bajo otra persona, toca los <b>⋯</b> de esa persona y elige <b>«Depende de»</b>. O al revés: en los ⋯ de la jefa o el jefe, <b>«A su cargo»</b>.</p><p>Lo que ve cada uno se elige en <b>«Quién ve qué»</b>: solo su gente directa, toda su rama (su gente y la gente de su gente) o todo el equipo, y además personas sueltas. Ver no es poder cambiar: las tareas y las estadísticas de alguien solo las toca su jefe directo o esa persona.</p>':'<p>Las altas, bajas, puestos y quién está a cargo de quién los lleva quien administra el equipo.</p>'}</div>`;
  organigrama(wrap.querySelector('#org'),adm,act);
  wrap.querySelectorAll('.qv-f:not([disabled])').forEach(b=>b.onclick=()=>queVe(M(b.dataset.q)));
+ wrap.querySelectorAll('.pr-chip').forEach(b=>b.onclick=()=>abreProductos(b.dataset.pr));
  wrap.querySelector('#eqMas').onclick=adm?opcionesEquipo:soloAdmin;
  if(!adm)return;
  wrap.querySelector('#alta').onclick=altaMiembro;

@@ -1,7 +1,7 @@
 // ── GUÍA DE RUMBO: qué es la app y para qué sirve cada sección.
 // NORMA: cada cambio que note el equipo (pantalla, botón, flujo o texto) se actualiza aquí en el mismo cambio.
 // Si la guía cambia de verdad, sube GUIA_VER: a quien ya la vio le sale «Novedades en la guía» una vez.
-const GUIA_VER=2;
+const GUIA_VER=3;
 const GUIA=[
  {k:'que',t:'¿Qué es Rumbo?',ic:'<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/>',
   h:`<p>Rumbo es la app del equipo. En un solo sitio tienes <b>lo que tienes que hacer hoy</b>, <b>cómo van tus números</b> y <b>lo que se pasa a tu senior</b>.</p>
@@ -16,6 +16,7 @@ const GUIA=[
    <ul><li>Escribe en el primer renglón libre y pulsa ✓. Con la barra de al lado puedes poner <b>negrita</b>, <u>subrayado</u> o <mark>fosforito</mark>.</li>
    <li>Toca el círculo para tacharla. La flecha la pasa al día siguiente y la ✕ la quita.</li>
    <li>Si hay algo largo que tener en cuenta, toca la <b>hojita</b> de la derecha y escríbelo en la <b>nota</b> de la tarea (sin límite de letras). Se ve debajo de la tarea, también cuando ya está hecha.</li>
+   <li>Con el <b>reloj</b> de una tarea le pones <b>hora</b> (una cita, una llamada…) y un <b>aviso</b>: a esa hora, o un rato antes, te suena en el móvil aunque tengas Rumbo cerrado. Las tareas con hora salen arriba, por orden.</li>
    <li>En la semana de arriba eliges el día: los días pasados muestran lo que se hizo y a qué hora.</li>
    <li>Las tareas que te pone tu senior salen con «Puesta por…» y solo las puedes marcar como hechas.</li>
    <li>Al final de la hoja de hoy está el botón para <b>pasar tu BP/7R</b>.</li>
@@ -26,7 +27,17 @@ const GUIA=[
    <li>Para sumar, escribe cuántos y pulsa «+ Apuntar». Si se te olvidó apuntarlo en su momento, toca «¿fue otro día?» y elige el día y la hora.</li>
    <li><b>La 7R</b> compara lo que llevas ahora con lo que llevabas la semana pasada a esta misma hora. Debajo ves cuánto te falta para superar la semana pasada entera.</li>
    <li>La gráfica muestra cada semana con su tendencia: verde si va bien, roja si va mal. Las negativas (por ejemplo, cancelaciones) van bien cuando bajan.</li>
+   <li>En la gráfica grande sale el <b>número de cada semana</b> encima de su punto. Si hay muchas, deslízala de lado.</li>
+   <li>Para tener la gráfica desde antes, toca <b>«Meter semanas pasadas»</b> (debajo de la gráfica) y escribe el total de cada semana.</li>
    <li>En los ⋯ de una estadística puedes cambiarla, hacerla principal o archivarla.</li></ul>`},
+ {k:'avisos',t:'Avisos en el móvil',ic:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 4.5 3 6.5M19 4.5l2 2"/>',
+  h:`<p>Cuando una tarea tiene hora y aviso, te suena en el móvil a su hora, aunque Rumbo esté cerrado. Si se la pones a alguien de tu equipo, le suena a esa persona.</p>
+   <ul><li>Actívalos una vez en cada móvil: toca tu inicial (arriba a la derecha) y luego <b>«Avisos en este móvil»</b>. Desde ahí también te puedes mandar uno de prueba.</li>
+   <li>En el <b>iPhone</b>, primero instala Rumbo (Safari › Compartir › «Añadir a pantalla de inicio») y actívalos abriéndola desde el icono.</li></ul>`},
+ {k:'prod',tab:'equipo',t:'Productos de cada puesto',ic:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  h:`<p>Cada puesto tiene sus <b>productos</b> (lo que tiene que producir) y, debajo de cada uno, sus <b>subproductos</b> (lo que hay que conseguir para llegar a él).</p>
+   <ul><li>Los ves en <b>Equipo</b>, en cada persona, y los tuyos también desde tu inicial › «Productos de mi puesto».</li>
+   <li>Los puede escribir la propia persona, su jefe o quien administra. Toca uno para cambiarlo.</li></ul>`},
  {k:'cond',tab:'est',t:'Condiciones (los jueves)',ic:'<path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z"/><path d="M14 3.5V8h4M9 12.5h6M9 16h6"/>',
   h:`<p>Cuando cierra la semana, en cada estadística sale <b>«Elige tu condición»</b>.</p>
    <ul><li>Ves con cuánto cerró la semana y la gráfica, y eliges la condición del listado.</li>

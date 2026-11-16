@@ -50,7 +50,7 @@ function textoTendencia(e,T){const C=T.filter(x=>!x.actual),t=tendencia(C.map(x=
  return {txt:(t.m>0?'Tendencia al alza':'Tendencia a la baja')+(b?' · bien':' · a mejorar'),c:colorDe(b)};}
 
 // La gráfica (SVG). mini = la pequeña de la tarjeta. El periodo en curso sale con el punto hueco
-function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:210,L=mini?6:30,R=mini?6:16,Tp=mini?8:24,B=mini?8:30;
+function grafica(e,T,ahora,mini){const W=mini?300:Math.max(340,58+Math.max(0,T.length-1)*40),H=mini?84:210,L=mini?6:30,R=mini?6:16,Tp=mini?8:24,B=mini?8:30;
  if(!T.length)return `<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}"><text x="${W/2}" y="${H/2+4}" text-anchor="middle" class="es-vacia">Aún sin datos</text></svg>`;
  const pts=T.map(x=>({x:perIdx(e.periodo,x.s),y:x.v,a:x.actual,s:x.s}));
  const x0=pts[0].x,x1=Math.max(pts[pts.length-1].x,x0+1);
@@ -58,14 +58,16 @@ function grafica(e,T,ahora,mini){const W=mini?300:340,H=mini?84:210,L=mini?6:30,
  const X=x=>L+(x-x0)/(x1-x0)*(W-L-R),Y=y=>Tp+(1-(y-y0)/(y1-y0))*(H-Tp-B);
  let s='';
  if(!mini){const pa=(()=>{const r=(y1-y0)/3,p=Math.pow(10,Math.floor(Math.log10(r||1))),n=r/p;return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;})();for(let v=Math.ceil(y0/pa)*pa;v<=y1+1e-9;v+=pa){const y=Y(v);if(y<Tp-2)continue;s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="es-rej"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" class="es-ej">${num(Math.round(v*100)/100)}</text>`;}
-  const paso=Math.ceil(pts.length/7);pts.forEach((p,i)=>{if((pts.length-1-i)%paso)return;s+=`<text x="${X(p.x)}" y="${H-8}" text-anchor="middle" class="es-ej">${escH(perFin(e.periodo,p.s))}</text>`;});}
+  const paso=1;pts.forEach((p,i)=>{if((pts.length-1-i)%paso)return;s+=`<text x="${X(p.x)}" y="${H-8}" text-anchor="middle" class="es-ej">${escH(perFin(e.periodo,p.s))}</text>`;});}
  const C=pts.filter(p=>!p.a),t=tendencia(C);
  if(t){const xa=C[0].x,xb=x1;s+=`<line x1="${X(xa)}" y1="${Y(t.m*xa+t.b)}" x2="${X(xb)}" y2="${Y(t.m*xb+t.b)}" stroke="${colorDe(bueno(e,t.m))}" class="es-ten"/>`;}
  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];s+=b.a?`<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" class="es-lin enc"/>`:`<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="${colorDe(bueno(e,b.y-a.y))}" class="es-lin"/>`;}
- const pasoN=Math.ceil(pts.length/(mini?6:10));
+ const pasoN=mini?Math.ceil(pts.length/6):1;
  pts.forEach((p,i)=>{if(mini&&!p.a&&i<pts.length-1&&pts.length>12)return;s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${mini?2.6:3.6}" class="es-pt${p.a?' enc':''}"/>`;
   if(!mini&&!((pts.length-1-i)%pasoN))s+=`<text x="${X(p.x)}" y="${Y(p.y)-9}" text-anchor="middle" class="es-nv${p.a?' enc':''}">${num(p.y)}</text>`;});
- return `<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;}
+ const svg=`<svg class="es-g${mini?' mini':''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"${!mini&&W>340?` style="width:${W}px;max-width:none"`:''}>${s}</svg>`;
+ // La grande, con todos los números: si no cabe, se desliza de lado (empieza en lo último)
+ return mini||W<=340?svg:`<div class="es-gs">${svg}</div>`;}
 
 // 7R: esta semana hasta el corte, comparada con la semana pasada hasta el mismo punto
 function sieteR(e,A,ahora,corte){const ini=perIni('semana',ahora),este=suma(A,ini,corte),antes=suma(A,ini-HS,corte-HS);return {ini,este,antes,d:este-antes};}
@@ -176,10 +178,12 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    ${e.periodo==='semana'?condTarjeta(e,A,ahora,CO[e.id]||[]):''}
    <div class="rp-c"><div class="es-gh"><b>Por ${e.periodo==='semana'?'semanas':e.periodo==='dia'?'días':'meses'}</b>${A.length?`<span style="color:${tt.c}">${escH(tt.txt)}</span>`:''}</div>
     ${grafica(e,T,ahora,false)}
-    <div class="es-ley"><span><i style="background:${VERDE}"></i>Sube bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span></div></div>
+    <div class="es-ley"><span><i style="background:${VERDE}"></i>Sube bien</span><span><i style="background:${ROJO}"></i>Va mal</span><span><i class="dash"></i>Tendencia</span></div>${edita?`<button type="button" class="bt sec es-pas">Meter ${e.periodo==='semana'?'semanas':e.periodo==='dia'?'días':'meses'} pasad${e.periodo==='semana'?'as':'os'}</button>`:''}</div>
    ${r7?`<details class="rp-c es-mas" data-k="7r"${ES.abre['7r']?' open':''}><summary>Día a día frente a la semana pasada (7R)</summary>${r7}</details>`:''}
    <details class="rp-c es-mas" data-k="ap"${ES.abre.ap?' open':''}><summary>Lo apuntado</summary><div class="es-per"><button type="button" class="pb-fl" data-v="-1" aria-label="Anterior"${!T.length||ver<=T[0].s?' disabled':''}><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>${escH(perLargo(e.periodo,ver,ahora))}<small>Total: ${num(totV)}</small></b><button type="button" class="pb-fl" data-v="1" aria-label="Siguiente"${ver>=actual?' disabled':''}><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
     ${Av.length?Av.map(x=>`<div class="es-fila" data-id="${x.id}"><span>${escH(dLargo(x.L))} · ${hhmm(x.L)}${x.por&&x.por!==e.persona?` <em>· ${escH(pri(nomDe(x.por)))}</em>`:''}</span><b>${Number(x.cantidad)>0?'+':''}${num(x.cantidad)}</b>${edita?`<button type="button" class="es-x" aria-label="Quitar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`:''}</div>`).join(''):'<p class="vacio">Aún no hay nada apuntado aquí.</p>'}</details>`;
+  box.querySelectorAll('.es-gs').forEach(g=>g.scrollLeft=g.scrollWidth);
+  {const b=box.querySelector('.es-pas');if(b)b.onclick=()=>pasados(e,A,ahora);}
   box.querySelectorAll('details.es-mas').forEach(x=>x.addEventListener('toggle',()=>{ES.abre[x.dataset.k]=x.open;guardaLS('es_abre',ES.abre);}));
   box.querySelector('.es-atras').onclick=()=>{ES.abierta='';if(ES.volverTodos){ES.volverTodos=0;ES.persona='*';esGuarda();carga();return;}esGuarda();pinta3();};chipsQuien();
   {const b=box.querySelector('.cd-elige');if(b)b.onclick=()=>escribeCond(e,A,()=>carga());}
@@ -207,6 +211,27 @@ const chipsQuien=()=>box.querySelectorAll('.es-tabs button').forEach(b=>b.onclic
    m.querySelector('[data-a="ar"]').onclick=async()=>{m.remove();const {error}=await sb.from('pb_estadisticas').update({archivada:!e.archivada}).eq('id',e.id);if(error){toast('No se ha podido',false);return;}e.archivada=!e.archivada;toast(e.archivada?'Archivada':'Vuelve a estar activa');ES.abierta='';esGuarda();pinta3();};
    m.querySelector('[data-a="bo"]').onclick=()=>{m.remove();pregunta('¿Borrar «'+e.nombre+'» y todos sus datos?',{sub:'No se puede deshacer. Si solo quieres que no salga, archívala.',si:'Borrar'}).then(async ok=>{if(!ok)return;const {error}=await sb.from('pb_estadisticas').delete().eq('id',e.id);if(error){toast('No se ha podido',false);return;}ES.abierta='';esGuarda();carga();});};};
   window.scrollTo(0,y);};
+
+ // Meter los números de semanas (o días, o meses) pasados: escribes el total de cada una y se guarda la diferencia
+ const pasados=(e,A,ahora)=>{const per=e.periodo,act=perIni(per,ahora);let n=12;const val={};
+  const nom={semana:['semanas','Semana que cerró el','Escribe el total de cada semana que ya ha pasado. Lo que dejes en blanco no cambia.'],dia:['días','','Escribe el total de cada día que ya ha pasado. Lo que dejes en blanco no cambia.'],mes:['meses','','Escribe el total de cada mes que ya ha pasado. Lo que dejes en blanco no cambia.']}[per];
+  const m=modal('<div class="pa-box"></div>'),box2=m.querySelector('.pa-box');
+  const lista=()=>{const L=[];let s=perAnt(per,act);for(let i=0;i<n;i++){L.push(s);s=perAnt(per,s);}return L;};
+  const etq=s=>per==='semana'?`${nom[1]} ${dLargo(perSig(per,s))}`:per==='dia'?dLargo(s):perCorto(per,s);
+  const pinta=()=>{box2.innerHTML=`<small class="cd-k">${escH(e.nombre)}</small><h3>Meter ${nom[0]} pasad${per==='semana'?'as':'os'}</h3><p>${nom[2]}</p>
+   <div class="pa-l">${lista().map(s=>{const t=suma(A,s,perSig(per,s)-1);return `<label class="pa-f"><span>${escH(etq(s))}<small>${t?'Ahora: '+num(t):'Sin datos'}</small></span><input class="i" inputmode="decimal" autocomplete="off" data-s="${s}" placeholder="${t?num(t):'—'}" value="${escH(val[s]||'')}"></label>`;}).join('')}</div>
+   <button type="button" class="lnk pa-mas">Más atrás</button>
+   <div class="err"></div><div class="bts"><button class="bt sec" data-x>Cancelar</button><button class="bt" data-ok>Guardar</button></div>`;
+   box2.querySelectorAll('input[data-s]').forEach(i=>i.oninput=()=>{val[i.dataset.s]=i.value;});
+   box2.querySelector('.pa-mas').onclick=()=>{n+=12;pinta();};
+   box2.querySelector('[data-x]').onclick=()=>m.remove();
+   box2.querySelector('[data-ok]').onclick=async ev=>{const filas=[];let mal=false;
+    Object.keys(val).forEach(k=>{const t=String(val[k]).trim().replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');if(!t)return;const v=Number(t);if(!isFinite(v)){mal=true;return;}
+     const s=+k,d=v-suma(A,s,perSig(per,s)-1);if(Math.abs(d)<1e-9)return;const L=s+Math.floor((perSig(per,s)-s)/2);filas.push({estadistica_id:e.id,en:new Date(realMs(L)).toISOString(),cantidad:Math.round(d*100)/100,por:yo});});
+    if(mal){box2.querySelector('.err').textContent='Escribe solo números';return;}if(!filas.length){m.remove();return;}
+    ev.target.disabled=true;const {error}=await sb.from('pb_apuntes').insert(filas);if(error){ev.target.disabled=false;box2.querySelector('.err').textContent='No se ha podido guardar';return;}
+    m.remove();toast(filas.length===1?'Guardado':'Guardados '+filas.length+' '+nom[0]);carga();};};
+  pinta();};
 
  // Crear o cambiar una estadística
  const editarEst=(e,perX)=>{const per=perX||(e&&e.persona)||persona(),pm=M(per)||{},v={puesto:e?e.puesto:(pm.puesto||''),nombre:e?e.nombre:'',eje_y:e?e.eje_y:'',periodo:e?e.periodo:'semana',sentido:e?e.sentido:'positiva'};
