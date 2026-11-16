@@ -3,7 +3,7 @@
 // Resumen de facturación: /api/cron?resumen=1 a las 7 UTC (8 h en invierno, 9 h en verano).
 //  1. Recordatorio de cita: 2 días antes, a quien tiene cita PENDIENTE pasado mañana
 //     (así aún puede cambiarla o anularla con más de 24 h de margen)
-//  1b. Citas reservadas con mucha antelación (14 días o más): otro recordatorio 4 días antes
+//  (las citas reservadas con 14 días o más de antelación tienen además un recordatorio por WhatsApp 4 días antes: Mensajes › Avisos)
 //  2. Recordatorio de ejercicios, todos los días: a quien hoy aún no los ha hecho
 //     (y los ha hecho en el último mes; si ese día le llega el de la cita, solo le llega ese)
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
@@ -295,8 +295,8 @@ module.exports = async function handler(req, res) {
   }
   // Recordatorios: 17:00 UTC (19 h en verano, 18 h en invierno)
   if (![18, 19].includes(horaMadrid()) && !/forzar=1/.test(req.url || '')) return res.status(200).json({ ok: true, saltado: 'Fuera de hora' });
-  const hoy = madrid(0), dia = madrid(2), dia4 = madrid(4), hace30 = madrid(-30);
-  const out = { citas: 0, citas4: 0, ejercicios: 0, errores: 0 };
+  const hoy = madrid(0), dia = madrid(2), hace30 = madrid(-30);
+  const out = { citas: 0, ejercicios: 0, errores: 0 };
   try {
     // Pacientes con avisos activados
     const pacs = await todos(TABLAS.paciente, `filterByFormula=${encodeURIComponent('{PushSubscription}!=""')}&fields[]=PushSubscription&fields[]=UltimaSession`);
@@ -317,25 +317,6 @@ module.exports = async function handler(req, res) {
       });
       ok ? out.citas++ : out.errores++;
     }
-
-    // 1b. Citas de dentro de 4 días que se reservaron con 14 días o más de antelación (se olvidan más).
-    //     Cuándo se reservó: «RESERVADA EL» (app y web) o, si no, cuándo la cita pasó a Pendiente (al darla en el panel)
-    try {
-      const f4 = `AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${dia4.fecha}',TRIM({ESTADO})='PENDIENTE',IS_BEFORE(IF({RESERVADA EL},{RESERVADA EL},LAST_MODIFIED_TIME({ESTADO})),DATEADD({FECHA},-14,'days')))`;
-      const citas4 = await todos(CITAS_TABLE, `filterByFormula=${encodeURIComponent(f4)}&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&sort[0][field]=HORA`);
-      for (const c of citas4) {
-        const pid = (c.fields['RELACIÓN - CITA'] || [])[0];
-        if (!pid || !subDe[pid] || yaAvisado.has(pid)) continue;
-        yaAvisado.add(pid);
-        const hora = String(c.fields['HORA'] || '').slice(0, 5), fisio = fisioDe(c.fields['PREF.']);
-        const ok = await enviar(subDe[pid], {
-          title: 'Te recordamos tu cita',
-          body: `${DIAS[dia4.dia].replace(/^./, m => m.toUpperCase())} ${+dia4.fecha.slice(8)}${hora ? ' a las ' + hora : ''}${fisio ? ' con ' + fisio : ''}. Como la reservaste hace tiempo, te lo recordamos: si no te va bien, avísanos con tiempo y te la cambiamos.`,
-          url: '/?s=citas', tag: 'cita'
-        });
-        ok ? out.citas4++ : out.errores++;
-      }
-    } catch (e) { console.log('recordatorio 4 días', e.message); }
 
     // 2. Ejercicios: todos los días, solo a quien hoy aún no los ha hecho
     const hechoHoy = new Set();

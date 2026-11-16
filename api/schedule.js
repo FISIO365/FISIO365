@@ -6260,6 +6260,22 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const et = await ponerEtapa(q.pacienteId, 'ALTA').catch(() => null);
           return res.status(200).json({ ok: !d.error, estados: (et && et.estados) || f.ESTADO || act, error: d.error && d.error.message });
         }
+        if (action === 'seg-agenda-lejanas' || action === 'seg-agenda-aviso4') {
+          // Recordatorio por WhatsApp 4 días antes, para citas reservadas con 14 días o más de antelación (se olvidan más).
+          // Cuándo se reservó: «RESERVADA EL» (app y web) o, si no, cuándo la cita pasó a Pendiente (al darla en el panel). Lo enviado se guarda en el ajuste «aviso4».
+          let E = await ajuste('aviso4', {}).catch(() => ({})); if (!E || typeof E !== 'object' || Array.isArray(E)) E = {};
+          if (action === 'seg-agenda-aviso4') { const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
+            const lim = new Date(Date.now() - 30 * 864e5).toISOString(); Object.keys(E).forEach(k => { if (!E[k] || String(E[k].t || '') < lim) delete E[k]; });
+            ids.forEach(id => { if (q.quitar) delete E[id]; else E[id] = { t: new Date().toISOString(), por: String(q.por || '').slice(0, 40) }; }); await guardarAjuste('aviso4', E, String(q.por || 'panel')); return res.status(200).json({ ok: true }); }
+          const d4 = new Date(hoyF + 'T12:00:00Z'); d4.setUTCDate(d4.getUTCDate() + 4); const f4 = d4.toISOString().slice(0, 10);
+          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f4}',FIND('PENDIENTE',UPPER({ESTADO}&'')),LEN(ARRAYJOIN({RELACIÓN - CITA}))>0,IS_BEFORE(IF({RESERVADA EL},{RESERVADA EL},LAST_MODIFIED_TIME({ESTADO})),DATEADD({FECHA},-14,'days')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(e => { console.log('lejanas', e.message); return []; });
+          const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {};
+          for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`)).forEach(p => { const F = p.fields || {}, nom = String(F['FULL NAME'] || '').trim(); pac[p.id] = { nombre: nom, pila: String(F['NOMBRE'] || nom).trim().split(/\s+/)[0] || '', tel: String(F['WHATSAPP'] || F['TELF'] || '') }; });
+          const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
+          const citas = rows.map(r => { const F = r.fields, pid = (F['RELACIÓN - CITA'] || [])[0] || ''; return { id: r.id, fecha: String(F['FECHA'] || '').slice(0, 10), hora: String(F['HORA'] || '').replace(/^(\d):/, '0$1:').slice(0, 5), fisio: nmR(F['PREF.']), pacienteId: pid, ...(pac[pid] || { nombre: '', pila: '', tel: '' }), enviado4: (E[r.id] || {}).t || '', por4: (E[r.id] || {}).por || '' }; })
+            .filter(c => c.pacienteId).sort((a, b) => (a.hora).localeCompare(b.hora));
+          return res.status(200).json({ ok: true, fecha: f4, citas });
+        }
         if (action === 'seg-agenda-aviso2') { // 2º aviso a quien no ha confirmado: cuándo y quién
           const ids = (Array.isArray(q.ids) ? q.ids : [q.id]).filter(okId).slice(0, 10); if (!ids.length) return res.status(400).json({ ok: false });
           const d = await at(CIT, { method: 'PATCH', body: JSON.stringify({ records: ids.map(id => ({ id, fields: { '2º AVISO ENVIADO': new Date().toISOString(), '2º AVISO POR': String(q.por || '').slice(0, 40) } })) }) });
