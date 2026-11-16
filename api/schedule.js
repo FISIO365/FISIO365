@@ -648,7 +648,7 @@ async function eqRachas(pids) {
 }
 // Ejercicios del programa (solo de los partes en que el fisio activó «Compartir sus ejercicios con el club»)
 async function eqEjercicios(pid) {
-  try { const pr = await programaApp(pid); return (pr.ejercicios || []).map(e => ({ name: e.name, series: e.series, reps: e.reps, dur: e.dur, descanso: e.descanso, desc: e.desc, explica: e.explica || '', ytId: e.ytId || '', imagen: e.imagen || '', dia: e.dia || '' })); } catch (e) { return []; }
+  try { const pr = await programaApp(pid); return (pr.ejercicios || []).map(e => ({ name: e.name, series: e.series, reps: e.reps, dur: e.dur, descanso: e.descanso, desc: e.desc, explica: e.explica || '', ytId: e.ytId || '', imagen: e.imagen || '', dia: e.dia || '', sem: e.sem || [] })); } catch (e) { return []; }
 }
 async function eqConEjercicios(pars, base) {
   return Promise.all(pars.map(async r => { const x = base(r); if (r.fields['EJERCICIOS']) x.ejercicios = await eqEjercicios(r.fields['PACIENTE']); else delete x.ejercicios; return x; }));
@@ -3146,6 +3146,7 @@ async function programaApp(patientId) {
       desc: ej.descripcion || '',
       sp: ej.sp ? 1 : 0,
       dia: /^[A-E]$/.test(ej.dia || '') ? ej.dia : '',
+      sem: Array.isArray(ej.sem) ? ej.sem.map(Number).filter(n => n >= 0 && n <= 6) : [],
       ytId,
       imagen: ej.imagen || '',
     };

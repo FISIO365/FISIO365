@@ -1182,17 +1182,17 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .avr-on small{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#a3441f}.avr-on b{display:block;font-size:14.5px;margin-top:1px}.avr-on p{margin:4px 0 0;font-size:12.5px;color:#7d6a60;line-height:1.45}
 .avr-bt{display:flex;gap:14px;margin-top:7px}.avr-bt button{border:none;background:none;padding:0;font-family:var(--font);font-size:12.5px;font-weight:600;color:#c2552e;cursor:pointer}
 .fp-pdf{width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#c2552e;border:1.5px solid #ecd9cd}.fp-pdf:hover{border-color:#c2552e}.fp-pdf svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.pe-dias:empty{display:none}.pe-dias{margin:10px 0 2px}
-.pe-dv{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1px dashed #e3cfc2;background:#fffaf6;border-radius:12px;padding:10px 12px;font-family:var(--font);cursor:pointer;color:#1a1a1a}
-.pe-dv:hover{border-color:#c2552e}.pe-dv svg{width:22px;height:22px;flex:none;fill:none;stroke:#c2552e;stroke-width:1.6}
-.pe-dv b{display:block;font-size:13.5px;font-weight:600}.pe-dv small{display:block;font-size:12px;color:#9a8d84;margin-top:1px}
-.pe-dt{display:flex;flex-wrap:wrap;gap:6px}
-.pe-dt button{display:flex;align-items:center;gap:7px;border:1px solid #ecdcd1;background:#fff;border-radius:99px;padding:7px 13px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#5e554d;cursor:pointer}
-.pe-dt button i{font-style:normal;font-size:11.5px;min-width:19px;height:19px;border-radius:99px;background:#f5ece6;color:#9a8d84;display:grid;place-items:center;padding:0 5px}
-.pe-dt button.on{background:#c2552e;border-color:#c2552e;color:#fff}.pe-dt button.on i{background:rgba(255,255,255,.25);color:#fff}
-.pe-dt .pe-dmas{border-style:dashed;color:#c2552e;background:#fffaf6}
+.pe-dias{margin:0 0 10px}
+.pe-dn{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pe-dn>span{font-size:13px;font-weight:600;color:#5e554d}
+.pe-dnb{display:flex;gap:5px}.pe-dnb button{width:36px;height:34px;border:1px solid #ecdcd1;background:#fff;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;color:#5e554d;cursor:pointer}.pe-dnb button.on{background:#c2552e;border-color:#c2552e;color:#fff}
+.pe-dt{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pe-dt button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid #ecdcd1;background:#fff;border-radius:12px;padding:8px 13px;font-family:var(--font);color:#5e554d;cursor:pointer;text-align:left}
+.pe-dt button b{font-size:13.5px}.pe-dt button small{font-size:11.5px;color:#9a8d84}
+.pe-dt button.on{background:#c2552e;border-color:#c2552e;color:#fff}.pe-dt button.on small{color:rgba(255,255,255,.85)}
+.pe-sem{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;background:#fdf1ea;border-radius:12px;padding:9px 11px}.pe-sem>span{font-size:13px;color:#5e554d}
+.pe-sem>div{display:flex;gap:4px}.pe-sem button{width:32px;height:32px;border:1px solid #ecd9cd;background:#fff;border-radius:99px;font-family:var(--font);font-size:12.5px;font-weight:600;color:#5e554d;cursor:pointer}
+.pe-sem button.on{background:#c2552e;border-color:#c2552e;color:#fff}.pe-sem button.otro{color:#c9bcb2;border-style:dashed}
 .pe-dnota{font-size:12px;color:#9a8d84;margin:8px 2px 0;line-height:1.45}.pe-dnota b{color:#7d6a60}
-.pe-dq{border:none;background:none;padding:0;font-family:var(--font);font-size:12px;font-weight:600;color:#c2552e;cursor:pointer}.pe-dq:hover{text-decoration:underline}
 .pe-mdia span{display:flex;gap:5px}.pe-mdia button{width:34px;height:32px;border:1px solid #ecdcd1;background:#fff;border-radius:9px;font-family:var(--font);font-weight:600;color:#5e554d;cursor:pointer}.pe-mdia button.on{background:#c2552e;border-color:#c2552e;color:#fff}
 .pe-res .pe-dz{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px 10px;padding:4px 12px 11px 75px;background:#fdf1ea;border-bottom:1px solid #f0ebe6}
 .pe-dz>div{display:flex;flex-direction:column;gap:3px}.pe-dz label{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9a8d84}
@@ -3182,7 +3182,7 @@ function peNorm(e){
  const reps=+e.reps||0, dur=+e.duracion||+e.dur||0;
  const seg=dur>0&&!reps;
  return {nombre:String(e.nombre||'').trim(),modo:seg?'seg':'rep',series:+e.series||3,reps:reps||10,seg:seg?dur:30,aguantar:(!seg&&dur)?dur:0,
-  descanso:(e.v2||e._nuevo)?(+e.descanso||0):0,dia:/^[A-E]$/.test(e.dia||'')?e.dia:'',zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||'',sp:e.sp?1:0};
+  descanso:(e.v2||e._nuevo)?(+e.descanso||0):0,dia:/^[A-E]$/.test(e.dia||'')?e.dia:'',sem:Array.isArray(e.sem)?e.sem.filter(n=>n>=0&&n<=6):[],zona:e.zona||'',descripcion:e.descripcion||e.desc||'',youtubeUrl:e.youtubeUrl||lib.youtubeUrl||'',imagen:e.imagen||lib.imagen||'',sp:e.sp?1:0};
 }
 function ejDosis(e){const se=+e.series||0,pl=(n,a,b)=>n===1?a:b,L=[];const r=e.modo==='rep'?(+e.reps||0):0,d=e.modo==='seg'?(+e.seg||0):(+e.aguantar||0),ds=+e.descanso||0;
  if(r)L.push(`${se} ${pl(se,'serie','series')} de ${r} ${pl(r,'repetición','repeticiones')}`);else if(d)L.push(`${se} ${pl(se,'serie','series')} de ${d} ${pl(d,'segundo','segundos')}`);
@@ -3208,12 +3208,14 @@ function peVer(e,o){o=o||{};const yt=String(e.youtubeUrl||'').match(/(?:v=|youtu
 function montarEditorEjs(el,inicial,onCambio){
  let ejs=(inicial||[]).map(peNorm), nuevo=-1, sel=[], zona='', sd={};
  // Días de entreno (A, B…): si algún ejercicio tiene día, el programa está dividido
- const LETRAS=['A','B','C','D','E'];let dias=[...new Set(ejs.map(e=>e.dia).filter(Boolean))].sort(),diaAct=dias[0]||'';
- if(dias.length)ejs.forEach(e=>{if(!e.dia)e.dia=dias[0];});
+ // Cada día lleva los días de la semana en que lo hace (0 = domingo … 6 = sábado), guardados en sus ejercicios («sem»)
+ const LETRAS=['A','B','C','D','E'],SEMD=[[1,'L','lunes'],[2,'M','martes'],[3,'X','miércoles'],[4,'J','jueves'],[5,'V','viernes'],[6,'S','sábado'],[0,'D','domingo']];
+ let dias=[],diaAct='',sem={};
+ const leerDias=()=>{dias=[...new Set(ejs.map(e=>e.dia).filter(Boolean))].sort();diaAct=dias[0]||'';sem={};if(dias.length)ejs.forEach(e=>{if(!e.dia)e.dia=dias[0];if(!sem[e.dia]&&Array.isArray(e.sem)&&e.sem.length)sem[e.dia]=e.sem.slice();});};leerDias();
  // Dosis de cada ejercicio marcado en el buscador (se ajusta en la misma fila antes de añadirlo)
  const sdDe=e=>{if(!sd[e.id]){const seg=+e.duracion>0&&!(+e.reps>0);sd[e.id]={modo:seg?'seg':'rep',series:+e.series||3,v:seg?(+e.duracion||30):(+e.reps||10)};}return sd[e.id];};
  const sdHTML=e=>{const d=sdDe(e),k=d.modo==='seg'?'Seg.':'Reps';return `<div class="pe-dz" data-dz="${e.id}"><div><label>Series</label><span class="pe-dzs"><button type="button" data-dza="-" data-dzk="series" aria-label="Menos series">−</button><input type="number" inputmode="numeric" min="1" data-dzk="series" value="${d.series}"><button type="button" data-dza="+" data-dzk="series" aria-label="Más series">+</button></span></div><i>×</i><div><label>${k}</label><span class="pe-dzs"><button type="button" data-dza="-" data-dzk="v" aria-label="Menos">−</button><input type="number" inputmode="numeric" min="1" data-dzk="v" value="${d.v}"><button type="button" data-dza="+" data-dzk="v" aria-label="Más">+</button></span></div><button type="button" class="pe-dzm" data-dzm>${d.modo==='seg'?'Pasar a reps':'Pasar a segundos'}</button></div>`;};
- el.innerHTML=`<div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-zs"></div><div class="pe-res"></div></div><div class="pe-dias"></div><div class="pe-lista"></div>`;
+ el.innerHTML=`<div class="pe-dias"></div><div class="pe-busca"><input type="search" placeholder="Busca y marca los ejercicios que quieras añadir…" autocomplete="off" enterkeyhint="search"><div class="pe-zs"></div><div class="pe-res"></div></div><div class="pe-lista"></div>`;
  const inp=el.querySelector('input'),res=el.querySelector('.pe-res'),lista=el.querySelector('.pe-lista'),zs=el.querySelector('.pe-zs'),dbar=el.querySelector('.pe-dias');
  // Filtro por zona: chips con las zonas que tienen ejercicios
  const pintaZonas=()=>{const cnt={};biblio.forEach(e=>{if(e.zona)cnt[e.zona]=(cnt[e.zona]||0)+1;});
@@ -3266,20 +3268,29 @@ function montarEditorEjs(el,inicial,onCambio){
  });
  const CHIPS={rep:[5,8,10,12,15,20],seg:[15,20,30,45,60]};
  function pintaDias(){
-  if(!dias.length){dbar.innerHTML=ejs.length?`<button type="button" class="pe-dv" data-d="dividir"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="7.5" height="16" rx="2"/><rect x="13.5" y="4" width="7.5" height="16" rx="2"/></svg><span><b>Dividir en días de entreno</b><small>Día A, día B… para que no haga todo cada día</small></span></button>`:'';return;}
-  dbar.innerHTML=`<div class="pe-dt">${dias.map(d=>{const n=ejs.filter(e=>e.dia===d).length;return `<button type="button" data-d="${d}" class="${d===diaAct?'on':''}">Día ${d}<i>${n}</i></button>`;}).join('')}${dias.length<LETRAS.length?`<button type="button" class="pe-dmas" data-d="mas" aria-label="Añadir un día">+ Día</button>`:''}</div>
-  <div class="pe-dnota">Lo que añadas entra en el <b>día ${diaAct}</b>. Para mover un ejercicio a otro día, en «Más opciones».${ejs.some(e=>e.dia===diaAct)?'':` <button type="button" class="pe-dq" data-d="quitadia">Quitar el día ${diaAct}</button>`} · <button type="button" class="pe-dq" data-d="juntar">Volver a un solo día</button></div>`;}
- dbar.addEventListener('click',ev=>{const b=ev.target.closest('[data-d]');if(!b)return;const d=b.dataset.d;
-  if(d==='dividir'){dias=['A','B'];diaAct='A';ejs.forEach(e=>e.dia='A');}
-  else if(d==='mas'){const l=LETRAS.find(x=>!dias.includes(x));if(l){dias.push(l);diaAct=l;}}
-  else if(d==='juntar'){dias=[];diaAct='';ejs.forEach(e=>e.dia='');}
-  else if(d==='quitadia'){dias=dias.filter(x=>x!==diaAct);diaAct=dias[0]||'';if(dias.length<2){dias=[];diaAct='';ejs.forEach(e=>e.dia='');}}
-  else diaAct=d;
-  pintar();avisar();});
+  const n=Math.max(1,dias.length),txtSem=d=>{const L=SEMD.filter(x=>(sem[d]||[]).includes(x[0])).map(x=>x[2]);return L.length?L.join(', ').replace(/, ([^,]*)$/,' y $1'):'';};
+  const usados=d=>dias.filter(x=>x!==d).flatMap(x=>sem[x]||[]);
+  dbar.innerHTML=`<div class="pe-dn"><span>Días de entreno</span><div class="pe-dnb">${[1,2,3,4,5].map(k=>`<button type="button" data-n="${k}" class="${k===n?'on':''}">${k}</button>`).join('')}</div></div>
+  ${n>1?`<div class="pe-dt">${dias.map(d=>{const c=ejs.filter(e=>e.dia===d).length,t=txtSem(d);return `<button type="button" data-d="${d}" class="${d===diaAct?'on':''}"><b>Día ${d}</b><small>${t?escH(t):'sin días'} · ${c} ${c===1?'ejercicio':'ejercicios'}</small></button>`;}).join('')}</div>
+  <div class="pe-sem"><span>¿Qué días hace el <b>día ${diaAct}</b>?</span><div>${SEMD.map(([k,l,nm])=>{const on=(sem[diaAct]||[]).includes(k),otro=!on&&usados(diaAct).includes(k);return `<button type="button" data-w="${k}" class="${on?'on':''}${otro?' otro':''}" title="${nm}${otro?' (ya es de otro día)':''}">${l}</button>`;}).join('')}</div></div>
+  <div class="pe-dnota">Ahora añades los ejercicios del <b>día ${diaAct}</b>. Toca otro día arriba para montar el suyo.${dias.some(d=>!(sem[d]||[]).length)?' Si a un día no le pones días de la semana, en su app el paciente elige cuál hace.':''}</div>`:''}`;}
+ dbar.addEventListener('click',ev=>{
+  const bn=ev.target.closest('[data-n]');if(bn){const n=+bn.dataset.n,antes=Math.max(1,dias.length);if(n===antes)return;
+   if(n===1){dias=[];diaAct='';sem={};ejs.forEach(e=>{e.dia='';});}
+   else{const nuevos=LETRAS.slice(0,n),fuera=dias.filter(d=>!nuevos.includes(d)),mov=ejs.filter(e=>fuera.includes(e.dia)).length;
+    if(!dias.length)ejs.forEach(e=>{e.dia='A';});else ejs.forEach(e=>{if(fuera.includes(e.dia))e.dia=nuevos[nuevos.length-1];});
+    fuera.forEach(d=>{delete sem[d];});dias=nuevos;if(!dias.includes(diaAct))diaAct=dias[0];if(!diaAct)diaAct='A';
+    if(mov)toast(`${mov} ${mov===1?'ejercicio pasa':'ejercicios pasan'} al día ${nuevos[nuevos.length-1]}`,true);}
+   pintar();avisar();return;}
+  const bw=ev.target.closest('[data-w]');if(bw){const k=+bw.dataset.w,L=sem[diaAct]||[];
+   // Un día de la semana es de un solo día de entreno: si era de otro, pasa a este
+   dias.forEach(d=>{if(d!==diaAct&&sem[d])sem[d]=sem[d].filter(x=>x!==k);});
+   sem[diaAct]=L.includes(k)?L.filter(x=>x!==k):[...L,k];pintar();avisar();return;}
+  const b=ev.target.closest('[data-d]');if(b){diaAct=b.dataset.d;pintar();}});
  function pintar(){
   pintaDias();
   const vis=ejs.map((e,i)=>[e,i]).filter(([e])=>!dias.length||e.dia===diaAct);
-  if(!vis.length){lista.innerHTML=dias.length&&ejs.length?`<div class="pe-vacia">El día ${diaAct} todavía no tiene ejercicios. Búscalos arriba y se añadirán a este día.</div>`:'<div class="pe-vacia">Todavía no hay ejercicios. Búscalos arriba, márcalos y dale a «Añadir».</div>';return;}
+  if(!vis.length){lista.innerHTML=dias.length?`<div class="pe-vacia">El día ${diaAct} todavía no tiene ejercicios. Búscalos arriba y se añadirán a este día.</div>`:'<div class="pe-vacia">Todavía no hay ejercicios. Búscalos arriba, márcalos y dale a «Añadir».</div>';return;}
   lista.innerHTML=vis.map(([e,i],vi)=>{const m=peMini(e),k=e.modo==='seg'?'seg':'reps',v=e[k];
    return `<div class="pe-ej${i===nuevo?' nuevo':''}" data-i="${i}">
  <div class="pe-top"><span class="pe-vth" data-veri="${i}" title="Ver el ejercicio">${m?`<img src="${escH(m)}" onerror="this.style.visibility='hidden'">`:'<span class="pe-ph"></span>'}${peTieneMedia(e)?'<i><svg viewBox="0 0 24 24"><path d="M9 7.5v9l7.5-4.5z"/></svg></i>':''}</span><div class="pe-nom"><i>${vi+1}.</i>${escH(e.nombre)}</div>
@@ -3325,8 +3336,8 @@ function montarEditorEjs(el,inicial,onCambio){
  lista.addEventListener('change',ev=>{const t=ev.target;if(t.type==='number'&&['series','reps','seg'].includes(t.dataset.k)){const e=ejs[+t.closest('.pe-ej').dataset.i];if(!(+e[t.dataset.k]>0)){e[t.dataset.k]=t.dataset.k==='seg'?30:t.dataset.k==='reps'?10:3;pintar();}}});
  pintar();
  return {
-  get:()=>ejs.map(e=>({v2:1,nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||'',...(e.sp?{sp:1}:{}),...(dias.length&&e.dia?{dia:e.dia}:{})})),
-  set:l=>{ejs=(l||[]).map(peNorm);dias=[...new Set(ejs.map(e=>e.dia).filter(Boolean))].sort();diaAct=dias[0]||'';if(dias.length)ejs.forEach(e=>{if(!e.dia)e.dia=dias[0];});pintar();avisar();}
+  get:()=>ejs.map(e=>({v2:1,nombre:e.nombre,series:+e.series||1,reps:e.modo==='rep'?(+e.reps||1):0,duracion:e.modo==='seg'?(+e.seg||30):(+e.aguantar||0),descanso:+e.descanso||0,zona:(e.zona||'').trim(),descripcion:(e.descripcion||'').trim(),youtubeUrl:e.youtubeUrl||'',imagen:e.imagen||'',...(e.sp?{sp:1}:{}),...(dias.length&&e.dia?{dia:e.dia,...((sem[e.dia]||[]).length?{sem:sem[e.dia].slice().sort()}:{})}:{})})),
+  set:l=>{ejs=(l||[]).map(peNorm);leerDias();pintar();avisar();}
  };
 }
 function selFisioHTML(id,sel){return `<div class="pe-fisio">Lo asigna<select id="${id}">${fisios.map(f=>`<option value="${f.id}" ${f.id===sel?'selected':''}>${escH(f.nombre)}</option>`).join('')}</select></div>`;}
@@ -6593,11 +6604,13 @@ async function pdfEntreno(pacNom,ejsIn,mensaje,fisioNom){
  set(10.5,'normal',GRIS);doc.text(doc.splitTextToSize(`${pacNom||''}${fisioNom?' · te los ha preparado '+fisioNom:''}`,tw),ml,y);y+=9;
  const dias=[...new Set(ejs.map(e=>e.dia).filter(Boolean))].sort();
  // Nota del fisio y cómo usar el programa
- const nota=[mensaje,dias.length>1?`Tu entreno tiene ${dias.length} días (${dias.map(d=>'día '+d).join(', ')}). Haz un día cada vez y ve alternándolos.`:''].filter(Boolean).join('\n\n');
+ const conSem=ejs.some(e=>Array.isArray(e.sem)&&e.sem.length);
+ const nota=[mensaje,dias.length>1?(conSem?`Tu entreno tiene ${dias.length} días. Cada uno tiene marcados los días de la semana en que lo haces.`:`Tu entreno tiene ${dias.length} días (${dias.map(d=>'día '+d).join(', ')}). Haz un día cada vez y ve alternándolos.`):''].filter(Boolean).join('\n\n');
  if(nota){set(10,'normal',TXT);const ls=doc.splitTextToSize(nota,tw-16);const h=ls.length*5.2+15;sitio(h+4);doc.setFillColor(...CREMA);doc.roundedRect(ml,y,tw,h,4,4,'F');set(8,'bold',NAR);doc.text(mensaje?'NOTA DE TU FISIO':'CÓMO USARLO',ml+8,y+8,{charSpace:.4});set(10,'normal',TXT);doc.text(ls,ml+8,y+14);y+=h+8;}
  const grupos=dias.length>1?dias.map(d=>[d,ejs.map((e,i)=>[e,i]).filter(([e])=>e.dia===d)]):[['',ejs.map((e,i)=>[e,i])]];
  grupos.forEach(([d,L])=>{
-  if(d){sitio(40);y+=2;set(13,'bold',NAR);doc.text('Día '+d,ml,y);set(9,'normal',GRIS);doc.text(`${L.length} ${L.length===1?'ejercicio':'ejercicios'}`,ml+19,y);y+=6;}
+  if(d){const S0=(L.find(([e])=>Array.isArray(e.sem)&&e.sem.length)||[{}])[0].sem||[],NS=[[1,'lunes'],[2,'martes'],[3,'miércoles'],[4,'jueves'],[5,'viernes'],[6,'sábado'],[0,'domingo']].filter(x=>S0.includes(x[0])).map(x=>x[1]),ts=NS.length?NS.join(', ').replace(/, ([^,]*)$/,' y $1'):'';
+   sitio(40);y+=2;set(13,'bold',NAR);doc.text('Día '+d,ml,y);set(9,'normal',GRIS);doc.text(`${ts?ts.charAt(0).toUpperCase()+ts.slice(1)+' · ':''}${L.length} ${L.length===1?'ejercicio':'ejercicios'}`,ml+19,y);y+=6;}
   L.forEach(([e,i],k)=>{
    const lb=biblio.find(x=>x.nombre.trim()===String(e.nombre).trim())||{};
    const n=peNorm(e),dosis=ejDosis(n),ind=String(e.descripcion||'').trim(),exp=String((e.sp&&lb.descripcionSP)||lb.descripcion||'').trim();
@@ -13426,7 +13439,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
-{f:'2026-11-16',aviso:1,ver:{sec:'pac',pasos:[{el:'.fp-pdf',txt:'Aquí sacas el PDF del entreno.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]},t:'Ejercicios: al marcar uno en el buscador ya le pones series y repeticiones en la misma fila; puedes dividir el programa en días (día A, día B…) y, con «Descargar en PDF para imprimir», dárselo en papel a quien no usa el móvil.'},
+{f:'2026-11-16',aviso:1,ver:{sec:'pac',pasos:[{el:'.fp-pdf',txt:'Aquí sacas el PDF del entreno.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]},t:'Ejercicios: al marcar uno en el buscador ya le pones series y repeticiones en la misma fila; arriba eliges cuántos días de entreno tiene y qué días de la semana hace cada uno (en su app le sale cada día el que toca), y con «Descargar en PDF para imprimir» se lo das en papel a quien no usa el móvil.'},
 {f:'2026-11-16',aviso:1,ver:{sec:'pac',pasos:[{el:'.fp-avr',txt:'Aquí programas el aviso.',click:['#pacResultados .pt-r','.fp-seg button[data-t="citas"]']}]},t:'Ficha › Citas › «Recordarle que reserve»: para quien dice que mirará su agenda. Eliges el día (por ejemplo, en 1 semana) y ese día le llega un aviso para reservar; si ya ha reservado, no le llega nada.'},
 {f:'2026-11-16',aviso:1,t:'Cobrar: si el paciente ya tiene una factura con sesiones de ese mismo día, el panel te avisa y te enseña cuál antes de hacer otra. Así no se factura dos veces la misma sesión.'},
 {f:'2026-11-16',aviso:1,t:'Mensajes › Avisos: arriba sale «Reservadas hace tiempo · dentro de 4 días». Son citas reservadas con 2 semanas o más de antelación: mándales el recordatorio por WhatsApp con Enviar, como los de siempre.'},
@@ -15713,7 +15726,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Quieres que haga ejercicios en casa',shot:'/img/school/panel-b-ejer.jpg',body:`<b>Qué haces:</b> ficha › <b>Ejercicios</b>. Busca (puedes filtrar por zona), <b>toca para marcar</b> los que quieras y <b>Añadir</b>.<br><br>Con la miniatura ▶ ves el vídeo antes de ponerlo.`,ver:{sec:'pac',pasos:[{el:'.fp-seg button[data-t="programa"]',txt:'La pestaña Ejercicios.',click:['#pacResultados .pt-r']},{el:'.pe-busca',txt:'Aquí buscas y marcas los ejercicios.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {ti:'Ajusta cada uno',body:`<b>Más rápido:</b> al marcar un ejercicio en el buscador, en esa misma fila ya le pones <b>series</b> y <b>repeticiones</b> (o segundos) antes de añadirlo.<br><br>Ya en la lista puedes afinar: <b>Repeticiones</b> o <b>Segundos</b>, series y reps (con atajos: 5, 8, 10, 12…) e <b>Indicaciones</b> si hace falta. Debajo ves cómo lo verá el paciente: «3 series de 12 repeticiones».`},
- {ti:'Entreno por días: día A, día B',body:`<b>Cuándo:</b> no quieres que haga todo cada día (por ejemplo, piernas un día y tronco otro).<br><br><b>Qué haces:</b> debajo del buscador, <b>Dividir en días de entreno</b>. Salen las pestañas <b>Día A</b> y <b>Día B</b> (con <b>+ Día</b>, hasta 5): lo que añades entra en el día que tienes abierto. Para pasar un ejercicio a otro día, en sus <b>Más opciones</b>.<br><br>En su app, el paciente elige qué día hace hoy; le propone solo el siguiente al último que hizo.`},
+ {ti:'Entreno por días: día A, día B',body:`<b>Cuándo:</b> no quieres que haga todo cada día (por ejemplo, piernas lunes y jueves, tronco martes y viernes).<br><br><b>Qué haces, antes de buscar ejercicios:</b> arriba, en <b>Días de entreno</b>, elige cuántos (2, 3…). Salen las pestañas <b>Día A</b>, <b>Día B</b>… En cada una marca <b>qué días de la semana</b> lo hace (L M X J V S D) y añade sus ejercicios. Para pasar un ejercicio a otro día, en sus <b>Más opciones</b>.<br><br>En su app, cada día le sale el entreno que le toca; los días sin entreno le dice que toca descansar (y no le llega el recordatorio de ejercicios). Si no marcas días de la semana, elige él cuál hace.`},
  {ti:'No usa el móvil: dáselo en papel',body:`<b>Cuándo:</b> el paciente no tiene la app o prefiere los ejercicios impresos.<br><br><b>Qué haces:</b> debajo de <b>Guardar programa</b>, <b>Descargar en PDF para imprimir</b>. Sale con la foto de cada ejercicio, las series y repeticiones, tus indicaciones, cómo se hace y, si lo has dividido, cada día por separado.<br><br>Lo puedes imprimir o mandárselo por WhatsApp o email.`,ver:{sec:'pac',pasos:[{el:'.fp-pdf',txt:'Aquí sacas el PDF.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {ti:'Guarda: le llega solo',shot:'/img/school/panel-b-ejer-guardar.jpg',body:`Escribe un <b>mensaje</b> si quieres y <b>Guardar programa</b>.<br><br>Sustituye al anterior y al paciente le llega un aviso: «Tienes ejercicios nuevos». No hace falta que se lo mandes tú.`},
  {ti:'No está el ejercicio que buscas',body:`Ponlo igualmente con su nombre e indicaciones.<br><br>Y propónlo en <b>Ejercicios › Pendientes de grabar</b> para que se grabe el vídeo.`}
@@ -15723,7 +15736,7 @@ function renderFormacion(wrap, ruta){
  {q:'Quieres que haga una plancha de 30 segundos. ¿Cómo lo pones?',opts:['En ese ejercicio, Segundos y 30','No se puede','Lo escribo en el nombre'],ok:0,fb:['¡Eso es!','Sí se puede.','Mejor con el modo Segundos.']},
  {q:'No sabes si un ejercicio es el que quieres. ¿Cómo lo compruebas?',opts:['Lo pongo y ya','Toco la miniatura ▶ y veo el vídeo','Le pregunto al paciente'],ok:1,fb:['Mejor verlo antes.','¡Bien!','Mejor compruébalo tú antes.'],ver:{sec:'pac',pasos:[{el:'.pe-busca',txt:'Busca aquí y mira el vídeo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {q:'Un paciente de 80 años no usa el móvil. ¿Cómo le das los ejercicios?',opts:['Se los explico y ya','Descargar en PDF para imprimir, debajo de Guardar programa','No se los pongo'],ok:1,fb:['Se le olvidarán: mejor en papel.','¡Eso es! Con fotos, series y repeticiones.','Sí se los puedes dar.']},
- {q:'Quieres que haga piernas un día y tronco otro. ¿Cómo lo montas?',opts:['Dos programas distintos','Dividir en días de entreno: día A y día B','Se lo explico en las indicaciones'],ok:1,fb:['Solo hay un programa: divídelo en días.','¡Bien! En su app elige qué día hace.','Mejor dividido en días: lo ve claro en su app.']},
+ {q:'Quieres que haga piernas lunes y jueves, y tronco martes y viernes. ¿Cómo lo montas?',opts:['Dos programas distintos','Días de entreno: 2, y en cada día marco sus días de la semana','Se lo explico en las indicaciones'],ok:1,fb:['Solo hay un programa: divídelo en días.','¡Bien! Cada día le sale el que le toca.','Mejor con días de entreno: lo ve claro en su app.']},
  {q:'Necesitas un ejercicio que no está en la biblioteca. ¿Qué haces?',opts:['No se lo pongo','Lo pongo con su nombre e indicaciones y lo propongo en Pendientes de grabar','Le mando un vídeo de YouTube'],ok:1,fb:['Sí se puede poner.','¡Eso es!','Mejor que lo grabemos nosotros.']}
  ]},
 
@@ -15986,7 +15999,7 @@ function renderFormacion(wrap, ruta){
  {ti:'La pantalla de Hoy',shot:'/img/school/app-02-hoy.jpg',body:`Está ordenada para que en 3 segundos sepa <b>cuándo viene y qué tiene que hacer</b>: arriba <b>su programa de hoy</b> (cuántos ejercicios lleva hechos), luego <b>su fisio y su próxima cita</b> (con «Hoy» o «Mañana» si toca y «Reservar otra») y, si le has dejado una nota nueva, <b>la ve abierta</b> (la siguiente vez sale plegada).<br><br>Debajo, cada ejercicio con sus series, el descanso y tus <b>indicaciones</b>. Al final, en <b>«Para ti»</b>, sale <b>una sola cosa cada vez</b>, la más importante: lo que pide su club, activar avisos, instalar la app, su premio, el próximo taller o «Regala fisioterapia». Si la cierra, otro día sale la siguiente. Los packs y el resto de promociones están en su menú › Promociones.`},
  {ti:'Hacer la sesión',shot:'/img/school/app-03-ejercicio.jpg',body:`Al tocar un ejercicio se abre la <b>sesión guiada</b>: vídeo, series, un <b>temporizador</b> y «Hecho · Siguiente» para pasar al siguiente. Lo que marca como hecho cuenta para su racha.<br><br>Al terminar, la app le pregunta si quiere <b>comunicar algo a su fisio</b> («hoy me ha molestado la rodilla…»).`},
  {ti:'Si le cambias los ejercicios',body:`Cuando guardas un programa nuevo desde su ficha, <b>sustituye al anterior</b> y le llega un aviso. Si un vídeo no carga, que pruebe con otra conexión o te escriba por el chat.`},
- {ti:'Si su entreno tiene días',body:`Si lo has dividido en <b>día A, día B…</b>, encima de «Tu sesión» le salen los días con cuántos ejercicios tiene cada uno. Elige cuál hace hoy; por defecto le propone el siguiente al último que terminó.`}
+ {ti:'Si su entreno tiene días',body:`Si lo has dividido en <b>día A, día B…</b> con sus días de la semana, encima de «Tu sesión» ve su entreno de la semana y <b>cada día le sale el que le toca</b>. Los días sin entreno le dice <b>«Hoy toca descansar»</b> (puede hacer uno igualmente si quiere). Si no les pusiste días de la semana, elige él cuál hace.`}
  ],
  qs:[
  {q:'Un paciente te dice que no sabe qué ejercicios le tocan hoy. ¿Dónde le dices que mire?',opts:['En la pantalla de Hoy de su app','En su email','En Citas'],ok:0,fb:['¡Eso es!','No, está en la app.','En Citas solo están las citas.']},

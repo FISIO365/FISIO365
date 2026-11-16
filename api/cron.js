@@ -334,8 +334,27 @@ module.exports = async function handler(req, res) {
       }
       off = d.offset || '';
     } while (off && seguir);
+    // Entreno por días: si su fisio le ha puesto días de la semana y hoy no le toca ninguno, hoy descansa (no se le recuerda)
+    const descansa = new Set();
+    try {
+      const cand = pacs.filter(p => !hechoHoy.has(p.id) && subDe[p.id] && !yaAvisado.has(p.id) && String(p.fields.UltimaSession || '').slice(0, 10) >= hace30.fecha).map(p => p.id);
+      for (let i = 0; i < cand.length; i += 40) {
+        const l = cand.slice(i, i + 40);
+        const pl = await todos('tblvgE0a4gsrj4Vhp', `filterByFormula=${encodeURIComponent(`AND(FIND('"sem"',{Ejercicios}&''),OR(${l.map(id => `{PacienteID}='${id}'`).join(',')}))`)}&fields[]=PacienteID&fields[]=Ejercicios&fields[]=FechaAsignacion&sort[0][field]=FechaAsignacion&sort[0][direction]=desc`).catch(() => []);
+        // Solo cuenta su programa más reciente: si el último no tiene días, no se toca
+        const ult = {}; for (const r of pl) { const pid = r.fields.PacienteID; if (pid && !ult[pid]) ult[pid] = r; }
+        const sinDias = await todos('tblvgE0a4gsrj4Vhp', `filterByFormula=${encodeURIComponent(`AND(NOT(FIND('"sem"',{Ejercicios}&'')),OR(${Object.keys(ult).map(id => `{PacienteID}='${id}'`).join(',') || "FALSE()"}))`)}&fields[]=PacienteID&fields[]=FechaAsignacion`).catch(() => []);
+        const masNuevo = {}; sinDias.forEach(r => { const pid = r.fields.PacienteID, f = String(r.fields.FechaAsignacion || ''); if (pid && f > (masNuevo[pid] || '')) masNuevo[pid] = f; });
+        for (const [pid, r] of Object.entries(ult)) {
+          if ((masNuevo[pid] || '') > String(r.fields.FechaAsignacion || '')) continue;
+          let E = []; try { E = JSON.parse(r.fields.Ejercicios || '[]'); } catch (e) {}
+          const sem = new Set(E.flatMap(e => Array.isArray(e.sem) ? e.sem.map(Number) : []));
+          if (sem.size && !sem.has(hoy.dia)) descansa.add(pid);
+        }
+      }
+    } catch (e) { console.log('descanso', e.message); }
     for (const p of pacs) {
-      if (hechoHoy.has(p.id) || !subDe[p.id] || yaAvisado.has(p.id)) continue;
+      if (hechoHoy.has(p.id) || !subDe[p.id] || yaAvisado.has(p.id) || descansa.has(p.id)) continue;
       // Solo pacientes en tratamiento: que hayan hecho ejercicios en el último mes
       const ult = String(p.fields.UltimaSession || '').slice(0, 10);
       if (!ult || ult < hace30.fecha) continue;

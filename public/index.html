@@ -370,7 +370,7 @@ body{background:var(--cream);-webkit-font-smoothing:antialiased}
 .dias-b{display:flex;gap:8px;overflow-x:auto;padding:2px}
 .dias-b button{flex:1;min-width:92px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:11px 14px;border-radius:14px;border:1.5px solid #ecdcd1;background:#fff;font-family:inherit;cursor:pointer;text-align:left}
 .dias-b button b{font-size:15px;color:#1a1a1a}.dias-b button span{font-size:12px;color:var(--muted)}
-.dias-b button.on{border-color:var(--lila-d);background:var(--lila-light)}.dias-b button.on b{color:var(--lila-d)}
+.dias-b button.on{border-color:var(--lila-d);background:var(--lila-light)}.dias-s{display:flex;gap:3px;margin:3px 0 1px}.dias-s i{font-style:normal;font-size:11px;font-weight:600;color:#7d6a60;background:#f5ece6;border-radius:6px;padding:1px 5px}.dias-s i.hoy{background:var(--lila-d);color:#fff}.dias-b button.on b{color:var(--lila-d)}
 .pl-tit{font-size:13px;font-weight:700;color:var(--muted);margin:18px 4px 8px;text-transform:uppercase;letter-spacing:.08em}
 .pl{background:#fff;border-radius:24px;box-shadow:var(--sombra);overflow:hidden}
 .pl-row{display:flex;align-items:center;gap:14px;padding:12px 14px;position:relative}
@@ -1112,13 +1112,21 @@ let patient=null,ejercicios=[],hechos=new Set(),mensajeFisio='';
 // Días de entreno (A, B…): ejTodos es el programa entero; «ejercicios» es lo que toca hoy
 let ejTodos=[],diaHoy='';
 function diasProg(){return [...new Set(ejTodos.map(e=>e.dia).filter(Boolean))].sort();}
-function aplicaDia(){const D=diasProg();if(D.length<2){diaHoy='';ejercicios=ejTodos;return;}
+// Días de la semana de cada día de entreno (0 = domingo … 6 = sábado); los pone el fisio
+function semDe(d){const e=ejTodos.find(x=>x.dia===d&&Array.isArray(x.sem)&&x.sem.length);return e?e.sem.map(Number):[];}
+const SEM_C=[[1,'lun'],[2,'mar'],[3,'mié'],[4,'jue'],[5,'vie'],[6,'sáb'],[0,'dom']];
+let diaDescanso=false;
+function aplicaDia(){const D=diasProg();diaDescanso=false;if(D.length<2){diaHoy='';ejercicios=ejTodos;return;}
  let g='',u='';try{g=localStorage.getItem(`f365_dia_${patient.id}_${TODAY}`)||'';u=localStorage.getItem(`f365_ultdia_${patient.id}`)||'';}catch(e){}
- diaHoy=D.includes(g)?g:(D.includes(u)?D[(D.indexOf(u)+1)%D.length]:D[0]);
- ejercicios=ejTodos.filter(e=>e.dia===diaHoy);}
-function cambiaDia(d){diaHoy=d;try{localStorage.setItem(`f365_dia_${patient.id}_${TODAY}`,d);}catch(e){}ejercicios=ejTodos.filter(e=>e.dia===d);renderEjercicios();}
-function diasHTML(){const D=diasProg();if(D.length<2)return '';
- return `<div class="dias-e"><div class="dias-t">Tu entreno tiene ${D.length} días. Elige cuál haces hoy</div><div class="dias-b">${D.map(d=>{const L=ejTodos.filter(e=>e.dia===d);return `<button class="${d===diaHoy?'on':''}" onclick="cambiaDia('${d}')"><b>Día ${d}</b><span>${L.length} ${L.length===1?'ejercicio':'ejercicios'}</span></button>`;}).join('')}</div></div>`;}
+ const conSem=D.some(d=>semDe(d).length),wd=new Date().getDay(),toca=D.find(d=>semDe(d).includes(wd));
+ if(D.includes(g))diaHoy=g;                       // lo eligió él hoy
+ else if(conSem&&toca)diaHoy=toca;               // el que le toca hoy según su fisio
+ else if(conSem){diaHoy='';diaDescanso=true;}    // hoy no le toca ninguno: descanso
+ else diaHoy=D.includes(u)?D[(D.indexOf(u)+1)%D.length]:D[0]; // sin días de la semana: el siguiente al último que hizo
+ ejercicios=diaHoy?ejTodos.filter(e=>e.dia===diaHoy):[];}
+function cambiaDia(d){diaHoy=d;diaDescanso=false;try{localStorage.setItem(`f365_dia_${patient.id}_${TODAY}`,d);}catch(e){}ejercicios=ejTodos.filter(e=>e.dia===d);renderEjercicios();}
+function diasHTML(){const D=diasProg();if(D.length<2)return '';const conSem=D.some(d=>semDe(d).length),wd=new Date().getDay();
+ return `<div class="dias-e"><div class="dias-t">${diaDescanso?'Hoy no te toca entreno. Si te apetece, puedes hacer uno':conSem?'Tu entreno de la semana':`Tu entreno tiene ${D.length} días. Elige cuál haces hoy`}</div><div class="dias-b">${D.map(d=>{const L=ejTodos.filter(e=>e.dia===d),S=semDe(d);return `<button class="${d===diaHoy?'on':''}" onclick="cambiaDia('${d}')"><b>Día ${d}</b>${S.length?`<span class="dias-s">${SEM_C.filter(x=>S.includes(x[0])).map(x=>`<i class="${x[0]===wd?'hoy':''}">${x[1]}</i>`).join('')}</span>`:''}<span>${L.length} ${L.length===1?'ejercicio':'ejercicios'}</span></button>`;}).join('')}</div></div>`;}
 let lang=localStorage.getItem('fisio365_lang')||'es';
 let modalTipo=null,modalTexto='',fisiosCache=null;
 const i18n={es:{entrar:"Entrar",entrando:"Entrando...",instalarApp:"¿Cómo instalo la app?",errorEmail:"Introduce tu email",errorPin:"Introduce los 4 dígitos del PIN",errorConexion:"Error de conexión",programaHoy:"Tu programa de ejercicios",progresoHoy:"Progreso de hoy",sesionCompletada:"¡Sesión completada!",sesionSub:"Has terminado tu programa de hoy.",sesionMsg:"Cada día que entrenas es un paso hacia tu recuperación. ¡Vuelve mañana!",miProgreso:"Mi progreso",cuantoDolor:"¿Cuánto dolor tienes hoy?",sinDolor:"Sin dolor",dolorMaximo:"Dolor máximo",guardar:"Guardar",salir:"Salir",sinPrograma:"Sin programa asignado",sinProgramaDesc:"Tu fisioterapeuta todavía no ha asignado ejercicios.",dolorBajo:function(pct){return "Tu dolor ha bajado un "+pct+"% respecto a ayer. ¡Vas por muy buen camino!";},dolorEstable:"Tu dolor se mantiene estable. ¡Sigue con tus ejercicios!",dolorSubio:"No te preocupes, los altibajos son normales. ¿Has cambiado algo en tu rutina?",dolorRegistrado:"Dolor registrado ✓"},cat:{entrar:"Entrar",entrando:"Entrant...",instalarApp:"Com instal·lo l'app?",errorEmail:"Introdueix el teu email",errorPin:"Introdueix els 4 dígits del PIN",errorConexion:"Error de connexió",programaHoy:"El teu programa d'exercicis",progresoHoy:"Progrés d'avui",sesionCompletada:"Sessió completada!",sesionSub:"Has acabat el teu programa d'avui.",sesionMsg:"Cada dia que entrenes és un pas cap a la teva recuperació. Torna demà!",miProgreso:"El meu progrés",cuantoDolor:"Quant dolor tens avui?",sinDolor:"Sense dolor",dolorMaximo:"Dolor màxim",guardar:"Guardar",salir:"Sortir",sinPrograma:"Sense programa assignat",sinProgramaDesc:"El teu fisioterapeuta encara no ha assignat exercicis.",dolorBajo:function(pct){return "El teu dolor ha baixat un "+pct+"% respecte a ahir.";},dolorEstable:"El teu dolor es manté estable. Segueix!",dolorSubio:"No et preocupis, els alts i baixos són normals.",dolorRegistrado:"Dolor registrat ✓"},en:{entrar:"Log in",entrando:"Logging in...",instalarApp:"How do I install the app?",errorEmail:"Please enter your email",errorPin:"Please enter all 4 PIN digits",errorConexion:"Connection error",programaHoy:"Your exercise program",progresoHoy:"Today's progress",sesionCompletada:"Session completed!",sesionSub:"You finished today's program.",sesionMsg:"Every day you train is a step towards your recovery. Come back tomorrow!",miProgreso:"My progress",cuantoDolor:"How much pain do you have today?",sinDolor:"No pain",dolorMaximo:"Maximum pain",guardar:"Save",salir:"Log out",sinPrograma:"No program assigned",sinProgramaDesc:"Your physiotherapist has not yet assigned any exercises.",dolorBajo:function(pct){return "Your pain decreased "+pct+"% since yesterday!";},dolorEstable:"Your pain is stable. Keep going!",dolorSubio:"Don't worry, ups and downs are normal.",dolorRegistrado:"Pain recorded ✓"}};
@@ -1311,6 +1319,7 @@ function tmrReiniciar(i){const t=tmrEstado(i);clearInterval(t.int);t.int=null;t.
 
 function renderEjercicios(){
   const lista=document.getElementById('ejList');
+  if(!ejercicios.length&&diaDescanso){lista.innerHTML=diasHTML()+`<div class="ej-vacio"><b>Hoy toca descansar</b>Tu fisio ha pensado tu entreno para otros días de la semana. Descansar también es parte de la recuperación.</div>`;const sub=document.getElementById('hoyHeroSub');if(sub)sub.textContent='Hoy toca descansar';return;}
   if(!ejercicios.length){lista.innerHTML=`<div class="ej-vacio"><b>Aún no tienes ejercicios</b>Tu fisio te los asignará después de tu sesión.</div>`;return;}
   document.getElementById('diarioSection').style.display='block';
   const n=ejercicios.length,h=ejHechos();

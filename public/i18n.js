@@ -4,6 +4,29 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"Tu entreno de la semana": [
+"El teu entrenament de la setmana",
+"Your training for the week"
+],
+"Hoy no te toca entreno. Si te apetece, puedes hacer uno": [
+"Avui no et toca entrenament. Si et ve de gust, en pots fer un",
+"No training today. If you feel like it, you can do one"
+],
+"Hoy toca descansar": [
+"Avui toca descansar",
+"Today is a rest day"
+],
+"Tu fisio ha pensado tu entreno para otros días de la semana. Descansar también es parte de la recuperación.": [
+"El teu fisio ha pensat el teu entrenament per a altres dies de la setmana. Descansar també és part de la recuperació.",
+"Your physio has planned your training for other days of the week. Resting is part of recovery too."
+],
+"lun": ["dl", "Mon"],
+"mar": ["dt", "Tue"],
+"mié": ["dc", "Wed"],
+"jue": ["dj", "Thu"],
+"vie": ["dv", "Fri"],
+"sáb": ["ds", "Sat"],
+"dom": ["dg", "Sun"],
 "Ya tienes otra cita": [
 "Ja tens una altra cita",
 "You already have another appointment"
