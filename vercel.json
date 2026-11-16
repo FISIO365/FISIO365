@@ -80,6 +80,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/xanara/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "icono.png",
       "use": "@vercel/static"
     }
@@ -319,6 +323,14 @@
     {
       "src": "/icono.png",
       "dest": "/icono.png"
+    },
+    {
+      "src": "/xanara/?",
+      "dest": "/public/xanara/index.html"
+    },
+    {
+      "src": "/xanara/(.*)",
+      "dest": "/public/xanara/$1"
     },
     {
       "src": "/privacidad",
