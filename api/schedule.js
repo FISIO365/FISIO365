@@ -6269,7 +6269,25 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             const lim = new Date(Date.now() - 30 * 864e5).toISOString(); Object.keys(E).forEach(k => { if (!E[k] || String(E[k].t || '') < lim) delete E[k]; });
             ids.forEach(id => { if (q.quitar) delete E[id]; else E[id] = { t: new Date().toISOString(), por: String(q.por || '').slice(0, 40) }; }); await guardarAjuste('aviso4', E, String(q.por || 'panel')); return res.status(200).json({ ok: true }); }
           const d4 = new Date(hoyF + 'T12:00:00Z'); d4.setUTCDate(d4.getUTCDate() + 4); const f4 = d4.toISOString().slice(0, 10);
-          const rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f4}',FIND('PENDIENTE',UPPER({ESTADO}&'')),LEN(ARRAYJOIN({RELACIÓN - CITA}))>0,IS_BEFORE(IF({RESERVADA EL},{RESERVADA EL},LAST_MODIFIED_TIME({ESTADO})),DATEADD({FECHA},-14,'days')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(e => { console.log('lejanas', e.message); return []; });
+          let PGx = null; try { PGx = require('./_pg'); if (!PGx.ACTIVO) PGx = null; } catch (e) { PGx = null; }
+          const lim14 = new Date(f4 + 'T00:00:00Z'); lim14.setUTCDate(lim14.getUTCDate() - 14);
+          let rows = await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${f4}',FIND('PENDIENTE',UPPER({ESTADO}&'')),LEN(ARRAYJOIN({RELACIÓN - CITA}))>0${PGx ? '' : `,IS_BEFORE(IF({RESERVADA EL},{RESERVADA EL},LAST_MODIFIED_TIME({ESTADO})),DATEADD({FECHA},-14,'days'))`})`)}&fields[]=FECHA&fields[]=HORA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}&fields[]=${encodeURIComponent('RESERVADA EL')}`).catch(e => { console.log('lejanas', e.message); return []; });
+          // Con los datos en Postgres, «última modificación» es la de toda la cita (confirmarla, el recordatorio…): cuándo se reservó sale del historial de cambios
+          if (PGx && rows.length) {
+            try {
+              const ids = rows.filter(r => !r.fields['RESERVADA EL']).map(r => r.id), cuando = {};
+              let desdeLog = null;
+              if (ids.length) {
+                const est = col => `upper(coalesce(${col}->'ESTADO'->>'name', ${col}->>'ESTADO', ''))`;
+                const q1 = await PGx.db().query(`select id, max(t) as t from cambios where id = any($1) and ${est('despues')} like 'PENDIENTE%' and ${est('antes')} not like 'PENDIENTE%' group by id`, [ids]);
+                q1.rows.forEach(x => { cuando[x.id] = new Date(x.t); });
+                const q2 = await PGx.db().query('select min(t) as t from cambios'); desdeLog = q2.rows[0] && q2.rows[0].t ? new Date(q2.rows[0].t) : null;
+              }
+              rows = rows.filter(r => { const re = r.fields['RESERVADA EL']; if (re) return new Date(re) < lim14;
+                if (cuando[r.id]) return cuando[r.id] < lim14;
+                return !!(desdeLog && desdeLog < lim14); }); // no hay cambio a «Pendiente» en el historial: se reservó antes de que empezara
+            } catch (e) { console.log('lejanas pg', e.message); rows = rows.filter(r => r.fields['RESERVADA EL'] && new Date(r.fields['RESERVADA EL']) < lim14); }
+          }
           const pids = [...new Set(rows.flatMap(r => r.fields['RELACIÓN - CITA'] || []))], pac = {};
           for (let i = 0; i < pids.length; i += 50) (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + pids.slice(i, i + 50).map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`)).forEach(p => { const F = p.fields || {}, nom = String(F['FULL NAME'] || '').trim(); pac[p.id] = { nombre: nom, pila: String(F['NOMBRE'] || nom).trim().split(/\s+/)[0] || '', tel: String(F['WHATSAPP'] || F['TELF'] || '') }; });
           const nmR = v => (v && typeof v === 'object') ? (v.name || '') : (v || '');
