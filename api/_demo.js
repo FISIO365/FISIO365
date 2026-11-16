@@ -15,9 +15,9 @@ async function demo({ at, db, op, guardarAjuste }) {
   const basico = ['programas', 'anamnesis', 'pacientes', 'school', 'checklist', 'agenda', 'chat', 'ejercicios', 'sugerencias', 'seguimiento', 'recordatorios'];
   // 1. Equipo (Laura entra con 1234)
   const fids = await lote('tbl2mLUrnaKCFTs6g', [
-    { Name: 'Laura Gómez', Password: '1234', Role: 'fisio', 'DIRECCIÓN': true, 'NºColegiado': '12345', ...acc(true) },
-    { Name: 'Marc Puig', Password: '2345', Role: 'fisio', 'NºColegiado': '23456', ...acc(basico) },
-    { Name: 'Ana Ruiz', Password: '3456', Role: 'fisio', 'NºColegiado': '34567', ...acc(basico) },
+    { Name: 'Laura Gómez', Password: '1234', Role: 'fisio', 'DIRECCIÓN': true, 'NºColegiado': '12345', 'HORAS SEMANA': 30, ...acc(true) },
+    { Name: 'Marc Puig', Password: '2345', Role: 'fisio', 'NºColegiado': '23456', 'HORAS SEMANA': 30, ...acc(basico) },
+    { Name: 'Ana Ruiz', Password: '3456', Role: 'fisio', 'NºColegiado': '34567', 'HORAS SEMANA': 30, ...acc(basico) },
     { Name: 'Recepción', Password: '4567', Role: 'admin', ...acc(['pacientes', 'agenda', 'chat', 'callin', 'captacion', 'recordatorios', 'checklist', 'school', 'sugerencias', 'seguimiento']) }]);
   const FIS = ['Laura', 'Marc', 'Ana'];
   // 2. Pacientes
@@ -65,6 +65,9 @@ async function demo({ at, db, op, guardarAjuste }) {
   const PLANES = [[0, [0, 1, 14, 2], 'Hazlos cada día por la mañana. Si algo duele más de 4/10, para y me lo cuentas.'], [1, [3, 4, 13], 'Dos veces al día, sobre todo después de trabajar con el ordenador.'], [2, [10, 9, 11], 'Para el tobillo: cada día. El equilibrio, mejor descalzo.'], [3, [5, 6], 'Sin forzar. La goma, la verde de momento.'], [4, [7, 8, 9], 'Rodilla: 3 días por semana. ¡Vas genial!'], [5, [11, 10], 'Por la noche, antes de dormir.'], [7, [12], 'Lento al bajar, es lo importante.'], [8, [0, 1, 2, 14], 'Rutina de espalda para casa.']];
   const fp = i => [fids[i % 3], FIS[i % 3]];
   await lote('tblvgE0a4gsrj4Vhp', PLANES.map(([i, L, m], n) => ({ Nombre: `${NOMBRES[i]} - ${madrid(-n - 2)}`, PacienteID: pids[i], PacienteNombre: NOMBRES[i], FisioID: fp(i)[0], FisioNombre: fp(i)[1], Ejercicios: JSON.stringify(L.map(ej)), FechaAsignacion: madrid(-n - 2), MensajeFisio: m })));
+  // Días que han hecho los ejercicios (racha y progreso en su app): los que tienen plan, casi cada día de las últimas semanas
+  const TAR = []; PLANES.forEach(([i], n) => { for (let d = 1; d <= 26; d++) if (d <= 9 - n || (d * 7 + n) % 4) TAR.push({ PacienteId: pids[i], Fecha: madrid(-d) }); TAR.push({ PacienteId: pids[i], Fecha: madrid(0) }); });
+  await lote('tblIXYE5ToRNY7MN4', TAR);
   const hora = (d, h) => { const [y, mo, dd] = madrid(d).split('-'); return `${+dd}/${+mo}/${y}, ${h}:00`; };
   const CHATS = [
     [0, -2, [['paciente', '09:12', 'Hola! Esta mañana me he levantado mucho mejor de la espalda 🙌'], ['fisio', '09:40', '¡Qué bien! Sigue con los ejercicios y el jueves lo vemos.']]],

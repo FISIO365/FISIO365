@@ -19,7 +19,7 @@
       }
     } catch (e) {}
     // Pares de color (empiezan por # o son el rgb del coral) y, en la app, también los de texto
-    var col = P.filter(function (p) { return /^#[0-9a-fA-F]{6}$/.test(p[0]) || /^194, ?85, ?46$/.test(p[0]); });
+    var col = P.filter(function (p) { return /^#[0-9a-fA-F]{6}$/.test(p[0]) || /^(194, ?85, ?46|217, ?119, ?79)$/.test(p[0]); });
     var txt = TEXTO ? P.filter(function (p) { return col.indexOf(p) < 0; }) : [];
     var todos = col.concat(txt);
     var fx = function (L, s) { s = String(s); for (var i = 0; i < L.length; i++) if (s.indexOf(L[i][0]) > -1) s = s.split(L[i][0]).join(L[i][1]); return s; };

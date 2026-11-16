@@ -6573,9 +6573,9 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         // Ocupación: horas de trabajo a la semana de Jonathan, Sara y Juan (campo HORAS SEMANA de FISIO)
         // Solo cuentan los días que cada fisio trabaja de verdad: un día sin ninguna fila en su agenda (vacaciones, festivo, baja…) no suma horas
         const fisT = await todosT(FISIOS_TABLE, `fields[]=Name&fields[]=${encodeURIComponent('HORAS SEMANA')}&fields[]=${encodeURIComponent('HORAS POR DÍA')}&fields[]=Role&fields[]=${encodeURIComponent('FECHA BAJA')}`).catch(() => []);
-        // Equipo = fisios con horario (Administración); si no se puede leer, los de siempre
+        // Equipo = fisios con horario (Administración); si no hay, los de siempre (en otra clínica, sus fisios: nunca los nombres de FISIO365)
         const eqH = fisT.filter(f => !f.fields['FECHA BAJA'] && String(f.fields.Role || 'fisio').toLowerCase() === 'fisio' && (f.fields['HORAS POR DÍA'] || Number(f.fields['HORAS SEMANA']) > 0)).map(f => String(f.fields.Name || '').split(' ')[0].toLowerCase()).filter(Boolean);
-        const EQUIPO = eqH.length ? eqH : ['jonathan', 'sara', 'juan'], DSEM = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const EQUIPO = eqH.length ? eqH : (!process.env.CLINICA || process.env.CLINICA === 'fisio365') ? ['jonathan', 'sara', 'juan'] : fisT.filter(f => !f.fields['FECHA BAJA'] && String(f.fields.Role || 'fisio').toLowerCase() === 'fisio').map(f => String(f.fields.Name || '').split(' ')[0].toLowerCase()).filter(Boolean), DSEM = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
         const horario = {}; fisT.forEach(f => { const k = String(f.fields.Name || '').split(' ')[0].toLowerCase(); if (!EQUIPO.includes(k)) return; const h = {};
           String(f.fields['HORAS POR DÍA'] || '').split('\n').forEach(l => { const m = l.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\D*(\d+(?:[.,]\d+)?)/); if (m) h[DSEM.indexOf(m[1])] = +m[2].replace(',', '.'); });
           if (!Object.keys(h).length && +f.fields['HORAS SEMANA']) [1, 2, 3, 4, 5].forEach(d => h[d] = +f.fields['HORAS SEMANA'] / 5);

@@ -65,6 +65,7 @@ function paresColor(color) {
   const out = [];
   L.forEach(([a, b]) => { out.push([a, b]); out.push([a.toUpperCase(), b]); });
   out.push(['194,85,46', P.join(',')], ['194, 85, 46', P.join(', ')]);
+  const cl = hx(tonoDe('#d9774f', P)); out.push(['217,119,79', cl.join(',')], ['217, 119, 79', cl.join(', ')]); // brillos (rgba) del coral claro
   return out;
 }
 
