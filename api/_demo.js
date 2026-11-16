@@ -59,10 +59,15 @@ async function demo({ at, db, op, guardarAjuste }) {
     ['Rodar la planta con pelota', 'Sentado, pasa una pelota bajo la planta del pie con presión cómoda.', 'Tobillo y pie', 1, 0, 60],
     ['Extensión de muñeca excéntrica', 'Con una botella de agua, baja la mano despacio en 4 segundos.', 'Codo, muñeca y mano', 3, 12, 0],
     ['Respiración diafragmática', 'Tumbado, una mano en el pecho y otra en la barriga: que se mueva solo la de la barriga.', 'Respiración', 1, 0, 120],
-    ['Bird-dog', 'A cuatro patas, estira brazo y pierna contrarios sin mover la pelvis.', 'Core', 3, 10, 0]];
-  await lote('tbloqn3ts872ueJSE', EJ.map(([Nombre, Descripcion, Zona]) => ({ Nombre, Descripcion, Zona })));
-  const ej = i => { const [nombre, descripcion, zona, series, reps, dur] = EJ[i]; return { v2: 1, nombre, series, reps, duracion: dur, descanso: 30, zona, descripcion, youtubeUrl: '', imagen: '' }; };
-  const PLANES = [[0, [0, 1, 14, 2], 'Hazlos cada día por la mañana. Si algo duele más de 4/10, para y me lo cuentas.'], [1, [3, 4, 13], 'Dos veces al día, sobre todo después de trabajar con el ordenador.'], [2, [10, 9, 11], 'Para el tobillo: cada día. El equilibrio, mejor descalzo.'], [3, [5, 6], 'Sin forzar. La goma, la verde de momento.'], [4, [7, 8, 9], 'Rodilla: 3 días por semana. ¡Vas genial!'], [5, [11, 10], 'Por la noche, antes de dormir.'], [7, [12], 'Lento al bajar, es lo importante.'], [8, [0, 1, 2, 14], 'Rutina de espalda para casa.']];
+    ['Bird-dog', 'A cuatro patas, estira brazo y pierna contrarios sin mover la pelvis.', 'Core', 3, 10, 0],
+    // Con vídeo (grabados en clínica): así se ve la biblioteca con vídeos de verdad
+    ['Patada de glúteo con goma', 'A cuatro patas, con la goma en los pies: estira la pierna hacia atrás sin arquear la espalda.', 'Cadera y glúteo', 3, 12, 0, 'https://www.youtube.com/watch?v=-ipreM3Qrh0'],
+    ['Core con pies en la pared', 'Boca arriba, pies en la pared y brazos al techo. Pega la zona lumbar al suelo y respira.', 'Lumbar', 3, 10, 0, 'https://www.youtube.com/watch?v=uUuWi2GYbqQ'],
+    ['Monster walk', 'Con la goma por encima de las rodillas, semiflexionado: pasos laterales sin juntar los pies.', 'Cadera y glúteo', 3, 12, 0, 'https://www.youtube.com/watch?v=tlpSlCGLwRQ'],
+    ['Puente de isquios sobre rodillo', 'Talones sobre el rodillo: sube la cadera y baja despacio, sin que el rodillo se mueva.', 'Cadera y glúteo', 3, 10, 0, 'https://www.youtube.com/watch?v=wdobzAtvu5k']];
+  await lote('tbloqn3ts872ueJSE', EJ.map(([Nombre, Descripcion, Zona, , , , yt]) => ({ Nombre, Descripcion, Zona, ...(yt ? { YouTubeURL: yt } : {}) })));
+  const ej = i => { const [nombre, descripcion, zona, series, reps, dur, yt] = EJ[i]; return { v2: 1, nombre, series, reps, duracion: dur, descanso: 30, zona, descripcion, youtubeUrl: yt || '', imagen: '' }; };
+  const PLANES = [[0, [15, 16, 18], 'Hazlos cada día por la mañana. Si algo duele más de 4/10, para y me lo cuentas.'], [1, [3, 4, 13], 'Dos veces al día, sobre todo después de trabajar con el ordenador.'], [2, [10, 9, 11], 'Para el tobillo: cada día. El equilibrio, mejor descalzo.'], [3, [5, 6], 'Sin forzar. La goma, la verde de momento.'], [4, [7, 8, 9], 'Rodilla: 3 días por semana. ¡Vas genial!'], [5, [11, 10], 'Por la noche, antes de dormir.'], [7, [12], 'Lento al bajar, es lo importante.'], [8, [0, 1, 2, 14], 'Rutina de espalda para casa.']];
   const fp = i => [fids[i % 3], FIS[i % 3]];
   await lote('tblvgE0a4gsrj4Vhp', PLANES.map(([i, L, m], n) => ({ Nombre: `${NOMBRES[i]} - ${madrid(-n - 2)}`, PacienteID: pids[i], PacienteNombre: NOMBRES[i], FisioID: fp(i)[0], FisioNombre: fp(i)[1], Ejercicios: JSON.stringify(L.map(ej)), FechaAsignacion: madrid(-n - 2), MensajeFisio: m })));
   // Días que han hecho los ejercicios (racha y progreso en su app): los que tienen plan, casi cada día de las últimas semanas
