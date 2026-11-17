@@ -7706,6 +7706,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      if (!MARCA.OTRA_CLINICA) await FACX.unaVez('cerrapoint-contacto', async () => { const C1 = await FACX.config(); const A = C1.actividades.map(a => a.id === 'cerrapoint' ? Object.assign({}, a, { email: a.email || 'cerrapoint@gmail.com', web: a.web || 'cerrajeros-sant-andreu.com' }) : a); await FACX.guardarConfig({ actividades: A }); }).catch(e => console.log('CerraPoint contacto', e.message));
       if (!MARCA.OTRA_CLINICA) await FACX.unaVez('cerrapoint', async () => { const C1 = await FACX.config(); if (!C1.actividades.some(a => a.id === 'cerrapoint'))
         await FACX.guardarConfig({ actividades: [...C1.actividades, { id: 'cerrapoint', nombre: 'CerraPoint', logo: require('./_logo_cerrapoint'), color: '#1d0fb0', tel: '613 560 143', iva: { tipo: 21 } }] }); }).catch(e => console.log('CerraPoint', e.message));
       const opcHtml = async () => { const CF = await conf().catch(() => CONF_DEF), C = await FACX.config(); return { logo: CLI.logoV ? '/api/schedule?action=clinica-logo&v=' + CLI.logoV : (MARCA.OTRA_CLINICA ? '' : '/informe/logo.png'), marca: CLI.marca, rgpd: C.pie || String(CF.holded.rgpd || TEXTO_RGPD), pago: C.pago, color: CLI.color }; };
@@ -7772,6 +7773,15 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad, clase: q.clase });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
       }
+      // ── Traer de Holded: lo de antes (ventas, compras y clientes) y los movimientos de los bancos conectados allí ──
+      if (/^fac-holded-/.test(action)) { if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
+        const HI = require('./_holded_import'), Hh = { holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }, es = f => /^\d{4}-\d{2}-\d{2}$/.test(String(f || ''));
+        if (action === 'fac-holded-previa') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' }); return res.status(200).json({ ok: true, ...(await HI.previa(Hh, q.desde, q.hasta)) }); }
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'fac-holded-traer') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' });
+          const r = await HI.traer(Hh, q.desde, q.hasta, q.mapa || {}, q.compras !== false); if (q.clientes) r.clientes = await HI.clientes(Hh); return res.status(200).json({ ok: true, ...r }); }
+        if (action === 'fac-holded-bancos') return res.status(200).json({ ok: true, cuentas: await HI.bancos(Hh) });
+        return res.status(400).json({ ok: false }); }
       // ── Día del cambio: dejar Holded y facturar solo con el panel ──
       if (action === 'fac-cambio-datos') { const M = await FACX.modo(), C = await FACX.config(), VFE = require('./_vf_envio');
         let hol = null; if (HOLDED_KEY) try { const u = ((await holded('/sales-receipts?limit=1&sort=-date&approval_status=approved')).items || [])[0] || (await holded('/sales-receipts?limit=1&sort=-date').catch(() => []))[0]; if (u) hol = { numero: u.document_number || '', fecha: u.date ? (typeof u.date === 'number' ? new Date(u.date * 1000).toISOString().slice(0, 10) : String(u.date).slice(0, 10)) : '' }; } catch (e) {}
@@ -7881,6 +7891,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
         try { const VFE = require('./_vf_envio'), C1 = await FACX.config(); out.vf = {}; for (const e of [...new Set(['pruebas', C1.vf.entorno || 'pruebas'])]) out.vf[e] = await VFE.enviar(e, { forzar: true }).catch(x => ({ error: x.message })); } catch (e) { out.vfErr = e.message; }
+        // Movimientos de los bancos conectados en Holded (si los hay)
+        if (HOLDED_KEY) try { out.bancos = await require('./_holded_import').bancos({ holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }); } catch (e) { out.bancosErr = e.message; }
         try { out.recurrentes = await require('./_recurrentes').correr(hoy, (id, to) => envioDoc({ id, op: 'email', to, yo: '' })); if (out.recurrentes.length) await pagoAvisar(null, 'Facturas que se repiten', out.recurrentes.map(x => x.codigo ? x.codigo + (x.enviada ? ' (enviada)' : '') : 'Error: ' + x.error).join(' · '), 'fac-rec'); } catch (e) { out.recErr = e.message; }
         // Recordatorios de cobro automáticos (si están puestos): a los 15 y a los 30 días, a quien tenga email
         try { const D = await FACX.db(), RC = ((await D.query(`select v from fac_config where k='recordar'`)).rows[0] || {}).v || {};
