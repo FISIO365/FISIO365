@@ -8046,9 +8046,20 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas
         const dia = /^\d{4}-\d{2}-\d{2}$/.test(q.dia || '') ? q.dia : FACX.isoMad();
         const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
-        const nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        let nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        // Arreglos: un ticket de Holded del panel sin su copia → se une a la que ya haya con su mismo ticket (p. ej. traída de Holded) o se hace ahora
+        if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set(nuestras.map(x => x.cobro).filter(Boolean)); let n = 0, cambio = false;
+          for (const r of filas) { const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue; n++;
+            try { const pacR = String(F['PacienteId'] || '') || null, ya = (await D0.query(`select id from fac_facturas where holded=$1 and cobro is null limit 1`, [hid])).rows[0];
+              const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
+              if (numH && /^borrador$/i.test(String(F['Nº FACTURA'] || ''))) await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: numH }, typecast: true }) }).catch(() => {});
+              if (ya) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [ya.id, r.id, pacR]); cambio = true; continue; }
+              if (!d) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
+              await FACX.desdeCobro({ cobro: r.id, paciente: pacR, fecha: dia, otro: !!String(F['A NOMBRE DE'] || '').trim(), cliente: { nombre: String(d.contact_name || F['A NOMBRE DE'] || ''), nif: String(d.contact_code || '') }, lineas: L.length ? L : [{ concepto: 'Sesión de fisioterapia', uds: 1, precio: Number(F['TOTAL'] || 0) }], holded: hid, holdedNum: numH, por: 'Recuperada al comparar' }); cambio = true; }
+            catch (e) { console.log('comparar arreglo', e.message); } }
+          if (cambio) nuestras = await FACX.lista({ desde: dia, hasta: dia }); }
         const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
-        const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, x = porCobro[r.id]; return { cobro: r.id, num: F['Nº FACTURA'] || '', total: Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null }; });
+        const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, x = porCobro[r.id]; return { cobro: r.id, num: (x && x.holded_num) || F['Nº FACTURA'] || '', total: Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null }; });
         const sueltas = nuestras.filter(x => !x.cobro || !holdedL.some(h => h.cobro === x.cobro)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
         return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(nuestras.reduce((t, x) => t + x.total, 0) * 100) / 100 });
       }
