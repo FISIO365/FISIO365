@@ -50,6 +50,7 @@ async function guardarConfig(c) { const D = await db(); const v = await config()
   if (c.emisor) Object.keys(CONF_DEF.emisor).forEach(k => { if (c.emisor[k] != null) v.emisor[k] = String(c.emisor[k]).trim().slice(0, 200); });
   if (c.iva) { if (c.iva.def) v.iva.def = ivaLimpio(c.iva.def); if (c.iva.conceptos) { v.iva.conceptos = {}; Object.entries(c.iva.conceptos).slice(0, 200).forEach(([k, x]) => { k = String(k).trim().slice(0, 120); if (k) v.iva.conceptos[k] = ivaLimpio(x); }); } }
   if (c.pie != null) v.pie = String(c.pie).slice(0, 2000);
+  if (c.vf && ['pruebas', 'real'].includes(c.vf.entorno)) v.vf = Object.assign({}, v.vf, { entorno: c.vf.entorno });
   if (c.pago != null) v.pago = String(c.pago).slice(0, 500);
   if (Array.isArray(c.actividades)) { const L = c.actividades.slice(0, 10).map(actLimpia); if (!L.some(a => a.id === 'principal')) L.unshift(actLimpia({ id: 'principal' }));
     // Logo que no se manda: se queda el que había
@@ -78,7 +79,7 @@ async function guardarSerie(x) { const D = await db();
   const tipo = TIPOS[x.tipo] ? x.tipo : 'simplificada', diseno = DISENOS[x.diseno] ? x.diseno : 'clasico', color = /^#[0-9a-f]{6}$/i.test(x.color || '') ? x.color : null;
   const formato = String(x.formato || '{P}{AAAA}-{N5}').trim(), anual = x.anual !== false, actividad = String(x.actividad || 'principal');
   if (!formatoOk(formato)) throw new Error('El formato tiene que llevar {N} (el número) y solo letras, números, guiones o barras');
-  if (x.id) { const ya = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) usadas from fac_series s where id=$1`, [x.id])).rows[0]; if (!ya) throw new Error('No encuentro esa serie');
+  if (x.id) { const ya = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id and not f.prueba) usadas from fac_series s where id=$1`, [x.id])).rows[0]; if (!ya) throw new Error('No encuentro esa serie');
     // Con facturas ya hechas, el prefijo y el tipo no se tocan (cambiarían números ya emitidos)
     if (ya.usadas && (prefijo !== ya.prefijo || tipo !== ya.tipo || formato !== ya.formato || anual !== ya.anual)) throw new Error('Esta serie ya tiene facturas: no se le puede cambiar el prefijo, el tipo ni el formato del número. Crea una serie nueva.');
     await D.query(`update fac_series set nombre=$2, prefijo=$3, tipo=$4, diseno=$5, color=$6, activa=$7, nota=$8, formato=$9, anual=$10 where id=$1`, [x.id, nombre, prefijo, tipo, diseno, color, x.activa !== false, String(x.nota || '').slice(0, 300), formato, anual]);
@@ -213,7 +214,8 @@ async function desdeCobro(o) {
   const s = completa ? (S.find(x => x.tipo === 'completa') || S[0]) : (S.find(x => x.tipo === 'simplificada') || S[0]);
   if (!s) throw new Error('No hay series');
   const lineas = o.lineas.map(l => Object.assign({ iva: ivaDe(C, l.ivaDe || l.concepto) }, l));
-  return emitir(Object.assign({}, o, { serie: s.id, lineas, prueba: true, codigoFijo: o.holdedNum || '', pagos: Object.assign({ estado: 'pagada', fecha: isoMad() }, o.pagos || {}) }));
+  // o.real: ya sin Holded (día del cambio): factura de verdad con nuestra numeración
+  return emitir(Object.assign({}, o, { serie: s.id, lineas, prueba: !o.real, codigoFijo: o.real ? '' : (o.holdedNum || ''), pagos: Object.assign({ estado: 'pagada', fecha: isoMad() }, o.pagos || {}) }));
 }
 
 async function lista(f) {
@@ -356,6 +358,10 @@ async function estadoPresupuesto(id, estado, factura) { const D = await db(); if
 
 // A quién se ha enviado (email): se ve en el detalle de la factura
 async function marcaEnviada(id, x) { const D = await db(); await D.query(`update fac_facturas set enviada = coalesce(enviada,'[]'::jsonb) || jsonb_build_array(jsonb_build_object('a',$2::text,'por',$3::text,'t',now()))  where id=$1`, [id, String(x.a || '').slice(0, 120), String(x.por || '').slice(0, 40)]); }
+// Con qué se factura: en paralelo con Holded (lo de ahora) o ya solo con el panel (desde el día del cambio)
+async function modo() { const D = await db(); const v = ((await D.query(`select v from fac_config where k='modo'`)).rows[0] || {}).v || {}; return { propio: !!v.propio, desde: v.desde || null, por: v.por || '', envioAuto: !!v.envioAuto }; }
+async function guardarModo(o) { const D = await db(), ya = await modo(); const v = Object.assign({}, ya, o.propio != null ? { propio: !!o.propio, desde: o.propio ? (ya.desde && ya.propio ? ya.desde : new Date().toISOString()) : null, por: String(o.por || '').slice(0, 40) } : {}, o.envioAuto != null ? { envioAuto: !!o.envioAuto } : {});
+  await D.query(`insert into fac_config(k,v) values('modo',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

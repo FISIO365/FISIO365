@@ -104,22 +104,25 @@ async function ingresosHoldedDias(desde, hasta) {
     dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
   // Packs cobrados enteros «con factura por sesión»: cuenta el dinero que entra de verdad, el pack entero el día que se paga;
   // los tickets de cada sesión no son dinero nuevo y no se suman
-  const PS = await packsPorSesion(desde, hasta).catch(e => { console.error('packs por sesión', e.message); return { tickets: new Set(), cobros: [] }; });
+  const PS = await packsPorSesion(desde, hasta).catch(e => { console.error('packs por sesión', e.message); return { tickets: new Set(), cobros: [], filas: new Set() }; });
   PS.tickets.forEach(id => vistos.add(id));
   suma(tk, 1); suma(rn, -1);
   PS.cobros.forEach(c => { dias[c.f] = Math.round(((dias[c.f] || 0) + c.v) * 100) / 100; });
+  // Facturas del panel (desde el día del cambio, ya sin Holded): también son ingresos
+  try { const D = await FACX.db(); (await D.query(`select fecha::text f, total::float v, cobro, cliente from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).rows
+    .forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return; dias[x.f] = Math.round(((dias[x.f] || 0) + x.v) * 100) / 100; }); } catch (e) {}
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
 // Packs «con factura por sesión»: ids de Holded de los tickets de cada sesión y los cobros del pack (día y total)
 async function packsPorSesion(desde, hasta) {
   const T0 = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{POR SESION}`)}`);
   const L = T0.filter(r => nmA((r.fields || {})['ESTADO']) === 'Emitida');
-  const tickets = new Set(), cobros = [];
+  const tickets = new Set(), cobros = [], filas = new Set();
   L.forEach(r => { const F = r.fields || {};
-    if (F['EN PACK']) { if (F['HOLDED ID']) tickets.add(String(F['HOLDED ID'])); return; }
+    if (F['EN PACK']) { if (F['HOLDED ID']) tickets.add(String(F['HOLDED ID'])); filas.add(r.id); return; }
     const f = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), v = Number(F['PACK TOTAL'] || F['TOTAL'] || 0);
     if (f >= desde && f <= hasta && v > 0) cobros.push({ f, v, pac: F['PacienteId'] || '', id: r.id }); });
-  return { tickets, cobros };
+  return { tickets, cobros, filas };
 }
 // Tickets de Holded (hechos fuera del panel) → sesiones pagadas por paciente, para el valor de cada sesión del informe de horas
 let _hCont = { t: 0, v: null };
@@ -2979,11 +2982,13 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   if (!lineas.length) throw new Error('Falta la línea 1 (concepto, nº de sesiones y precio)');
   const notas = String(f[FF.notas] || '').trim();
   if (Math.round(lineas.reduce((t, l) => t + l.uds * l.precio, 0) * 100) <= 0) throw new Error('El total tiene que ser mayor que 0');
+  // Desde el día del cambio, la factura la hace el panel (sin Holded)
+  const MODO = await FACX.modo().catch(() => ({})), propio = !!MODO.propio;
 
   // Fecha: hoy, o la de la fila si es anterior a hoy y no anterior al último ticket emitido
   const isoMad = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
   const hoyIso = isoMad(new Date());
-  const ult = await holded('/sales-receipts?limit=1&sort=-date&approval_status=approved').catch(() => ({}));
+  const ult = propio ? {} : await holded('/sales-receipts?limit=1&sort=-date&approval_status=approved').catch(() => ({}));
   const ultima = (ult.items || [])[0];
   const ultFecha = ultima && ultima.date ? String(ultima.date).slice(0, 10) : '';
   let fecha = hoyIso;
@@ -3009,6 +3014,8 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI'] || ''), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '', sinDni: !pf['DNI'] };
   }
   if (!datos.code && !datos.sinDni) throw new Error('Falta el DNI/NIF de quien recibe la factura');
+  let contactId = null;
+  if (!propio) {
   let contactId = datos.code ? ((await contactoPorDni(datos.code))[0] || {}).id : (await contactosDelPaciente(pacId).catch(() => []))[0];
   if (!contactId) {
     const body = { name: datos.name, type: 'client' }; if (datos.code) body.code = datos.code;
@@ -3017,6 +3024,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     if (datos.address) body.bill_address = { address: datos.address };
     const c = await holdedPost('/contacts', body);
     contactId = c.id;
+  }
   }
 
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
@@ -3031,29 +3039,47 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes && !otras.length ? '' : ' · pago del resto') : ' · pago a cuenta';
     const it = { name: (f[FF_PS] && grupoP !== recId ? `${con} · sesión ${otras.length} de ${nS} del pack` : `${con} · pack de ${nS} sesiones${que}`).slice(0, 150), units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
-  const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
-  const docId = doc.id;
-  if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
-  let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
-  // Si se ha quedado en borrador (sin número), se aprueba para que coja el siguiente número de la serie
-  if (!borradorH && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
-  const borrador = !creado.document_number;
-  const num = creado.document_number || 'Borrador';
-  const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha, [FF.holdedId]: String(docId) };
-  await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
-  if (!borrador) try {
-    const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
-    if (pdf) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
-  } catch (e) {}
-  // Facturación propia: la misma factura con nuestra numeración (en paralelo; si falla, el cobro sigue igual)
-  try { const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
-    await FACX.desdeCobro({ cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
-      lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, holded: String(docId), holdedNum: borrador ? '' : String(num), por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+  let num, borrador;
+  if (propio) {
+    const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
+    const r = await FACX.desdeCobro({ real: true, cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
+      lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+    num = r.codigo; borrador = false;
+    await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha }, typecast: true }) });
+    // El PDF se guarda en la fila (como el de Holded): lo ven la ficha y la app del paciente
+    const base = 'https://' + (process.env.VERCEL_PROJECT_PRODUCTION_URL || 'app.fisioterapia365.com');
+    try { const pr = await fetch(`${base}/api/schedule?action=fac-ver&id=${r.id}&k=${FACX.firma(r.id)}`); if (pr.ok) { const b64 = Buffer.from(await pr.arrayBuffer()).toString('base64');
+      await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: b64, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) }); } } catch (e) {}
     await vfEnviarSuave();
-  } catch (e) { console.log('Facturación propia:', e.message); }
+    // Si está puesto, la factura le llega sola al paciente por email
+    if (MODO.envioAuto && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(datos.email || ''))) try { await fetch(`${base}/api/schedule?action=fac-enviar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pwd: process.env.FISIO_PASSWORD, id: r.id, op: 'email', to: datos.email, yo: quien || '' }) }); } catch (e) {}
+  } else {
+    const doc = await holdedPost('/sales-receipts', { contact_id: contactId, contact_name: datos.name, date: fecha, notes: [fisioTxt, notas, rgpdH].filter(Boolean).join('\n\n\n'), currency: 'EUR', language: 'es', items });
+    const docId = doc.id;
+    if (!docId) throw new Error('Holded no ha devuelto el ticket creado');
+    let creado = await holded('/sales-receipts/' + docId).catch(() => ({}));
+    // Si se ha quedado en borrador (sin número), se aprueba para que coja el siguiente número de la serie
+    if (!borradorH && !creado.document_number) { await holdedPost('/sales-receipts/' + docId + '/approve', {}).catch(() => {}); creado = await holded('/sales-receipts/' + docId).catch(() => creado); }
+    borrador = !creado.document_number;
+    num = creado.document_number || 'Borrador';
+    const campos = { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha, [FF.holdedId]: String(docId) };
+    await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: campos, typecast: true }) });
+    if (!borrador) try {
+      const pdf = await holdedPdf('/sales-receipts/' + docId + '/pdf');
+      if (pdf) await fetch(`https://content.airtable.com/v0/${BASE_ID}/${recId}/${FF.pdf}/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: 'application/pdf', file: pdf, filename: 'Factura_' + String(num).replace(/[^\w-]/g, '_') + '.pdf' }) });
+    } catch (e) {}
+    // Facturación propia: la misma factura con nuestra numeración (en paralelo; si falla, el cobro sigue igual)
+    try { const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
+      await FACX.desdeCobro({ cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
+        lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, holded: String(docId), holdedNum: borrador ? '' : String(num), por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+      await vfEnviarSuave();
+    } catch (e) { console.log('Facturación propia:', e.message); }
+  }
   return { num, borrador, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) - (descuento ? Math.abs(descuento.importe) : 0) };
 }
 
+// Facturas del panel (no las copias de Holded) de un paciente, con la misma forma que las de Holded
+async function propiasDe(pac) { try { const L = await FACX.lista({ paciente: pac }); return L.filter(x => !x.prueba && x.estado === 'emitida').map(x => ({ id: x.id, tipo: 'propia', k: FACX.firma(x.id), numero: x.codigo, borrador: false, fecha: Math.floor(Date.parse(String(x.fecha).slice(0, 10) + 'T12:00:00Z') / 1000), total: Number(x.total), pagada: (x.pagos || {}).estado !== 'pendiente', concepto: '' })); } catch (e) { return []; } }
 async function listarFacturas(ids, conBorradores) {
   let facturas = [];
   // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y, por si acaso, facturas completas
@@ -4329,7 +4355,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     const { rec, k } = req.query;
     if (!process.env.EMITIR_TOKEN || k !== process.env.EMITIR_TOKEN) return res.status(401).send(pagina(false, 'Enlace no válido', 'Este botón no está bien configurado.'));
-    if (!HOLDED_KEY) return res.status(200).send(pagina(false, 'Holded no está conectado', 'Falta añadir la clave de Holded en Vercel.'));
+    if (!HOLDED_KEY && !(await FACX.modo().catch(() => ({}))).propio) return res.status(200).send(pagina(false, 'Holded no está conectado', 'Falta añadir la clave de Holded en Vercel.'));
     if (!/^rec[A-Za-z0-9]{14}$/.test(rec || '')) return res.status(400).send(pagina(false, 'Fila no válida', 'No se ha podido identificar la factura.'));
     // De una en una, para que la numeración salga siempre en orden
     const turno = emitiendo.then(() => emitirFactura(rec));
@@ -7736,7 +7762,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-inicio') { // lo que necesita la sección: ajustes, series y conceptos del panel
         const CF = await conf().catch(() => CONF_DEF);
         return res.status(200).json({ ok: true, config: await FACX.config(), series: await FACX.series(), conceptos: ((CF.listas || {}).conceptos || []).map(c => c.n || c).filter(Boolean),
-          tipos: FACX.TIPOS, disenos: FACX.DISENOS, exenciones: FACX.EXENCIONES, ivas: FACX.TIPOS_IVA });
+          tipos: FACX.TIPOS, disenos: FACX.DISENOS, exenciones: FACX.EXENCIONES, ivas: FACX.TIPOS_IVA, modo: await FACX.modo() });
       }
       if (action === 'fac-config') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, config: await FACX.guardarConfig(q.config || {}) }); }
       if (action === 'fac-serie') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const id = await FACX.guardarSerie(q.serie || {}); return res.status(200).json({ ok: true, id, series: await FACX.series() }); }
@@ -7746,6 +7772,20 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
       }
+      // ── Día del cambio: dejar Holded y facturar solo con el panel ──
+      if (action === 'fac-cambio-datos') { const M = await FACX.modo(), C = await FACX.config(), VFE = require('./_vf_envio');
+        let hol = null; if (HOLDED_KEY) try { const u = ((await holded('/sales-receipts?limit=1&sort=-date&approval_status=approved')).items || [])[0] || (await holded('/sales-receipts?limit=1&sort=-date').catch(() => []))[0]; if (u) hol = { numero: u.document_number || '', fecha: u.date ? (typeof u.date === 'number' ? new Date(u.date * 1000).toISOString().slice(0, 10) : String(u.date).slice(0, 10)) : '' }; } catch (e) {}
+        const S = (await FACX.series()).filter(x => x.activa && (x.actividad || 'principal') === 'principal' && x.tipo === 'simplificada').sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0))[0] || null;
+        // Propuesta para seguir la numeración de Holded: T260415 → prefijo T, {AA}, 4 cifras, siguiente 416
+        let prop = null; const m = hol && String(hol.numero).match(/^([A-Za-z]*)(\d{2})(\d{3,6})$/); if (m) prop = { prefijo: m[1].toUpperCase() || (S ? S.prefijo : 'T'), formato: '{P}{AA}{N' + m[3].length + '}', siguiente: +m[3] + 1, ejemplo: m[1].toUpperCase() + m[2] + String(+m[3] + 1).padStart(m[3].length, '0') };
+        return res.status(200).json({ ok: true, modo: M, holded: hol, serie: S && { id: S.id, nombre: S.nombre, prefijo: S.prefijo, formato: S.formato, proxima: S.proxima, siguiente: S.siguiente, usadas: S.usadas }, propuesta: prop, entorno: C.vf.entorno, vf: await VFE.estado('pruebas') }); }
+      if (action === 'fac-cambio') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (q.propio) { const S = (await FACX.series()).find(x => x.id === q.serie); if (!S) return res.status(200).json({ ok: false, error: 'Elige la serie de los tickets' });
+          if (q.formato || q.siguiente) await FACX.guardarSerie(Object.assign({}, S, { prefijo: q.prefijo || S.prefijo, formato: q.formato || S.formato, siguiente: q.siguiente || '' }));
+          if (q.entorno) await FACX.guardarConfig({ vf: { entorno: q.entorno === 'real' ? 'real' : 'pruebas' } });
+          await FACX.guardarModo({ propio: true, por: q.quien, envioAuto: !!q.envioAuto }); }
+        else await FACX.guardarModo(q.envioAuto != null && q.soloEnvio ? { envioAuto: !!q.envioAuto } : { propio: false, por: q.quien });
+        return res.status(200).json({ ok: true, modo: await FACX.modo() }); }
       // ── VERI*FACTU: certificado y envío a la AEAT ──
       if (/^fac-vf-/.test(action)) { const VFE = require('./_vf_envio'), ent = q.entorno === 'real' ? 'real' : 'pruebas';
         if (action === 'fac-vf-estado') return res.status(200).json({ ok: true, entorno: ent, ...(await VFE.estado(ent)) });
@@ -7945,7 +7985,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       // Sesiones gratis (no van a Holded): se ven en la ficha junto a las facturas
       const gratis = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{MODO DE PAGO}='Gratis')`)}`).catch(() => [])).map(r => { const f = r.fields;
         return { id: r.id, fecha: String(f['FECHA DE COBRO'] || f['FECHA'] || String(r.createdTime).slice(0, 10)).slice(0, 10), lineas: [[f['CONCEPTO 1'], f['Nº SESIONES 1']], [f['CONCEPTO 2'], f['Nº SESIONES 2']]].filter(([c]) => c).map(([c, n]) => ({ c: (c && c.name) || c, n: Number(n) || 1 })), nota: f['NOTAS'] || '' }; }).sort((a, b) => b.fecha.localeCompare(a.fecha));
-      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [] });
+      const propiasF = await propiasDe(pac);
+      if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: propiasF });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
@@ -7957,13 +7998,13 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
-        return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo: saldo2, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas });
+        return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo: saldo2, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas: facturas.concat(propiasF).sort((a, b) => b.fecha - a.fecha) });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: [], error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: propiasF, error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (action === 'facturar-sesion-pack') { // emite la factura de una sesión de un pack cobrado entero «con factura por sesión»
-      if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado.' });
+      if (!HOLDED_KEY && !(await FACX.modo().catch(() => ({}))).propio) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado.' });
       if (!/^rec[A-Za-z0-9]{14}$/.test(q.grupo || '')) return res.status(400).json({ ok: false });
       if (!q.dobleOk) { const fD = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); const prev = await facturasSesionDia(pac, fD).catch(() => []);
         if (prev.length) return res.status(200).json({ ok: false, doble: true, previas: prev, fechaTxt: fechaTxtCorta(fD), error: 'Ya hay una factura con sesiones de ese día' }); }
@@ -7975,7 +8016,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       const x = await at(`${FACTURAS_TABLE}/${q.facturaId}`); if (x.error || (x.fields || {})['PacienteId'] !== pac) return res.status(404).json({ ok: false });
       const d = await at(`${FACTURAS_TABLE}/${q.facturaId}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'EN PACK': !!q.enPack } }) }); global._sesPac = {};
       return res.status(200).json({ ok: !d.error }); }
-    if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
+    if (!HOLDED_KEY && !(await FACX.modo().catch(() => ({}))).propio) return res.status(200).json({ ok: false, error: 'Holded todavía no está conectado (falta la clave en Vercel).' });
     let lineas = (Array.isArray(q.lineas) ? q.lineas : []).slice(0, 2);
     // Pack pagado en partes: cada pago es su propio ticket (lo que entra ese día) y queda unido al pack.
     // El primero lleva las sesiones del pack (cuentan desde ya); los siguientes solo el importe.
@@ -8289,7 +8330,12 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
   if (action === 'facturas') {
     const id = req.query.id;
     if (!/^rec[A-Za-z0-9]{14}$/.test(patientId || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
-  if (!HOLDED_KEY) return res.status(200).json({ ok: false, sinConfigurar: true, facturas: [] });
+    // Las del panel (desde el día del cambio): PDF propio
+    if (/^fac[0-9a-f]{16}$/.test(id || '')) { try { const F = await FACX.una(id); if (!F || F.paciente !== patientId || F.prueba) return res.status(403).json({ ok: false, error: 'No autorizado' });
+        const pr = await fetch(`https://${req.headers.host}/api/schedule?action=fac-ver&id=${id}&k=${FACX.firma(id)}`); if (!pr.ok) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
+        return res.status(200).json({ ok: true, nombre: 'Factura_' + String(F.codigo).replace(/[^\w-]/g, '_') + '.pdf', pdf: Buffer.from(await pr.arrayBuffer()).toString('base64') }); } catch (e) { return res.status(500).json({ ok: false, error: 'No se ha podido' }); } }
+    const propias = await propiasDe(patientId);
+    if (!HOLDED_KEY) return res.status(200).json({ ok: true, facturas: propias });
     try {
       const ids = await contactosDelPaciente(patientId);
       if (id) {
@@ -8301,7 +8347,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         if (!pdf) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
         return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.document_number || id).replace(/[^\w-]/g, '_') + '.pdf', pdf });
       }
-      const facturas = await listarFacturas(ids);
+      const facturas = (await listarFacturas(ids)).concat(propias).sort((a, b) => b.fecha - a.fecha);
       return res.status(200).json({ ok: true, facturas });
     } catch (e) {
       return res.status(500).json({ ok: false, error: 'No se han podido cargar las facturas' });
