@@ -2825,6 +2825,7 @@ const CONF_DEF = {
 };
 async function conf() { const g = await ajuste('config', null) || {}; const o = {};
   // Una vez: «Stripe» como forma de pago (cobros por el enlace de pago y talleres); luego se puede quitar en Ajustes
+  if (!g._conceptosLimpios) { g._conceptosLimpios = 1; if (g.listas && Array.isArray(g.listas.conceptos)) g.listas.conceptos = g.listas.conceptos.filter(c => !/^(otros|pago parcial)/i.test(String((c && c.n) || ''))); await guardarAjuste('config', g, 'Sistema').catch(() => {}); }
   if (!g._stripePago) { g._stripePago = 1; if (g.listas && Array.isArray(g.listas.pagos) && !g.listas.pagos.includes('Stripe')) g.listas.pagos.push('Stripe'); await guardarAjuste('config', g, 'Sistema').catch(() => {}); } Object.keys(CONF_DEF).forEach(k => { o[k] = Object.assign({}, CONF_DEF[k], g[k] || {}); }); o.listas = Object.assign({}, CONF_DEF.listas, (g.listas || {})); if (o.app && Array.isArray(o.app.promos)) o.app = Object.assign({}, o.app, { promos: o.app.promos.map(p => p && /tally\.so\/r\/WOVB0N/.test(String(p.accion || '')) ? Object.assign({}, p, { accion: 'https://app.fisioterapia365.com/regalo' }) : p) }); return o; }
 // Check-list: la guardada en Administración (los puntos de siempre conservan su comprobación automática)
 async function checklistTodos() {
