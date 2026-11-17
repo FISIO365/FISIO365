@@ -31,6 +31,10 @@ const holdedPdf = async path => {
   if (!r.ok) throw await holdedErr(r, path);
   return Buffer.from(await r.arrayBuffer()).toString('base64');
 };
+// Cualquier respuesta de Holded tal cual (para adjuntos: puede ser el archivo o un JSON)
+const holdedRaw = async path => { const r = await fetch(HOLDED_URL + path, { headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: '*/*' } });
+  if (!r.ok) throw await holdedErr(r, path); const tipo = String(r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase(), buf = Buffer.from(await r.arrayBuffer());
+  let json = null; if (/json/.test(tipo)) { try { json = JSON.parse(buf.toString('utf8')); } catch (e) {} } return { tipo, buf, json }; };
 // Listado con páginas (cursor)
 const holdedTodos = async (path, max = 20) => {
   let out = [], cursor = null;
@@ -7823,11 +7827,12 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       }
       // ── Traer de Holded: lo de antes (ventas, compras y clientes) y los movimientos de los bancos conectados allí ──
       if (/^fac-holded-/.test(action)) { if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
-        const HI = require('./_holded_import'), Hh = { holded, holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }, es = f => /^\d{4}-\d{2}-\d{2}$/.test(String(f || ''));
+        const HI = require('./_holded_import'), Hh = { holded, holdedRaw, holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }, es = f => /^\d{4}-\d{2}-\d{2}$/.test(String(f || ''));
         if (action === 'fac-holded-previa') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' }); return res.status(200).json({ ok: true, ...(await HI.previa(Hh, q.desde, q.hasta)) }); }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'fac-holded-traer') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' });
           const r = await HI.traer(Hh, q.desde, q.hasta, q.mapa || {}, q.compras !== false); if (q.clientes) r.clientes = await HI.clientes(Hh); return res.status(200).json({ ok: true, ...r }); }
+        if (action === 'fac-holded-archivos') return res.status(200).json({ ok: true, ...(await HI.archivos(Hh, 20)) });
         if (action === 'fac-holded-bancos') return res.status(200).json({ ok: true, cuentas: await HI.bancos(Hh) });
         return res.status(400).json({ ok: false }); }
       // ── Día del cambio: dejar Holded y facturar solo con el panel ──

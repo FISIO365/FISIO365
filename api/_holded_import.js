@@ -100,4 +100,30 @@ async function bancos(h) {
     const movs = mv.map(m => ({ fecha: h.fechaMov(m), concepto: h.textoMov(m), importe: h.importeMov(m), saldo: null })).filter(m => m.fecha && m.importe);
     const r = await GX.importar(cta.id, movs); out.push(Object.assign({ cuenta: cta.nombre }, r)); }
   return out; }
-module.exports = { previa, traer, clientes, bancos, prefijo };
+// Los archivos (PDF o foto) de las compras traídas: Holded los guarda como adjuntos de cada compra.
+// Va por tandas (cada llamada hace unas cuantas) y dice cuántas quedan. Si una compra no tiene adjunto, se marca para no volver a mirarla.
+const TIPOS = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/;
+const tipoNom = n => /\.pdf$/i.test(n) ? 'application/pdf' : /\.jpe?g$/i.test(n) ? 'image/jpeg' : /\.png$/i.test(n) ? 'image/png' : /\.webp$/i.test(n) ? 'image/webp' : '';
+async function adjuntoDe(h, pid) {
+  const L0 = await h.holdedRaw(`/purchases/${pid}/attachments`), j = L0.json;
+  const L = Array.isArray(j) ? j : (j && (j.items || j.data || j.attachments)) || [];
+  for (const a of L) { const nom = String((typeof a === 'string' ? a : a.name || a.filename || a.fileName || a.file_name) || 'factura'), aid = typeof a === 'string' ? a : a.id || a._id || a.attachment_id || nom;
+    let tipo = String((a && (a.content_type || a.contentType || a.mime_type || a.type)) || '').toLowerCase(); if (!TIPOS.test(tipo)) tipo = tipoNom(nom); if (!tipo) continue;
+    const r = await h.holdedRaw(`/purchases/${pid}/attachments/${encodeURIComponent(aid)}`);
+    let buf = null;
+    if (r.json) { const x = r.json.data || r.json; const b = x.content || x.base64 || x.file || x.data; if (typeof b === 'string' && b.length > 100) buf = Buffer.from(b.replace(/^data:[^,]+,/, ''), 'base64');
+      else if (typeof (x.url || x.download_url) === 'string') { const d = await fetch(x.url || x.download_url); if (d.ok) buf = Buffer.from(await d.arrayBuffer()); } }
+    else if (r.buf.length) { buf = r.buf; if (TIPOS.test(r.tipo)) tipo = r.tipo; }
+    if (buf && buf.length > 200) return { buf, tipo, nom }; }
+  return null; }
+async function archivos(h, max) { const D = await GX.db(), t0 = Date.now(); await D.query(`alter table fac_gastos add column if not exists holded_sin boolean not null default false`);
+  const L = (await D.query(`select id, holded from fac_gastos where holded is not null and archivo is null and not holded_sin order by fecha desc limit $1`, [max || 20])).rows;
+  let ok = 0, sin = 0, err = null;
+  for (const g of L) { if (Date.now() - t0 > 45000) break;
+    try { const a = await adjuntoDe(h, g.holded);
+      if (!a || a.buf.length > 4.2e6) { await D.query(`update fac_gastos set holded_sin=true where id=$1`, [g.id]); sin++; continue; }
+      const arch = await GX.subirArchivo(a.buf.toString('base64'), a.nom, a.tipo); await D.query(`update fac_gastos set archivo=$2 where id=$1`, [g.id, arch]); ok++; }
+    catch (e) { err = err || e.message.slice(0, 160); if (/40[134]/.test(e.message) && !ok) break; } }
+  const quedan = +(await D.query(`select count(*) n from fac_gastos where holded is not null and archivo is null and not holded_sin`)).rows[0].n;
+  return { traidos: ok, sinArchivo: sin, quedan, error: err }; }
+module.exports = { previa, traer, clientes, bancos, prefijo, archivos };
