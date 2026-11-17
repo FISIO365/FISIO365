@@ -2981,6 +2981,26 @@ async function facturarSesionPack(pac, grupo, fecha, quien, fisioSel) {
   try { const x = await turno; return Object.assign({ k: ya.length + 1, n, importe: imp }, x); }
   catch (e) { await at(`${FACTURAS_TABLE}/${rec}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Error' }, typecast: true }) }).catch(() => {}); throw e; }
 }
+// El contacto de Holded de quien recibe el ticket (lo busca por DNI o, sin DNI, por el paciente; si no está, lo crea)
+async function contactoHolded(datos, pacId) {
+  let contactId = datos.code ? ((await contactoPorDni(datos.code))[0] || {}).id : (await contactosDelPaciente(pacId).catch(() => []))[0];
+  if (!contactId) { const body = { name: datos.name, type: 'client' }; if (datos.code) body.code = datos.code;
+    if (datos.email) body.email = datos.email; if (datos.mobile) body.mobile = datos.mobile; if (datos.address) body.bill_address = { address: datos.address };
+    const c = await holdedPost('/contacts', body); contactId = c.id; }
+  return contactId; }
+// Arreglo: tickets de Holded hechos desde el panel que se quedaron sin cliente (fallo del 17/11 por la tarde): se les pone su cliente
+async function repararSinCliente(desde) { const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{HOLDED ID}!='',IS_AFTER({FECHA DE COBRO},DATETIME_PARSE('${desde}','YYYY-MM-DD')))`)}&returnFieldsByFieldId=true`).catch(() => []);
+  const out = { mirados: 0, arreglados: 0, errores: [] };
+  for (const r of filas.slice(0, 60)) { const f = r.fields, hid = String(f[FF.holdedId] || ''); if (!/^[a-f0-9]{24}$/i.test(hid)) continue; out.mirados++;
+    try { const d = await holded('/sales-receipts/' + hid).catch(() => null); if (!d || d.contact_id) continue;
+      const pacId = (f[FF.paciente] || [])[0]; let datos;
+      if (String(f[FF.aNombre] || '').trim()) datos = { name: String(f[FF.aNombre]).trim(), code: normDni(f[FF.aNif]), address: String(f[FF.aDir] || '').trim() };
+      else { const pf = ((await at(`${PACIENTES}/${pacId}`)).fields) || {}; datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI'] || ''), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '' }; }
+      const cid = await contactoHolded(datos, pacId); if (!cid) continue;
+      const rr = await fetch(HOLDED_URL + '/sales-receipts/' + hid, { method: 'PUT', headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ contact_id: cid, contact_name: datos.name }) });
+      if (!rr.ok) { out.errores.push((f[FF.num] || hid) + ': ' + (await rr.text().catch(() => '')).slice(0, 120)); continue; }
+      out.arreglados++; } catch (e) { out.errores.push(e.message.slice(0, 120)); } }
+  return out; }
 async function emitirFactura(recId, quien, fisioSel, descuento) {
   const CF = await conf().catch(() => CONF_DEF), borradorH = CF.holded.borrador !== false, rgpdH = String(CF.holded.rgpd || TEXTO_RGPD);
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
@@ -3032,18 +3052,9 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     datos = { name: String(pf['FULL NAME'] || '').trim(), code: normDni(pf['DNI'] || ''), email: pf['EMAIL'] || '', mobile: pf['WHATSAPP'] || pf['TELF'] || '', sinDni: !pf['DNI'] };
   }
   if (!datos.code && !datos.sinDni) throw new Error('Falta el DNI/NIF de quien recibe la factura');
-  let contactId = null;
-  if (!propio) {
-  let contactId = datos.code ? ((await contactoPorDni(datos.code))[0] || {}).id : (await contactosDelPaciente(pacId).catch(() => []))[0];
-  if (!contactId) {
-    const body = { name: datos.name, type: 'client' }; if (datos.code) body.code = datos.code;
-    if (datos.email) body.email = datos.email;
-    if (datos.mobile) body.mobile = datos.mobile;
-    if (datos.address) body.bill_address = { address: datos.address };
-    const c = await holdedPost('/contacts', body);
-    contactId = c.id;
-  }
-  }
+  // (Ojo: sin «let» dentro, que si no el ticket de Holded se queda sin cliente)
+  const contactId = propio ? null : await contactoHolded(datos, pacId);
+  if (!propio && !contactId) throw new Error('No se ha podido crear el cliente en Holded');
 
   const fisioTxt = await fisioDelPaciente(pacId, quien, fisioSel).catch(() => '');
   let conPack = '';
@@ -7736,6 +7747,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      // Tickets de Holded que se quedaron sin cliente el 17/11 por la tarde: se les pone (una vez) y se avisa a dirección
+      if (HOLDED_KEY) await FACX.unaVez('holded-sin-cliente-1711', async () => { const x = await repararSinCliente('2026-11-16');
+        await pagoAvisar(null, x.errores.length ? '⚠️ Tickets de Holded sin cliente' : '✅ Tickets de Holded arreglados', `${x.arreglados} ticket${x.arreglados === 1 ? '' : 's'} de hoy ya tienen su cliente en Holded.${x.errores.length ? ' No se han podido: ' + x.errores.join(' · ').slice(0, 300) : ''}`, 'holded-sin-cliente'); }).catch(e => console.log('sin cliente', e.message));
       // Facturas hechas a mano antes de unirlas a la ficha: se buscan sus pacientes (una vez)
       await FACX.unaVez('fac-mano-paciente', async () => { const D0 = await FACX.db(); const L = (await D0.query(`select id, cliente from fac_facturas where paciente is null and not prueba and actividad='principal' and coalesce(por,'')<>'Holded (traída)' limit 300`)).rows;
         for (const f of L) { const p = await pacDeCliente(f.cliente).catch(() => null); if (p) await D0.query(`update fac_facturas set paciente=$2 where id=$1`, [f.id, p]); } }).catch(e => console.log('fac-mano-paciente', e.message));
@@ -8043,6 +8057,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         await vfEnviarSuave();
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) });
       }
+      if (action === 'fac-sin-cliente') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, ...(await repararSinCliente(String(q.desde || '2026-11-16'))) }); }
       if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas
         const dia = /^\d{4}-\d{2}-\d{2}$/.test(q.dia || '') ? q.dia : FACX.isoMad();
         const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
