@@ -7087,6 +7087,16 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         await guardarAjuste('carpetas-' + q.id, { c, de }, q.quien || '');
         return res.status(200).json({ ok: true, carpetas: { c, de } });
       }
+      if (action === 'seg-ficha-archivo-borrar') { // quitar un archivo de su ficha (y de su carpeta, si estaba en una)
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !/^att[A-Za-z0-9]{14}$/.test(q.att || '')) return res.status(400).json({ ok: false });
+        const pac = await at(`${PACIENTES}/${q.id}`); if (pac.error) return res.status(404).json({ ok: false, error: 'No se encuentra el paciente' });
+        const L = (pac.fields && pac.fields['DOCUS']) || [], resto = L.filter(a => a.id !== q.att);
+        if (resto.length === L.length) return res.status(200).json({ ok: true });
+        const d = await at(`${PACIENTES}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { DOCUS: resto.map(a => ({ id: a.id })) } }) });
+        if (d.error) return res.status(200).json({ ok: false, error: d.error.message || 'No se ha podido borrar' });
+        const C = await ajuste('carpetas-' + q.id, null); if (C && C.de && C.de[q.att]) { delete C.de[q.att]; await guardarAjuste('carpetas-' + q.id, C, q.quien || '').catch(() => {}); }
+        return res.status(200).json({ ok: true });
+      }
       if (action === 'seg-ficha-archivo') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !q.file) return res.status(400).json({ ok: false, error: 'Falta el archivo' });
         const r = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${q.id}/fldTMnwMj4c1C2835/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: String(q.tipo || 'application/octet-stream'), file: String(q.file), filename: String(q.nombre || 'archivo').slice(0, 120) }) });
