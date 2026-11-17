@@ -1,0 +1,183 @@
+// ── Facturación propia del panel (fase 1: en paralelo con Holded) ──
+// Tablas propias en Postgres (no pasan por la capa de Airtable): numeración correlativa sin huecos por serie y año,
+// facturas inmutables una vez emitidas, IVA por línea, series con su diseño. Más adelante: VeriFactu (huella, QR y envío a la AEAT).
+const crypto = require('crypto');
+const PG = require('./_pg');
+
+const SQL = `
+create table if not exists fac_config (k text primary key, v jsonb not null default '{}'::jsonb, modificado timestamptz not null default now());
+create table if not exists fac_series (id text primary key, nombre text not null, prefijo text not null unique, tipo text not null default 'simplificada', diseno text not null default 'clasico', color text, activa boolean not null default true, auto boolean not null default false, nota text, orden int not null default 0, creado timestamptz not null default now());
+create table if not exists fac_contadores (serie text not null, anio int not null, n bigint not null default 0, primary key (serie, anio));
+create table if not exists fac_facturas (id text primary key, serie text not null, anio int not null, numero bigint not null, codigo text not null unique, tipo text not null, fecha date not null, emitida timestamptz not null default now(), emisor jsonb not null, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, paciente text, fisio text, cobro text, holded text, holded_num text, pagos jsonb, nota text, rectifica text, motivo text, estado text not null default 'emitida', diseno text, por text, vf jsonb, unique (serie, anio, numero))
+`;
+const ini = { p: null };
+async function db() {
+  if (!PG.ACTIVO || !PG.db) throw new Error('La facturación necesita la base de datos propia');
+  if (!ini.p) ini.p = (async () => { for (const s of SQL.split(/;\s*\n/).map(x => x.trim()).filter(Boolean)) await PG.db().query(s); await sembrar(); })().catch(e => { ini.p = null; throw e; });
+  await ini.p; return PG.db();
+}
+
+// ── Configuración ──
+// IVA: cada concepto con su tipo (0, 4, 10, 21) y, si es 0, el motivo (exenta por ser sanitaria, etc.)
+const EXENCIONES = { E1: 'Operación exenta de IVA (art. 20.Uno.3º de la Ley 37/1992 del IVA: asistencia sanitaria)', E6: 'Operación exenta de IVA', NS: 'Operación no sujeta a IVA' };
+const CONF_DEF = {
+  emisor: { razon: '', nif: '', direccion: '', cp: '', ciudad: '', provincia: '', pais: 'España', email: '', tel: '', web: '' },
+  iva: { def: { tipo: 0, exencion: 'E1' }, conceptos: {} }, // conceptos: { 'Sesión de fisioterapia': { tipo: 0, exencion: 'E1' }, 'Venta de material': { tipo: 21 } }
+  pie: '', // texto al pie (protección de datos)
+  pago: '' // texto de forma de pago para completas (IBAN…)
+};
+async function config() { const D = await db(); const r = await D.query(`select v from fac_config where k='config'`); const g = (r.rows[0] || {}).v || {};
+  return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '' }; }
+async function guardarConfig(c) { const D = await db(); const v = await config();
+  if (c.emisor) Object.keys(CONF_DEF.emisor).forEach(k => { if (c.emisor[k] != null) v.emisor[k] = String(c.emisor[k]).trim().slice(0, 200); });
+  if (c.iva) { if (c.iva.def) v.iva.def = ivaLimpio(c.iva.def); if (c.iva.conceptos) { v.iva.conceptos = {}; Object.entries(c.iva.conceptos).slice(0, 200).forEach(([k, x]) => { k = String(k).trim().slice(0, 120); if (k) v.iva.conceptos[k] = ivaLimpio(x); }); } }
+  if (c.pie != null) v.pie = String(c.pie).slice(0, 2000);
+  if (c.pago != null) v.pago = String(c.pago).slice(0, 500);
+  await D.query(`insert into fac_config(k,v,modificado) values('config',$1,now()) on conflict (k) do update set v=excluded.v, modificado=now()`, [v]); return v; }
+const TIPOS_IVA = [0, 4, 10, 21];
+function ivaLimpio(x) { x = x || {}; const t = Number(x.tipo); const tipo = TIPOS_IVA.includes(t) ? t : 0; return tipo ? { tipo } : { tipo: 0, exencion: EXENCIONES[x.exencion] ? x.exencion : 'E1' }; }
+const ivaDe = (C, concepto) => ivaLimpio(C.iva.conceptos[concepto] || C.iva.def);
+
+// ── Series ──
+const TIPOS = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' };
+const DISENOS = { clasico: 'Clásico', moderno: 'Moderno', minimal: 'Minimal' };
+async function sembrar() { const D = PG.db(); const r = await D.query(`select count(*)::int n from fac_series`); if (r.rows[0].n) return;
+  await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,auto,orden) values ('S','Tickets (simplificadas)','T','simplificada','clasico',true,1),('F','Facturas completas','F','completa','clasico',false,2),('R','Rectificativas','R','rectificativa','clasico',false,3) on conflict do nothing`); }
+async function series() { const D = await db(); return (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) as usadas from fac_series s order by orden, creado`)).rows; }
+async function guardarSerie(x) { const D = await db();
+  const nombre = String(x.nombre || '').trim().slice(0, 60), prefijo = String(x.prefijo || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10);
+  if (!nombre || !prefijo) throw new Error('Pon el nombre y el prefijo de la serie');
+  const tipo = TIPOS[x.tipo] ? x.tipo : 'simplificada', diseno = DISENOS[x.diseno] ? x.diseno : 'clasico', color = /^#[0-9a-f]{6}$/i.test(x.color || '') ? x.color : null;
+  if (x.id) { const ya = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) usadas from fac_series s where id=$1`, [x.id])).rows[0]; if (!ya) throw new Error('No encuentro esa serie');
+    // Con facturas ya hechas, el prefijo y el tipo no se tocan (cambiarían números ya emitidos)
+    if (ya.usadas && (prefijo !== ya.prefijo || tipo !== ya.tipo)) throw new Error('Esta serie ya tiene facturas: no se le puede cambiar el prefijo ni el tipo. Crea una serie nueva.');
+    await D.query(`update fac_series set nombre=$2, prefijo=$3, tipo=$4, diseno=$5, color=$6, activa=$7, nota=$8 where id=$1`, [x.id, nombre, prefijo, tipo, diseno, color, x.activa !== false, String(x.nota || '').slice(0, 300)]);
+  } else { const id = 'S' + crypto.randomBytes(5).toString('hex');
+    await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,color,nota,orden) values($1,$2,$3,$4,$5,$6,$7,(select coalesce(max(orden),0)+1 from fac_series))`, [id, nombre, prefijo, tipo, diseno, color, String(x.nota || '').slice(0, 300)]).catch(e => { if (/unique/i.test(e.message)) throw new Error('Ya hay una serie con ese prefijo'); throw e; }); x.id = id; }
+  // Serie de los cobros del panel: solo una (simplificada o completa)
+  if (x.auto) await D.query(`update fac_series set auto=(id=$1)`, [x.id]);
+  return x.id; }
+
+// ── Importes ──
+const r2 = x => Math.round((Number(x) || 0) * 100) / 100;
+function calcular(lineas) {
+  const L = (lineas || []).map(l => { const uds = Number(String(l.uds ?? 1).replace(',', '.')), precio = Number(String(l.precio ?? 0).replace(',', '.')), dto = Math.min(100, Math.max(0, Number(l.dto) || 0)), iva = ivaLimpio(l.iva || { tipo: l.tipo, exencion: l.exencion });
+    return { concepto: String(l.concepto || '').trim().slice(0, 200), detalle: String(l.detalle || '').trim().slice(0, 500), uds: isFinite(uds) ? uds : 0, precio: isFinite(precio) ? r2(precio * 10000) / 10000 : 0, dto, iva, base: r2(uds * precio * (1 - dto / 100)) }; })
+    .filter(l => l.concepto && l.uds);
+  const G = {}; L.forEach(l => { const k = l.iva.tipo ? 'T' + l.iva.tipo : 'E-' + l.iva.exencion; (G[k] = G[k] || { tipo: l.iva.tipo, exencion: l.iva.exencion || null, base: 0, cuota: 0 }).base = r2(G[k].base + l.base); });
+  Object.values(G).forEach(g => { g.cuota = r2(g.base * g.tipo / 100); });
+  const base = r2(L.reduce((t, l) => t + l.base, 0)), cuota = r2(Object.values(G).reduce((t, g) => t + g.cuota, 0));
+  return { lineas: L, impuestos: Object.values(G).sort((a, b) => b.tipo - a.tipo), base, cuota, total: r2(base + cuota) };
+}
+
+// ── Emitir: número siguiente de su serie (bloqueando la serie) y factura cerrada ──
+const isoMad = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d || new Date());
+async function emitir(o) {
+  const D = await db(), C = await config();
+  const c = calcular(o.lineas);
+  if (!c.lineas.length) throw new Error('La factura necesita al menos una línea');
+  const hoy = isoMad(), fecha = /^\d{4}-\d{2}-\d{2}$/.test(o.fecha || '') ? o.fecha : hoy;
+  if (fecha > hoy) throw new Error('La fecha no puede ser futura');
+  const cli = { nombre: String((o.cliente || {}).nombre || '').trim().slice(0, 200), nif: String((o.cliente || {}).nif || '').trim().toUpperCase().slice(0, 30), direccion: String((o.cliente || {}).direccion || '').trim().slice(0, 300), cp: String((o.cliente || {}).cp || '').trim().slice(0, 10), ciudad: String((o.cliente || {}).ciudad || '').trim().slice(0, 80), provincia: String((o.cliente || {}).provincia || '').trim().slice(0, 80), pais: String((o.cliente || {}).pais || '').trim().slice(0, 60), email: String((o.cliente || {}).email || '').trim().slice(0, 120) };
+  return D.tx(async q => {
+    const s = (await q.query(`select * from fac_series where id=$1 for update`, [o.serie])).rows[0];
+    if (!s) throw new Error('Elige una serie');
+    if (!s.activa) throw new Error('Esa serie está desactivada');
+    if (s.tipo === 'completa' && (!cli.nombre || !cli.nif || !cli.direccion)) throw new Error('La factura completa necesita nombre, NIF y dirección de quien la recibe');
+    if (s.tipo === 'rectificativa' && !o.rectifica) throw new Error('Una rectificativa tiene que decir qué factura corrige');
+    if (s.tipo === 'simplificada' && c.total > 3000) throw new Error('Una factura simplificada no puede pasar de 3.000 €: usa una serie de facturas completas');
+    const anio = +fecha.slice(0, 4);
+    // Las fechas van en orden dentro de la serie: no puede ir antes que la última emitida
+    const ult = (await q.query(`select max(fecha)::text f from fac_facturas where serie=$1 and anio=$2`, [s.id, anio])).rows[0].f;
+    if (ult && fecha < ult) throw new Error(`La fecha es anterior a la última factura de la serie (${ult.split('-').reverse().join('/')})`);
+    const n = (await q.query(`insert into fac_contadores(serie,anio,n) values($1,$2,1) on conflict (serie,anio) do update set n=fac_contadores.n+1 returning n`, [s.id, anio])).rows[0].n;
+    const codigo = `${s.prefijo}${anio}-${String(n).padStart(5, '0')}`, id = 'fac' + crypto.randomBytes(8).toString('hex');
+    const emisor = Object.assign({}, C.emisor);
+    await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,rectifica,motivo,diseno,por)
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
+      [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null]);
+    return { id, codigo, total: c.total };
+  });
+}
+
+// Desde un cobro del panel (lo que ya va a Holded): misma factura con nuestra numeración. Si ya existe, no repite.
+async function desdeCobro(o) {
+  const D = await db();
+  if (o.cobro) { const ya = (await D.query(`select id, codigo from fac_facturas where cobro=$1 and estado='emitida' limit 1`, [o.cobro])).rows[0]; if (ya) return ya; }
+  const C = await config();
+  const completa = !!(o.cliente && o.cliente.nif && o.cliente.direccion && o.otro);
+  const S = (await D.query(`select id, tipo from fac_series where activa order by auto desc, orden`)).rows;
+  const s = completa ? (S.find(x => x.tipo === 'completa') || S[0]) : (S.find(x => x.tipo === 'simplificada') || S[0]);
+  if (!s) throw new Error('No hay series');
+  const lineas = o.lineas.map(l => Object.assign({ iva: ivaDe(C, l.ivaDe || l.concepto) }, l));
+  return emitir(Object.assign({}, o, { serie: s.id, lineas }));
+}
+
+async function lista(f) {
+  const D = await db(); const w = [], p = [];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f.desde || '')) { p.push(f.desde); w.push(`fecha>=$${p.length}`); }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f.hasta || '')) { p.push(f.hasta); w.push(`fecha<=$${p.length}`); }
+  if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
+  if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
+  if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
+}
+async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0]; return r || null; }
+
+// Enlace firmado para ver una factura (el paciente desde su app, o compartirla)
+const firma = (id) => crypto.createHmac('sha256', String(process.env.FISIO_PASSWORD || process.env.MIGRAR_KEY || 'f365')).update('fac:' + id).digest('base64url').slice(0, 22);
+
+// ── Diseños: HTML listo para imprimir o guardar en PDF (A4) ──
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const eur = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const fechaL = f => { const [a, m, d] = String(f).slice(0, 10).split('-'); return `${+d}/${+m}/${a}`; };
+const num = n => (Number(n) || 0).toLocaleString('es-ES', { maximumFractionDigits: 4 });
+function html(F, o) {
+  o = o || {}; const E = F.emisor || {}, Cl = F.cliente || {}, L = F.lineas || [], I = F.impuestos || [], col = F.serie_color || o.color || '#c2552e', d = F.diseno || 'clasico';
+  const titulo = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' }[F.tipo] || 'Factura';
+  const exentas = [...new Set(L.filter(l => !l.iva.tipo).map(l => EXENCIONES[l.iva.exencion] || EXENCIONES.E1))];
+  const dirE = [E.direccion, [E.cp, E.ciudad].filter(Boolean).join(' '), E.provincia].filter(Boolean).join(' · ');
+  const dirC = [Cl.direccion, [Cl.cp, Cl.ciudad].filter(Boolean).join(' '), Cl.provincia, Cl.pais && Cl.pais !== 'España' ? Cl.pais : ''].filter(Boolean).join(' · ');
+  const conDto = L.some(l => l.dto), conIva = L.some(l => l.iva.tipo);
+  const filas = L.map(l => `<tr><td><b>${esc(l.concepto)}</b>${l.detalle ? `<small>${esc(l.detalle)}</small>` : ''}</td><td class="n">${num(l.uds)}</td><td class="n">${eur(l.precio)}</td>${conDto ? `<td class="n">${l.dto ? num(l.dto) + ' %' : ''}</td>` : ''}<td class="n">${l.iva.tipo ? l.iva.tipo + ' %' : 'Exenta'}</td><td class="n">${eur(l.base)}</td></tr>`).join('');
+  const imp = I.map(g => `<div class="tl"><span>${g.tipo ? `Base ${g.tipo} %` : 'Base exenta'}</span><b>${eur(g.base)}</b></div>${g.tipo ? `<div class="tl"><span>IVA ${g.tipo} %</span><b>${eur(g.cuota)}</b></div>` : ''}`).join('');
+  const logo = o.logo ? `<img class="logo" src="${esc(o.logo)}" alt="">` : `<div class="marca">${esc(o.marca || E.razon || '')}</div>`;
+  const emisorB = `<div class="emi">${logo}<div class="emi-t"><b>${esc(E.razon)}</b>${E.nif ? `<span>NIF ${esc(E.nif)}</span>` : ''}${dirE ? `<span>${esc(dirE)}</span>` : ''}${[E.tel, E.email, E.web].filter(Boolean).length ? `<span>${esc([E.tel, E.email, E.web].filter(Boolean).join(' · '))}</span>` : ''}</div></div>`;
+  const clienteB = Cl.nombre ? `<div class="cli"><small>${F.tipo === 'simplificada' ? 'Cliente' : 'Facturar a'}</small><b>${esc(Cl.nombre)}</b>${Cl.nif ? `<span>NIF/DNI ${esc(Cl.nif)}</span>` : ''}${dirC ? `<span>${esc(dirC)}</span>` : ''}${Cl.email ? `<span>${esc(Cl.email)}</span>` : ''}</div>` : '';
+  const datosB = `<div class="dat"><div><small>Nº</small><b>${esc(F.codigo)}</b></div><div><small>Fecha</small><b>${fechaL(F.fecha)}</b></div>${F.rectifica_codigo ? `<div><small>Rectifica a</small><b>${esc(F.rectifica_codigo)}</b></div>` : ''}</div>`;
+  const pie = [F.fisio ? esc(F.fisio) : '', F.nota ? esc(F.nota).replace(/\n/g, '<br>') : '', F.motivo ? 'Motivo de la rectificación: ' + esc(F.motivo) : '', ...exentas.map(esc), F.tipo === 'completa' && o.pago ? esc(o.pago) : ''].filter(Boolean).map(x => `<p>${x}</p>`).join('');
+  const anul = F.estado === 'anulada' ? '<div class="anul">ANULADA</div>' : '';
+  const css = `@page{size:A4;margin:0}*{box-sizing:border-box;margin:0}body{font-family:Poppins,Helvetica,Arial,sans-serif;color:#1f1a17;font-size:12.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#e9e5e1}
+.hoja{width:210mm;min-height:297mm;margin:20px auto;background:#fff;padding:18mm 17mm 16mm;position:relative;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.08)}
+@media print{body{background:#fff}.hoja{margin:0;box-shadow:none}.bar{display:none}}
+.bar{position:sticky;top:0;display:flex;justify-content:center;gap:10px;padding:12px;background:rgba(233,229,225,.92);backdrop-filter:blur(6px);z-index:2}.bar button{font:600 13px Poppins,sans-serif;border:0;border-radius:99px;padding:10px 20px;background:${col};color:#fff;cursor:pointer}
+.logo{max-height:52px;max-width:200px;object-fit:contain;display:block}.marca{font-size:22px;font-weight:700;color:${col};letter-spacing:-.02em}
+.emi{display:flex;flex-direction:column;gap:10px}.emi-t,.cli{display:flex;flex-direction:column}.emi-t span,.cli span{color:#6e625a;font-size:11.5px}.cli small,.dat small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#a0948b;font-weight:600}
+.tit{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.dat{display:flex;gap:28px}.dat b{font-size:13px}
+table{width:100%;border-collapse:collapse;margin-top:26px}th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#a0948b;font-weight:600;text-align:left;padding:8px 6px}td{padding:11px 6px;border-top:1px solid #efe9e4;vertical-align:top}td small{display:block;color:#7d6f66;font-size:11px}.n{text-align:right;white-space:nowrap}th.n{text-align:right}
+.tot{margin-left:auto;width:260px;margin-top:16px;display:flex;flex-direction:column;gap:4px}.tl{display:flex;justify-content:space-between;color:#6e625a}.tl b{color:#1f1a17;font-weight:500}.tt{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:2px solid #1f1a17;font-size:18px;font-weight:700}
+.pie{margin-top:auto;padding-top:26px;display:flex;flex-direction:column;gap:6px;color:#7d6f66;font-size:10.5px}.pie .rgpd{font-size:9px;color:#a0948b;margin-top:6px}
+.anul{position:absolute;top:42%;left:0;right:0;text-align:center;font-size:90px;font-weight:800;color:rgba(200,30,30,.12);transform:rotate(-18deg)}
+` + ({
+    clasico: `.cab{display:flex;justify-content:space-between;gap:30px;padding-bottom:22px;border-bottom:3px solid ${col}}.cab2{display:flex;justify-content:space-between;gap:30px;margin-top:22px}.tit{color:${col}}th{border-bottom:1px solid #e6ded7}`,
+    moderno: `.hoja{padding-left:30mm}.hoja::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12mm;background:${col}}.cab{display:flex;justify-content:space-between;gap:30px}.cab2{display:flex;justify-content:space-between;gap:30px;margin-top:26px;padding:16px 18px;background:#f7f3ef;border-radius:14px}.tit{font-size:30px}thead tr{background:#1f1a17}th{color:#fff}th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}.tt{border-top-color:${col};color:${col}}`,
+    minimal: `body{font-family:Helvetica,Arial,sans-serif}.cab{display:flex;justify-content:space-between;gap:30px}.cab2{display:flex;justify-content:space-between;gap:30px;margin-top:30px}.marca{color:#1f1a17}.tit{font-weight:400;font-size:28px;letter-spacing:.02em;text-transform:uppercase}th{border-bottom:1px solid #1f1a17;color:#1f1a17}td{border-top:0;border-bottom:1px solid #eee}.tt{border-top:1px solid #1f1a17}`
+  }[d] || '');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(titulo)} ${esc(F.codigo)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>
+${o.barra === false ? '' : `<div class="bar"><button onclick="print()">Descargar o imprimir</button></div>`}
+<div class="hoja">${anul}<div class="cab">${emisorB}<div style="text-align:right"><div class="tit">${esc(titulo)}</div></div></div>
+<div class="cab2">${clienteB || '<div></div>'}${datosB}</div>
+<table><thead><tr><th>Concepto</th><th class="n">Uds.</th><th class="n">Precio</th>${conDto ? '<th class="n">Dto.</th>' : ''}<th class="n">IVA</th><th class="n">Importe</th></tr></thead><tbody>${filas}</tbody></table>
+<div class="tot">${imp}<div class="tt"><span>Total</span><span>${eur(F.total)}</span></div></div>
+<div class="pie">${pie}${o.rgpd ? `<p class="rgpd">${esc(o.rgpd)}</p>` : ''}</div></div></body></html>`;
+}
+// Muestra de un diseño con datos de ejemplo (para elegir en Ajustes)
+function muestra(diseno, tipo, C, o) {
+  const c = calcular([{ concepto: 'Sesión de fisioterapia', uds: 1, precio: 65, iva: { tipo: 0, exencion: 'E1' } }, { concepto: 'Plus aplicación colágeno', uds: 1, precio: 15, iva: ivaDe(C, 'Plus aplicación colágeno') }]);
+  return html({ emisor: C.emisor, cliente: { nombre: 'Laura Martínez Soler', nif: '12345678Z', direccion: tipo === 'simplificada' ? '' : 'C/ Ejemplo, 12', cp: tipo === 'simplificada' ? '' : '08030', ciudad: tipo === 'simplificada' ? '' : 'Barcelona' }, lineas: c.lineas, impuestos: c.impuestos, base: c.base, cuota: c.cuota, total: c.total, codigo: 'T2026-00001', fecha: isoMad(), tipo, diseno, fisio: 'Atendido por: tu fisio · Nº col. 00000' }, o);
+}
+
+module.exports = { db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
