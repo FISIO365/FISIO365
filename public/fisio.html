@@ -1350,6 +1350,29 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 .fp-ipop{flex-basis:100%;width:100%;margin-top:8px;font-size:13.5px;line-height:1.5;color:#5f554e;background:#faf7f4;border-radius:12px;padding:10px 12px}
 .fp-up{flex-direction:row!important;flex-wrap:wrap;justify-content:center;align-items:center;background:#fff!important;border:1.5px dashed #d9cdc2!important;padding:14px!important}.fp-up span{font-size:14px}
 .fp-evh{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:8px}.fp-evh b{font-size:13.5px}
+.fp-archb .fp-bt{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.fp-carpa{display:inline-flex;align-items:center;gap:6px}
+.fp-carpnew{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font);color:#7d6a60;background:#f7f3ef;border:0;border-radius:99px;padding:7px 14px;cursor:pointer}
+.fp-carpnew svg,.fp-carpn svg,.fp-atm svg,.fp-carpops svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fp-atg{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.fp-at{min-width:0;display:flex;flex-direction:column;gap:6px}
+.fp-atv{display:block;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#f7f3ef;border:1px solid #efe8e2;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.fp-atv:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(26,26,26,.08)}
+.fp-atv img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-atv .fp-doc-ic{width:100%;height:100%;border:0;border-radius:0;font-size:15px}
+.fp-atn{display:flex;align-items:center;gap:4px;min-width:0}.fp-atn span{flex:1;min-width:0;font-size:11.5px;color:#7d6a60;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-atm{flex:none;width:26px;height:26px;border-radius:50%;border:0;background:none;color:#b3a59c;cursor:pointer;display:grid;place-items:center}.fp-atm:hover{background:#f3efea;color:#c2552e}
+.fp-carp{border:1.5px solid #f0ebe6;border-radius:18px;padding:12px 14px 14px;margin-top:12px;transition:border-color .15s,background .15s}
+.fp-carp.sinc{border-style:dashed}
+.fp-archb.arrastra .fp-carp{border-color:#e8d8cd}.fp-carp.sobre{border-color:#c2552e!important;background:#fdf6f2}
+.fp-carpt{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.fp-carpn{display:inline-flex;align-items:center;gap:8px;min-width:0;color:#c2552e}.fp-carpn b{color:#1a1a1a;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-carp.sinc .fp-carpn b{color:#7d6a60;font-weight:600}
+.fp-carpn em{font-style:normal;font-size:11px;font-weight:700;background:#f3efea;color:#7d6a60;border-radius:99px;padding:1px 8px}
+.fp-carpm{width:30px;height:30px;border-radius:50%;border:0;background:#f7f3ef;color:#7d6a60;font-size:16px;line-height:1;cursor:pointer}
+.fp-carpv{margin:0;font-size:12.5px}.fp-carp.sinc .fp-carpt{margin-bottom:0}.fp-carp.sinc .fp-atg{margin-top:10px}
+.fp-carpops{display:flex;flex-direction:column;gap:8px;margin-top:6px}.fp-carpops button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:500 14px var(--font);color:#1a1a1a;background:#f7f3ef;border:1.5px solid transparent;border-radius:14px;padding:12px 14px;cursor:pointer}
+.fp-carpops button.on{border-color:#c2552e;color:#c2552e;background:#fdf6f2}.fp-carpops button.rojo{color:#b42318}
 .fp-docs{display:flex;flex-direction:column;gap:8px}
 .fp-archb .fp-bt{margin-bottom:10px}.fp-archn{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;background:#f3efea;color:#7d6a60;border-radius:99px;padding:1px 8px;vertical-align:1px}
 .fp-up.fp-upmini{display:inline-flex!important;flex-direction:row!important;padding:6px 14px!important;margin:0!important;border:0!important;border-radius:99px!important;background:#fbeee7!important}.fp-upmini span{font-size:13px!important}
@@ -11163,10 +11186,41 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
  function archivos(){const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
   return `<label class="fp-up"><input type="file" multiple hidden><span>＋ Subir archivo</span>${infoI('PDF o fotos de hasta 3 MB. Se guardan en su ficha de Airtable.')}</label>
   ${P.archivos.length?`<div class="fp-docs">${P.archivos.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-doc-it">${a.mini?`<img src="${escH(a.mini)}" alt="">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}<span class="fp-doc-t"><b>${escH(a.nombre)}</b><small>${escH(ext)}${a.tam?' · '+kb(a.tam):''}</small></span><span class="fp-doc-go">›</span></a>`;}).join('')}</div>`:'<div class="fac-vacio">No tiene archivos</div>'}`;}
- // Archivos a mano en la pestaña Historia (los mismos que en Más › Archivos)
- function archivosMini(){const A=P.archivos||[];
-  return `<div class="fp-blk fp-archb"><div class="fp-bt"><h3>Archivos${A.length?' <span class="fp-archn">'+A.length+'</span>':''}</h3><label class="fp-up fp-upmini"><input type="file" multiple hidden><span>＋ Subir</span></label></div>
-   ${A.length?`<div class="fp-archl">${A.map(a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();return `<a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-archi"><span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span><span>${escH(a.nombre)}</span></a>`;}).join('')}</div>`:'<p class="fp-mu" style="margin:0;font-size:13px">Sin archivos todavía: informes, pruebas, fotos…</p>'}</div>`;}
+ // Archivos a mano en la pestaña Historia: en miniatura y, si quieres, en carpetas (p. ej. «Rodilla derecha»)
+ const CARP_IC='<svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>';
+ const carpetas=()=>{const c=(d&&d.carpetas)||{},L=Array.isArray(c.c)?c.c:[],de={};Object.entries(c.de||{}).forEach(([k,v])=>{if(L.includes(v))de[k]=v;});return {c:L.slice(),de};};
+ async function guardaCarpetas(C){const r=await agPost('seg-ficha-carpetas',{id,carpetas:C,quien:miNombreCorto()}).catch(()=>({}));if(!r.ok){toast('No se ha podido guardar',false);return false;}d.carpetas=r.carpetas;return true;}
+ function archivosMini(){const A=P.archivos||[],C=carpetas();
+  const tile=a=>{const ext=(a.nombre.split('.').pop()||'doc').slice(0,4).toUpperCase();
+   return `<div class="fp-at" data-att="${escH(a.id||'')}" draggable="${C.c.length&&a.id?'true':'false'}"><a href="${escH(a.url)}" target="_blank" rel="noopener" class="fp-atv" title="${escH(a.nombre)}">${a.mini?`<img src="${escH(a.mini)}" alt="" loading="lazy">`:`<span class="fp-doc-ic ${/PDF/.test(ext)?'pdf':/JPG|JPEG|PNG|HEIC|WEBP/.test(ext)?'img':''}">${escH(ext)}</span>`}</a>
+    <div class="fp-atn"><span>${escH(a.nombre)}</span>${C.c.length&&a.id?`<button type="button" class="fp-atm" title="Mover a otra carpeta" aria-label="Mover a otra carpeta">${CARP_IC}</button>`:''}</div></div>`;};
+  const sub=c=>`<label class="fp-up fp-upmini"><input type="file" multiple hidden data-c="${escH(c)}"><span>＋ Subir</span></label>`;
+  const sinC=A.filter(a=>!C.de[a.id]);
+  const grupos=C.c.map(c=>{const L=A.filter(a=>C.de[a.id]===c);return `<div class="fp-carp" data-c="${escH(c)}"><div class="fp-carpt"><span class="fp-carpn">${CARP_IC}<b>${escH(c)}</b>${L.length?'<em>'+L.length+'</em>':''}</span><span class="fp-carpa">${sub(c)}<button type="button" class="fp-carpm" aria-label="Opciones de la carpeta">⋯</button></span></div>
+   ${L.length?`<div class="fp-atg">${L.map(tile).join('')}</div>`:'<p class="fp-mu fp-carpv">Vacía: sube aquí sus pruebas o arrastra archivos a esta carpeta.</p>'}</div>`;}).join('');
+  return `<div class="fp-blk fp-archb"><div class="fp-bt"><h3>Archivos${A.length?' <span class="fp-archn">'+A.length+'</span>':''}</h3><span class="fp-carpa"><button type="button" class="fp-carpnew">＋ Carpeta</button>${C.c.length?'':sub('')}</span></div>
+   ${grupos}
+   ${C.c.length?`<div class="fp-carp sinc" data-c=""><div class="fp-carpt"><span class="fp-carpn"><b>Sin carpeta</b>${sinC.length?'<em>'+sinC.length+'</em>':''}</span><span class="fp-carpa">${sub('')}</span></div>${sinC.length?`<div class="fp-atg">${sinC.map(tile).join('')}</div>`:''}</div>`
+    :(A.length?`<div class="fp-atg">${A.map(tile).join('')}</div>`:'<p class="fp-mu" style="margin:0;font-size:13px">Sin archivos todavía: informes, pruebas, fotos…</p>')}</div>`;}
+ // Carpetas: crear, cambiar el nombre, quitar y mover archivos (con el botón o arrastrando)
+ function montarCarpetas(cont){const box=cont.querySelector('.fp-archb');if(!box)return;
+  const mover=async(att,c)=>{const C=carpetas();if((C.de[att]||'')===c)return;if(c)C.de[att]=c;else delete C.de[att];if(await guardaCarpetas(C)){toast(c?'Movido a «'+c+'»':'Sacado de la carpeta',true);pintar();}};
+  box.querySelector('.fp-carpnew').onclick=async()=>{const n=String(await pideTexto('Nombre de la carpeta (p. ej. «Rodilla derecha»)','')||'').trim().slice(0,60);if(!n)return;const C=carpetas();
+   if(C.c.some(x=>x.toLowerCase()===n.toLowerCase())){toast('Ya hay una carpeta con ese nombre',false);return;}C.c.push(n);if(await guardaCarpetas(C)){toast('Carpeta creada',true);pintar();}};
+  box.querySelectorAll('.fp-carpm').forEach(b=>b.onclick=()=>{const c=b.closest('.fp-carp').dataset.c;
+   const mm=hzModal(`<div class="hz-top"><div><small>Carpeta</small><b>${escH(c)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="fp-carpops"><button type="button" data-a="ren">Cambiar el nombre</button><button type="button" data-a="del" class="rojo">Quitar la carpeta</button></div>`);
+   mm.querySelector('.hz-x').onclick=()=>mm.remove();
+   mm.querySelector('[data-a="ren"]').onclick=async()=>{mm.remove();const n=String(await pideTexto('Nuevo nombre de la carpeta',c)||'').trim().slice(0,60);if(!n||n===c)return;const C=carpetas();
+    if(C.c.some(x=>x!==c&&x.toLowerCase()===n.toLowerCase())){toast('Ya hay una carpeta con ese nombre',false);return;}C.c=C.c.map(x=>x===c?n:x);Object.keys(C.de).forEach(k=>{if(C.de[k]===c)C.de[k]=n;});if(await guardaCarpetas(C)){toast('Nombre cambiado',true);pintar();}};
+   mm.querySelector('[data-a="del"]').onclick=async()=>{mm.remove();if(!await pregunta(`¿Quitar la carpeta «${c}»? Los archivos no se borran: pasan a «Sin carpeta».`,{si:'Quitar',no:'Cancelar'}))return;const C=carpetas();C.c=C.c.filter(x=>x!==c);Object.keys(C.de).forEach(k=>{if(C.de[k]===c)delete C.de[k];});if(await guardaCarpetas(C)){toast('Carpeta quitada',true);pintar();}};});
+  box.querySelectorAll('.fp-atm').forEach(b=>b.onclick=()=>{const att=b.closest('.fp-at').dataset.att,C=carpetas(),ya=C.de[att]||'';
+   const mm=hzModal(`<div class="hz-top"><div><small>Mover a</small><b>¿A qué carpeta?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="fp-carpops">${C.c.map(c=>`<button type="button" data-c="${escH(c)}" class="${c===ya?'on':''}">${CARP_IC}${escH(c)}</button>`).join('')}<button type="button" data-c="" class="${ya?'':'on'}">Sin carpeta</button></div>`);
+   mm.querySelector('.hz-x').onclick=()=>mm.remove();mm.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{mm.remove();mover(att,x.dataset.c);});});
+  // Arrastrar (en el ordenador)
+  box.querySelectorAll('.fp-at[draggable="true"]').forEach(t=>t.ondragstart=e=>{e.dataTransfer.setData('text/x-att',t.dataset.att);e.dataTransfer.effectAllowed='move';box.classList.add('arrastra');});
+  box.ondragend=()=>{box.classList.remove('arrastra');box.querySelectorAll('.fp-carp.sobre').forEach(x=>x.classList.remove('sobre'));};
+  box.querySelectorAll('.fp-carp').forEach(g=>{g.ondragover=e=>{if([...e.dataTransfer.types].includes('text/x-att')){e.preventDefault();g.classList.add('sobre');}};g.ondragleave=e=>{if(!g.contains(e.relatedTarget))g.classList.remove('sobre');};
+   g.ondrop=e=>{const att=e.dataTransfer.getData('text/x-att');if(!att)return;e.preventDefault();g.classList.remove('sobre');box.classList.remove('arrastra');mover(att,g.dataset.c);};});}
  function historia(){
   const hoy=d.hoy,ses=d.citas.filter(c=>c.fecha<=hoy&&/REALIZADA/i.test(c.estado)),u=ultSesion(d.citas,hoy);
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
@@ -11404,7 +11458,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   else if(tab==='racha')fpTabRacha(id,cont,tok);
   else if(tab==='programa')fpTabPrograma(id,cont,tok,P.nombre);
   else if(tab==='acceso'){cont.innerHTML=acceso();montarAcceso(cont);}
-  else if(tab==='historia'||tab==='archivos'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);montarSubida(cont);}
+  else if(tab==='historia'||tab==='archivos'){cont.innerHTML=historia();montarEdicion(cont);montarHistoria(cont);montarSubida(cont);montarCarpetas(cont);}
  }
  var histCabFn=null;
  function montarEdicion(cont){
@@ -11433,13 +11487,16 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
      if(k==='datos'&&campos.tel!==undefined&&campos.whatsapp===undefined)campos.whatsapp=campos.tel; // un solo teléfono: sirve también para WhatsApp
      if(k==='datos'&&!campos.nombre){b.disabled=false;b.textContent='Guardar';toast('El nombre no puede quedar vacío',false);return;}
      try{await guardar(campos);if(k==='datos'){P.telf=campos.tel;P.whatsapp=campos.whatsapp;const pl=(pacs||[]).find(x=>x.id===id);if(pl){pl.nombre=campos.nombre;pl.telefono=campos.whatsapp||campos.tel;}}toast('Guardado',true);pintar();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};};});}
- function montarSubida(cont){const inp=cont.querySelector('.fp-up input');inp.onchange=async()=>{const fs=[...inp.files];if(!fs.length)return;
+ function montarSubida(cont){cont.querySelectorAll('.fp-up input').forEach(inp=>inp.onchange=async()=>{const fs=[...inp.files];if(!fs.length)return;const carp=inp.dataset.c||'',antes=new Set((P.archivos||[]).map(a=>a.id));
   for(const f of fs){if(f.size>3*1024*1024){toast(`«${f.name}» pesa más de 3 MB`,false);continue;}
    toast(`Subiendo ${f.name}…`,true);
    try{const b64=await new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=ko;r.readAsDataURL(f);});
     const r=await (await fetch('/api/schedule?action=seg-ficha-archivo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id,file:b64,nombre:f.name,tipo:f.type||'application/octet-stream'})})).json();if(!r.ok)throw new Error(r.error||'No se ha podido subir');}
    catch(err){toast(err.message||'No se ha podido subir',false);}}
-  try{await cargar();Object.assign(P,d.paciente);}catch(e){}toast('Archivos actualizados',true);pintar();};}
+  try{await cargar();Object.assign(P,d.paciente);}catch(e){}
+  // Lo nuevo va a la carpeta desde la que se subió
+  if(carp){const nuevos=(P.archivos||[]).filter(a=>a.id&&!antes.has(a.id));if(nuevos.length){const C=carpetas();if(C.c.includes(carp)){nuevos.forEach(a=>C.de[a.id]=carp);await guardaCarpetas(C);}}}
+  toast(carp?'Subido a «'+carp+'»':'Archivos actualizados',true);pintar();});}
  function editarEstado(){const mm=hzModal(`<div class="hz-top"><div><small>Estado</small><b>${escH(P.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="sc-sub" style="margin:0 0 8px">Toca para poner o quitar. Puede tener varios.</div><div class="est-slot"></div><div class="hz-bts"><button type="button" class="hz-ok">Guardar</button></div>`);
   mm.querySelector('.hz-x').onclick=()=>mm.remove();const sel=selectorEstados(P.estados);mm.querySelector('.est-slot').appendChild(sel);
   mm.querySelector('.hz-ok').onclick=async e=>{e.target.disabled=true;try{await guardarEstados(id,sel.get());P.estados=sel.get();toast('Guardado',true);mm.remove();pintar();}catch(err){e.target.disabled=false;toast('No se ha podido guardar',false);}};}
@@ -13472,6 +13529,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',t:'Ficha › Historia › Archivos: ahora se ven en miniatura y puedes ordenarlos en carpetas (p. ej. «Rodilla derecha» y «Rodilla izquierda») con «＋ Carpeta».',ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí: «＋ Carpeta» para crear una y el icono de carpeta de cada archivo para moverlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
 {f:'2026-11-16',t:'Buzón: las solicitudes de vacaciones y horas libres ya se pueden contestar («Responder a…»), también después de aprobarlas. Lo ve quien la pidió y el resto de dirección.'},
 {f:'2026-11-16',t:'Tarjeta regalo por recomendar: con «Cambiar» eliges a quién va (por si le recomendaron dos personas). La tarjeta ya sale siempre con el nombre de esa persona.'},
 {f:'2026-11-16',t:'Ficha › Facturas: si un pack empezó antes de que el panel contara sesiones, salen sus sesiones de antes; toca la primera del pack y cuentan también en lo que le queda.'},
@@ -15748,7 +15806,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Acabas la sesión: anótala',shot:'/img/school/panel-b-anotar.jpg',body:`<b>Cuándo:</b> al acabar cada sesión.<br><br><b>Qué haces:</b> ficha › <b>Historia</b> › <b>＋ Anotar sesión</b>. Qué trabajaste, cómo respondió, la pauta para casa.<br><br><b>Para qué:</b> si otro fisio le atiende, sabe por dónde vais.`,ver:{sec:'pac',pasos:[{el:'.fp-add-ev',txt:'Aquí anotas la sesión.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
  {ti:'Si se te olvida, te avisa',shot:'/img/school/panel-b-historia.jpg',body:`Arriba de la Historia sale en rojo <b>⚠️ No se ha actualizado</b> tras su última sesión.<br><br>Y al día siguiente te sale en tus <b>Pendientes</b> hasta que la anotes.<br><br>Se añade al final con fecha y tu nombre, sin borrar lo anterior.`},
- {ti:'Trae una prueba o un informe',body:`<b>Cuándo:</b> te enseña una resonancia, un informe de su médico, una foto…<br><br><b>Qué haces:</b> Historia › Archivos › <b>＋ Subir</b> (PDF o fotos, hasta 3 MB).<br><br>¿Te lo manda por el chat? Ahí mismo tienes <b>Guardar en su ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí subes sus pruebas e informes.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
+ {ti:'Trae una prueba o un informe',body:`<b>Cuándo:</b> te enseña una resonancia, un informe de su médico, una foto…<br><br><b>Qué haces:</b> Historia › Archivos › <b>＋ Subir</b> (PDF o fotos, hasta 3 MB). Se ven en miniatura.<br><br><b>Ordénalos en carpetas:</b> con <b>＋ Carpeta</b> creas, por ejemplo, «Rodilla derecha» y «Rodilla izquierda». Subes desde la carpeta, o mueves un archivo con su icono de carpeta (en el ordenador, también arrastrándolo).<br><br>¿Te lo manda por el chat? Ahí mismo tienes <b>Guardar en su ficha</b>.`,ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí subes sus pruebas e informes.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
  {ti:'Escribirle desde su historia',body:`En su <b>Historia</b>, debajo de «Pedir reseña», tienes <b>Enviarle un mensaje</b>: por <b>WhatsApp</b> o por el <b>chat de su app</b>, sin volver arriba de la ficha.`,ver:{sec:'pac',pasos:[{el:'.fp-msgc',txt:'Aquí.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
  {ti:'Te dice «estoy mucho mejor»',body:`Es el mejor momento para pedir la reseña.<br><br>Toca <b>Pedir reseña</b> en su Historia: te prepara el WhatsApp con el enlace a Google y queda apuntado en Valoraciones.`,ver:{sec:'pac',pasos:[{el:'.fp-resb',txt:'Este botón.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}}
  ],

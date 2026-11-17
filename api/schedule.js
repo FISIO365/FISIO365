@@ -6759,10 +6759,11 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         // Sesiones gratis ganadas en el sorteo de reseñas (se descuentan a mano con el botón)
         const premios = (((await ajuste('premios-sorteo', {})) || {})[q.id] || []);
         const aMedias = await packAMedias(pac.id).catch(() => []); // packs pagados en partes: lo que le falta por pagar (sale arriba en la ficha)
-        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos, premios, aMedias,
+        const carpetas = await ajuste('carpetas-' + pac.id, null); // carpetas de sus archivos (p. ej. «Rodilla derecha»)
+        return res.status(200).json({ ok: true, hoy: hoyF, saldo, consent, referidos, premios, aMedias, carpetas,
           paciente: { id: pac.id, pin: F['PIN'] || '', nombre: F['FULL NAME'] || '', tel: F['WHATSAPP'] || F['TELF'] || '', telf: F['TELF'] || '', whatsapp: F['WHATSAPP'] || '', pin: F['PIN'] || '', email: F['EMAIL'] || '', dni: F['DNI'] || '', cumple: F['CUMPLE'] || '', cumpleEnlace: enlaceCumple(pac.id, 0), cumpleEnlaceR: enlaceCumple(pac.id, 1), cumpleFel: ((await ajuste('cumples_felicitados', {}).catch(() => ({}))) || {})[pac.id] || null, precioEsp: precioEspDe(F), telDescartado: F['TELF FORM DESCARTADO'] || '', foto: (((F['FOTO PERFIL'] || [])[0] || {}).thumbnails || {}).large ? F['FOTO PERFIL'][0].thumbnails.large.url : (((F['FOTO PERFIL'] || [])[0] || {}).url || ''), ultimoAcceso: F['ÚLTIMO ACCESO APP'] || '', appUsada: !!(F['ÚLTIMO ACCESO APP'] || F['PushSubscription']), appInstalada: !!(F['APP INSTALADA'] || F['PushSubscription']), alta: pac.createdTime || '', estados: F['ESTADO'] || [],
             motivo: F['MOTIVO DE VISITA'] || '', historial: F['HISTORIAL CLÍNICO'] || '', historialMod: F['HISTORIAL ACTUALIZADO'] || '', notas: F['NOTAS'] || '', porQue: F['POR QUÉ NO REAGENDA'] || '', porQueFecha: F['POR QUÉ FECHA'] || '', porQueHist: String(F['POR QUÉ HISTORIAL'] || '').split('\n').map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean), porQueFisio: F['POR QUÉ FISIO'] || '', bonoPrevio: F['SESIONES BONO PREVIO'] || 0, colab: F['COLAB'] || '', resena: !!F['RESEÑA POSITIVA'],
-            archivos: (F['DOCUS'] || []).map(a => ({ nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
+            archivos: (F['DOCUS'] || []).map(a => ({ id: a.id || '', nombre: a.filename || 'archivo', url: a.url, tipo: a.type || '', tam: a.size || 0, mini: (a.thumbnails && ((a.thumbnails.large && a.thumbnails.large.url) || (a.thumbnails.small && a.thumbnails.small.url))) || '' })) },
           citas: citas.map(c => ({ id: c.id, fecha: String(c.fields['FECHA'] || '').slice(0, 10), hora: c.fields['HORA'] || '', estado: String(nm(c.fields['ESTADO'])).trim(), fisio: nm(c.fields['PREF.']), nota: c.fields['NOTAS'] || '' })),
           seguimiento: segs.map(r => ({ id: r.id, fecha: r.fields['FECHA DE LLAMADA'] || '', nota: r.fields['NOTAS'] || '', hecho: !!r.fields['HECHO'], quien: nm(r.fields['RESPONSABLE']) })),
           llamadas: llams.map(r => { const d = diaMad(r.fields['FECHA']); return { fecha: d.f, hora: d.h, quien: nm(r.fields['QUIEN LLAMA']), resultado: String(nm(r.fields['RESULTADO'])).trim(), nota: r.fields['NOTAS'] || '', resena: !!r.fields['RESEÑA'] }; }) });
@@ -7078,6 +7079,13 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const d = await at(PACIENTES, { method: 'POST', body: JSON.stringify({ records: [{ fields: f }], typecast: true }) });
         if (d.error || !d.records) return res.status(200).json({ ok: false, error: (d.error && (d.error.message || d.error.type)) || 'No se ha podido crear' });
         return res.status(200).json({ ok: true, paciente: { id: d.records[0].id, nombre, email, pin, telefono: tel, estados: est } });
+      }
+      if (action === 'seg-ficha-carpetas') { // carpetas de los archivos de un paciente: { c: [nombres], de: { idArchivo: carpeta } }
+        const c0 = q.carpetas || {}, c = [...new Set((Array.isArray(c0.c) ? c0.c : []).map(x => String(x || '').trim().slice(0, 60)).filter(Boolean))].slice(0, 30), de = {};
+        Object.entries(c0.de || {}).forEach(([k, v]) => { if (/^att[A-Za-z0-9]{14}$/.test(k) && c.includes(v)) de[k] = v; });
+        if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false });
+        await guardarAjuste('carpetas-' + q.id, { c, de }, q.quien || '');
+        return res.status(200).json({ ok: true, carpetas: { c, de } });
       }
       if (action === 'seg-ficha-archivo') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !q.file) return res.status(400).json({ ok: false, error: 'Falta el archivo' });
