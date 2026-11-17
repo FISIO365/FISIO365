@@ -7897,7 +7897,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
               catch (e) { out.gesErr = e.message; await (await FACX.db()).query(`delete from fac_config where k=$1`, ['hecho:gestoria:' + an + '-' + tq]); } } } } catch (e) { out.gesErr = e.message; }
         return res.status(200).json({ ok: true, ...out }); }
       // ── Para la gestoría: resumen del trimestre (IVA, retenciones y libros) en datos o en PDF ──
-      if (action === 'fac-anual') return res.status(200).json({ ok: true, ...(await require('./_gestoria').anual(q.anio || FACX.isoMad().slice(0, 4))) });
+      if (action === 'fac-anual') return res.status(200).json({ ok: true, ...(await require('./_gestoria').anual(q.desde && q.hasta ? { desde: q.desde, hasta: q.hasta } : (q.anio || FACX.isoMad().slice(0, 4)))) });
       if (action === 'fac-gestoria' || action === 'fac-gestoria-pdf') { const GS = require('./_gestoria'), act = String(q.actividad || '');
         const X = await GS.datos({ desde: q.desde, hasta: q.hasta, actividad: act });
         if (action === 'fac-gestoria') return res.status(200).json({ ok: true, conf: await gesConf(), ...X, gastos: X.gastos.map(g => Object.assign(g, { falta: !g.archivo && !require('./_gastos').SIN_DOC.has(g.categoria) })) });
@@ -7912,7 +7912,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (/^fac-(gas|banco|cuentas|ivareg)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
         if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro, prov: q.prov }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas(), esperados: await GX.esperados(String(q.actividad || 'principal')).catch(() => []) });
         if (action === 'fac-gas-uno') { const g = await GX.gasto(String(q.id || '')); if (!g) return res.status(404).json({ ok: false, error: 'No encontrado' }); return res.status(200).json({ ok: true, gasto: g }); }
-        if (action === 'fac-gas-provs') return res.status(200).json({ ok: true, proveedores: await GX.listaProveedores(String(q.actividad || 'principal'), q.anio || FACX.isoMad().slice(0, 4)) });
+        if (action === 'fac-gas-provs') return res.status(200).json({ ok: true, proveedores: await GX.listaProveedores(String(q.actividad || 'principal'), q.desde, q.hasta) });
         if (action === 'fac-gas-prov') return res.status(200).json({ ok: true, proveedores: await GX.proveedores(String(q.actividad || 'principal'), q.q) });
         if (!post) return res.status(405).json({ ok: false });
         if (action === 'fac-gas-leer') { // sube el archivo y la IA lo lee (si falla la lectura, el archivo queda subido igual)

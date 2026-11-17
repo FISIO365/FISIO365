@@ -100,9 +100,9 @@ async function esperados(actividad, hoy) { const D = await db(); hoy = hoy || is
   return L.filter(g => g.cada > 0).map(g => { const [a, m, d] = g.fecha.split('-').map(Number), t = new Date(Date.UTC(a, m - 1 + g.cada, Math.min(d, 28))); return Object.assign(g, { toca: t.toISOString().slice(0, 10) }); })
     .filter(g => { const lim = new Date(Date.parse(g.toca) + 7 * 864e5).toISOString().slice(0, 10); return lim <= hoy; }).sort((a, b) => a.toca.localeCompare(b.toca)); }
 // Proveedores: resumen por proveedor (del año) y cambiar el nombre o el NIF en todos sus gastos
-async function listaProveedores(actividad, anio) { const D = await db();
+async function listaProveedores(actividad, desde, hasta) { const D = await db();
   return (await D.query(`select proveedor->>'nombre' nombre, max(proveedor->>'nif') nif, count(*)::int n, sum(total)::float total, max(fecha)::text ultima, (array_agg(categoria order by fecha desc))[1] categoria, bool_or(cada>0) repite, bool_or(isp<>'') extranjero
-    from fac_gastos where (actividad=$1 or comun) and extract(year from fecha)=$2 group by proveedor->>'nombre' order by sum(total) desc`, [actividad || 'principal', +anio])).rows; }
+    from fac_gastos where (actividad=$1 or comun) and fecha between $2 and $3 group by proveedor->>'nombre' order by sum(total) desc`, [actividad || 'principal', esFecha(desde) ? desde : '2000-01-01', esFecha(hasta) ? hasta : '2099-12-31'])).rows; }
 async function cambiarProveedor(de, a) { const D = await db(), P = provLimpio(a); if (!P.nombre) throw new Error('Pon el nombre');
   const r = await D.query(`update fac_gastos set proveedor = proveedor || $2::jsonb where proveedor->>'nombre'=$1`, [String(de || ''), JSON.stringify({ nombre: P.nombre, nif: P.nif })]); return r.rowCount; }
 async function noRepite(id) { const D = await db(); await D.query(`update fac_gastos set cada=0 where id=$1`, [id]); }
