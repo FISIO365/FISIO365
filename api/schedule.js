@@ -7739,6 +7739,30 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const r = await FACX.guardarPresupuesto({ id: q.id, actividad: q.actividad, fecha: q.fecha, validez: q.validez, cliente: q.cliente, lineas: q.lineas, nota: q.nota, por: q.quien });
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-pres-estado') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); await FACX.estadoPresupuesto(String(q.id || ''), q.estado); return res.status(200).json({ ok: true }); }
+      // ── Gastos y banco (api/_gastos.js) ──
+      if (/^fac-(gas|banco|cuentas)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
+        if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas() });
+        if (action === 'fac-gas-uno') { const g = await GX.gasto(String(q.id || '')); if (!g) return res.status(404).json({ ok: false, error: 'No encontrado' }); return res.status(200).json({ ok: true, gasto: g }); }
+        if (action === 'fac-gas-prov') return res.status(200).json({ ok: true, proveedores: await GX.proveedores(String(q.actividad || 'principal'), q.q) });
+        if (!post) return res.status(405).json({ ok: false });
+        if (action === 'fac-gas-leer') { // sube el archivo y la IA lo lee (si falla la lectura, el archivo queda subido igual)
+          const archivo = await GX.subirArchivo(q.file, q.nombre, q.tipo); let datos = null, error = '';
+          try { datos = await GX.leerFactura(q.file, q.tipo, (await FACX.config()).emisor); } catch (e) { error = e.message; }
+          const dup = datos ? await GX.duplicado(datos).catch(() => null) : null;
+          return res.status(200).json({ ok: true, archivo, datos, error, duplicado: dup }); }
+        if (action === 'fac-gas-guardar') { const dup = q.forzar ? null : await GX.duplicado(q).catch(() => null); if (dup) return res.status(200).json({ ok: false, duplicado: dup, error: 'Ya hay un gasto con ese número de factura de este proveedor' });
+          const r = await GX.guardarGasto(Object.assign({}, q, { por: q.quien })); return res.status(200).json({ ok: true, ...r }); }
+        if (action === 'fac-gas-borrar') { await GX.borrarGasto(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-cuentas') return res.status(200).json({ ok: true, cuentas: await GX.guardarCuentas(q.cuentas) });
+        if (action === 'fac-banco') return res.status(200).json({ ok: true, cuentas: await GX.cuentas(), resumen: await GX.resumenBanco(), movimientos: await GX.movimientos({ cuenta: q.cuenta, desde: q.desde, hasta: q.hasta, estado: q.estado, q: q.q }) });
+        if (action === 'fac-banco-mejores') return res.status(200).json({ ok: true, mejores: await GX.mejores((q.ids || []).map(String)) });
+        if (action === 'fac-banco-importar') return res.status(200).json({ ok: true, ...(await GX.importar(String(q.cuenta || ''), q.movs)) });
+        if (action === 'fac-banco-uno') { const s = await GX.sugerencias(String(q.id || '')); return res.status(200).json({ ok: true, ...s, enlaces: await GX.detalleEnlaces(s.mov) }); }
+        if (action === 'fac-banco-buscar') return res.status(200).json({ ok: true, items: await GX.buscar(q.tipo, q.q, q.importe) });
+        if (action === 'fac-banco-conciliar') return res.status(200).json(await GX.conciliar(String(q.id || ''), q));
+        if (action === 'fac-banco-deshacer') { await GX.desconciliar(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-banco-borrar') { await GX.borrarMovs(String(q.cuenta || ''), (q.ids || []).map(String)); return res.status(200).json({ ok: true }); }
+        return res.status(400).json({ ok: false, error: 'Acción desconocida' }); }
       if (action === 'fac-una') { const F = await FACX.una(String(q.id || '')); if (!F) return res.status(404).json({ ok: false, error: 'No encontrada' });
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
       if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await FACX.pago(String(q.id || ''), q.estado, q.modo) }); }

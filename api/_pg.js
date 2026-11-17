@@ -532,4 +532,4 @@ if (ACTIVO && global.fetch && !global.fetch._pg) {
   nf._pg = 1; nf._marca = _fetch && _fetch._marca; nf._base = 1; global.fetch = nf;
 }
 
-module.exports = { ACTIVO, cambiosRecientes, modificadosRecientes, deshacerCambio, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch, almacen, rutaDe, ALM };
+module.exports = { guardarArchivo, ACTIVO, cambiosRecientes, modificadosRecientes, deshacerCambio, responder, archivo, SQL_INIT, T, campo, _cache: CACHE, filas, iniciar, db, fetchReal: _fetch, almacen, rutaDe, ALM };
