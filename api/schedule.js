@@ -8092,18 +8092,10 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) });
       }
       if (action === 'fac-sin-cliente') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, ...(await repararSinCliente(String(q.desde || '2026-11-16'))) }); }
-      if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas
-        const dia = /^\d{4}-\d{2}-\d{2}$/.test(q.dia || '') ? q.dia : FACX.isoMad();
-        const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
-        let nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        if (await arreglarDia(dia, filas).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
-        // Lo que hay de verdad en Holded ese día (también lo hecho allí directamente y con su importe real)
-        let HD = null; if (HOLDED_KEY) try { const q2 = `limit=200&start_date=${dia}&end_date=${dia}`; const [tk, fa] = await Promise.all([holdedTodos('/sales-receipts?' + q2, 5), holdedTodos('/invoices?' + q2, 3).catch(() => [])]);
-          const fMad = d => { const v = d.date; if (typeof v === 'number' || /^\d{9,13}$/.test(String(v || ''))) { const n = Number(v); return FACX.isoMad(new Date(n < 1e12 ? n * 1000 : n)); } return String(v || '').slice(0, 10); };
-          HD = new Map(); [...tk, ...fa].filter(d => d && d.id && fMad(d) === dia).forEach(d => HD.set(String(d.id), d)); if (!HD.size) HD = null; } catch (e) { HD = null; }
-        const viva = nuestras.filter(x => x.estado === 'emitida'), porHid = {}; viva.forEach(x => { if (x.holded) porHid[x.holded] = x; });
+      // Comparar un día: cobros del panel (y lo hecho en Holded) frente a las copias. HD = tickets reales de Holded de ese día (si se tienen)
+      const compDia = (filas, nuestras, HD) => { const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
+        // Solo las copias de Holded (las facturas hechas de verdad en el panel no van a Holded y no cuentan aquí)
+        const viva = nuestras.filter(x => x.estado === 'emitida' && x.prueba), porHid = {}; viva.forEach(x => { if (x.holded) porHid[x.holded] = x; });
         const prop = x => x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null;
         const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, hid = String(F['HOLDED ID'] || ''), d = HD && HD.get(hid), x = porCobro[r.id] || porHid[hid];
           return { cobro: r.id, hid, num: (d && d.document_number) || (x && x.holded_num) || F['Nº FACTURA'] || '', total: d ? importeDoc(d) : x && x.holded ? x.total : Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: prop(x) }; });
@@ -8113,7 +8105,28 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         { const ya = new Set(holdedL.map(h => h.hid)); viva.filter(x => x.por === 'Holded (traída)' && x.holded && !ya.has(x.holded)).forEach(x => holdedL.push({ cobro: null, hid: x.holded, enHolded: true, num: x.holded_num || x.codigo, total: x.total, nombre: (x.cliente || {}).nombre || '', propia: prop(x) })); }
         const usadas = new Set(holdedL.filter(h => h.propia).map(h => h.propia.id));
         const sueltas = viva.filter(x => !usadas.has(x.id)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
-        return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(viva.reduce((t, x) => t + x.total, 0) * 100) / 100 });
+        return { holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(viva.reduce((t, x) => t + x.total, 0) * 100) / 100 }; };
+      // Varios días de golpe (rápido: sin preguntar a Holded): cuánto hay en cada lado cada día y si cuadra
+      if (action === 'fac-comparar-rango') { const hoyA = FACX.isoMad(), desde = /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') ? q.desde : hoyA.slice(0, 8) + '01', hasta = /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '') && q.hasta < hoyA ? q.hasta : hoyA;
+        await FACX.quitarRepetidas().catch(() => 0);
+        const filasR = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',NOT(IS_BEFORE({FECHA DE COBRO},DATETIME_PARSE('${desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA DE COBRO},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}`).catch(() => []);
+        const nuestrasR = await FACX.lista({ desde, hasta, limite: 2000 }), porDia = {}, dDe = r => { const v = String(r.fields['FECHA DE COBRO'] || ''); return /T/.test(v) ? FACX.isoMad(new Date(v)) : v.slice(0, 10); };
+        filasR.forEach(r => { const d = dDe(r); (porDia[d] = porDia[d] || { f: [], n: [] }).f.push(r); }); nuestrasR.forEach(x => { const d = String(x.fecha).slice(0, 10); (porDia[d] = porDia[d] || { f: [], n: [] }).n.push(x); });
+        const dias = Object.keys(porDia).sort().reverse().map(d => { const c = compDia(porDia[d].f, porDia[d].n, null), faltan = c.holded.filter(x => !x.propia).length;
+          return { dia: d, holded: c.sumaHolded, propia: c.sumaPropia, n: c.holded.length, faltan, sobran: c.sueltas.length, cuadra: !faltan && !c.sueltas.length && Math.abs(c.sumaHolded - c.sumaPropia) < 0.01 }; });
+        return res.status(200).json({ ok: true, desde, hasta, dias }); }
+      if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas
+        const dia = /^\d{4}-\d{2}-\d{2}$/.test(q.dia || '') ? q.dia : FACX.isoMad();
+        const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
+        let nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        if (await arreglarDia(dia, filas).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        // Lo que hay de verdad en Holded ese día (también lo hecho allí directamente y con su importe real)
+        let HD = null; if (HOLDED_KEY) try { const q2 = `limit=200&start_date=${dia}&end_date=${dia}`; const [tk, fa] = await Promise.all([holdedTodos('/sales-receipts?' + q2, 5), holdedTodos('/invoices?' + q2, 3).catch(() => [])]);
+          const fMad = d => { const v = d.date; if (typeof v === 'number' || /^\d{9,13}$/.test(String(v || ''))) { const n = Number(v); return FACX.isoMad(new Date(n < 1e12 ? n * 1000 : n)); } return String(v || '').slice(0, 10); };
+          HD = new Map(); [...tk, ...fa].filter(d => d && d.id && fMad(d) === dia).forEach(d => HD.set(String(d.id), d)); if (!HD.size) HD = null; } catch (e) { HD = null; }
+        const c = compDia(filas, nuestras, HD);
+        return res.status(200).json(Object.assign({ ok: true, dia }, c));
       }
       return res.status(400).json({ ok: false, error: 'Acción desconocida' });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
