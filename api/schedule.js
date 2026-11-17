@@ -7752,6 +7752,12 @@ Devuelve solo el texto del mensaje, sin comillas.`;
 <dt>Productor del sistema</dt><dd>${e(S.nombreRazon)} · NIF ${e(S.nif)}</dd><dt>Dirección postal del productor</dt><dd>${e(S.direccion)}</dd></dl>
 <p style="margin-top:22px">${e(S.nombreRazon)}, como productora del sistema informático de facturación indicado, declara bajo su responsabilidad que el sistema, en la versión indicada, cumple lo dispuesto en el artículo 29.2.j) de la Ley 58/2003, de 17 de diciembre, General Tributaria, en el Reglamento que establece los requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación de empresarios y profesionales, aprobado por el Real Decreto 1007/2023, de 5 de diciembre, y en la Orden HAC/1177/2024, de 17 de octubre, y en las especificaciones técnicas, funcionales y de contenido que la desarrollan.</p>
 <p>En Barcelona, a 17 de noviembre de 2026.</p></article></main></body></html>`); }
+      const GX0 = () => require('./_gastos');
+      if (action === 'fac-buzon-in') { // gastos por email: Brevo manda aquí lo que llega a gastos@facturas.<dominio>
+        const BZ = require('./_buzon'); if (String(q.k || req.query.k || '') !== BZ.clave()) return res.status(404).json({ ok: false });
+        if (req.method !== 'POST') return res.status(200).json({ ok: true });
+        try { const r = await BZ.entrada(req.body || {}, (t, b) => pagoAvisar(null, t, b, 'fac-buzon')); return res.status(200).json({ ok: true, ...r }); }
+        catch (e) { console.log('fac-buzon-in', e.message); return res.status(200).json({ ok: false }); } }
       if (action === 'fac-pagar') { // pagar una factura con tarjeta: lleva a Stripe y, al volver, la deja pagada
         const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || String(q.k || '') !== FACX.firma(id)) return res.status(404).send('No encontrada');
         const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
@@ -7793,6 +7799,15 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         return enviaPdf(await require('./_factura_pdf').pdfFactura(F, o), 'Ejemplo');
       }
       if (!okPwd) return res.status(401).json({ ok: false, error: 'No autorizado' });
+      // ── Gastos por email (buzón) ──
+      if (/^fac-buzon/.test(action)) { const BZ = require('./_buzon');
+        if (action === 'fac-buzon') { const C = await BZ.conf(); return res.status(200).json({ ok: true, lista: await BZ.lista(), conf: C, direccion: C.dominio ? 'gastos@' + C.dominio : '', sugerido: 'facturas.' + String(CLI.email || 'info@fisioterapia365.com').split('@')[1], brevo: !!process.env.BREVO_API_KEY }); }
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'fac-buzon-leer') { const x = await BZ.leer(String(q.id || '')); return res.status(200).json({ ok: true, archivo: x.archivo, datos: x.datos, error: x.error, duplicado: x.datos ? await GX0().duplicado(x.datos).catch(() => null) : null }); }
+        if (action === 'fac-buzon-hecho') { await BZ.hecho(String(q.id || ''), q.gasto); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-buzon-borrar') { await BZ.descartar(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-buzon-alta') { const url = `https://${req.headers.host || 'app.fisioterapia365.com'}/api/schedule?action=fac-buzon-in&k=${BZ.clave()}`; const C = await BZ.alta(q.dominio, url); return res.status(200).json({ ok: true, conf: C, direccion: 'gastos@' + C.dominio }); }
+        return res.status(400).json({ ok: false }); }
       if (action === 'fac-inicio') { // lo que necesita la sección: ajustes, series y conceptos del panel
         const CF = await conf().catch(() => CONF_DEF);
         return res.status(200).json({ ok: true, config: await FACX.config(), series: await FACX.series(), conceptos: ((CF.listas || {}).conceptos || []).map(c => c.n || c).filter(Boolean),
