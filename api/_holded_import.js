@@ -56,7 +56,7 @@ async function traer(h, desde, hasta, mapa, conCompras) {
   const D = await GX.db(); await D.query(`alter table fac_gastos add column if not exists holded text`);
   const X = await leer(h, desde, hasta), C = await FACX.config(), S = (await D.query(`select id, tipo, actividad from fac_series where activa order by auto desc, orden`)).rows;
   const serie = (act, tipo) => (S.find(s => (s.actividad || 'principal') === act && s.tipo === tipo) || S.find(s => s.tipo === tipo) || S[0] || {}).id;
-  let nv = 0, rep = 0, ng = 0;
+  let nv = 0, rep = 0, ng = 0; const vistos = new Set();
   for (const [t, d] of X.ventas) {
     const hid = String(d.id), num = txt(d.document_number, 60);
     if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; continue; }
@@ -68,6 +68,11 @@ async function traer(h, desde, hasta, mapa, conCompras) {
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,true,$20)`,
       [id, serie(act, tipo === 'rectificativa' ? 'rectificativa' : tipo), +f.slice(0, 4), n, num, tipo, f, C.emisor, { nombre: txt(d.contact_name || (d.contact || {}).name, 200), nif: txt(d.contact_code || (d.contact || {}).code, 30).toUpperCase() }, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, hid, num,
         JSON.stringify(tipo === 'rectificativa' ? {} : { estado: pagada ? 'pagada' : 'pendiente', fecha: pagada ? f : null }), txt(d.notes || d.desc, 1000) || null, 'Holded (traída)', act]);
+    // Los clientes de las otras actividades (CerraPoint) se guardan con sus datos; los de la clínica ya son pacientes del panel
+    if (act !== 'principal') { const c0 = d.contact || d.contact_id, cid = c0 && typeof c0 === 'object' ? c0.id : c0; if (cid && !vistos.has(cid)) { vistos.add(cid);
+      let c = null; try { c = h.holded ? await h.holded('/contacts/' + cid) : null; } catch (e) {}
+      const a = (c && (c.bill_address || c.billing_address)) || {};
+      await FACX.guardarCliente(act, { nombre: txt((c && c.name) || d.contact_name, 200), nif: (c && (c.code || c.vat_number)) || d.contact_code || '', email: (c && c.email) || '', tel: (c && (c.mobile || c.phone)) || '', direccion: a.address || '', cp: a.postal_code || a.postalCode || '', ciudad: a.city || '' }).catch(() => {}); } }
     nv++; }
   if (conCompras) for (const d of X.compras) {
     const hid = String(d.id); if ((await D.query(`select 1 from fac_gastos where holded=$1 limit 1`, [hid])).rows.length) continue;

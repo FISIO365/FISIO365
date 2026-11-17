@@ -7823,7 +7823,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       }
       // ── Traer de Holded: lo de antes (ventas, compras y clientes) y los movimientos de los bancos conectados allí ──
       if (/^fac-holded-/.test(action)) { if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
-        const HI = require('./_holded_import'), Hh = { holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }, es = f => /^\d{4}-\d{2}-\d{2}$/.test(String(f || ''));
+        const HI = require('./_holded_import'), Hh = { holded, holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }, es = f => /^\d{4}-\d{2}-\d{2}$/.test(String(f || ''));
         if (action === 'fac-holded-previa') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' }); return res.status(200).json({ ok: true, ...(await HI.previa(Hh, q.desde, q.hasta)) }); }
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'fac-holded-traer') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' });
