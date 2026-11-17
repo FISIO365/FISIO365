@@ -2327,6 +2327,8 @@ function pagoLimite(fecha, hora) {
 }
 const pagoLimTxt = iso => { const d = new Date(iso); return isNaN(d) ? '' : new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long' }).format(d).replace(',', '') + ' a las ' + new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }).format(d); };
 const pagoAhora = () => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+// VERI*FACTU: después de hacer o anular facturas, se mandan a la AEAT los registros pendientes (si hay certificado; como mucho ~9 s)
+async function vfEnviarSuave() { try { const VFE = require('./_vf_envio'), C = await FACX.config(); for (const e of [...new Set(['pruebas', (C.vf || {}).entorno || 'pruebas'])]) await Promise.race([VFE.enviar(e), new Promise(r => setTimeout(r, 9000))]); } catch (e) { console.log('vf envío', e.message); } }
 // Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
 async function pagoAvisar(fisio, title, body, tag, solo) {
   try { const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}`); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = (fl.records || []).filter(x => !x.fields['FECHA BAJA']);
@@ -3047,6 +3049,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   try { const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
     await FACX.desdeCobro({ cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
       lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, holded: String(docId), holdedNum: borrador ? '' : String(num), por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+    await vfEnviarSuave();
   } catch (e) { console.log('Facturación propia:', e.message); }
   return { num, borrador, otro: !!String(f[FF.aNombre] || '').trim(), total: lineas.reduce((t, l) => t + l.uds * l.precio, 0) - (descuento ? Math.abs(descuento.importe) : 0) };
 }
@@ -7696,6 +7699,18 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         if (X.tipo === 'factura') { const F = X.doc, o = await opcPdf(F.actividad); if (F.vf && F.vf.alta && F.estado !== 'anulada') { const ent = F.vf.entorno || 'pruebas'; o.qr = { url: FACX.VF.urlQR(ent, F), pruebas: ent !== 'real' }; } return pdf.pdfFactura(F, o); }
         const P = X.doc, C = await FACX.config(), A = FACX.actDe(C, P.actividad), E = Object.assign({}, C.emisor, ...['tel', 'email', 'web', 'direccion'].filter(k => A[k]).map(k => ({ [k]: A[k] })));
         return pdf.pdfFactura(Object.assign({}, P, { tipo: 'presupuesto', emisor: E, diseno: 'clasico' }), await opcPdf(P.actividad)); };
+      if (action === 'fac-declaracion') { // declaración responsable del sistema informático de facturación (pública)
+        const S = require('./_vf_envio').SISTEMA, e = x => String(x || '').split('').map(c => '&#' + c.charCodeAt(0) + ';').join(''); // en entidades: la marca blanca no lo cambia (el productor es siempre el mismo)
+        return res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8').send(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Declaración responsable · ${e(S.nombre)}</title><style>body{margin:0;background:#f5f2ee;font-family:Poppins,Helvetica,Arial,sans-serif;color:#1a1a1a}main{max-width:720px;margin:0 auto;padding:32px 18px}article{background:#fff;border-radius:18px;padding:28px 26px;border:1px solid #ece6e0}h1{font-size:22px;margin:0 0 6px}p,li{font-size:14.5px;line-height:1.65;color:#3c342f}dt{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#9a8d84;font-weight:700;margin-top:14px}dd{margin:2px 0 0;font-size:15px}</style></head><body><main><article>
+<h1>Declaración responsable del sistema informático de facturación</h1><p>Artículo 13 del Reglamento aprobado por el Real Decreto 1007/2023 y artículo 15 de la Orden HAC/1177/2024.</p>
+<dl><dt>Nombre del sistema informático</dt><dd>${e(S.nombre)}</dd><dt>Código identificador del sistema</dt><dd>${e(S.id)}</dd><dt>Versión</dt><dd>${e(S.version)}</dd>
+<dt>Componentes y funcionalidades</dt><dd>Aplicación web (servidor en la nube y base de datos PostgreSQL) para clínicas: emisión de facturas completas, simplificadas, rectificativas y sustitutivas, numeración correlativa por series, registros de facturación de alta y anulación encadenados con huella SHA-256, código QR tributario en cada factura y remisión de los registros a la AEAT por el servicio web VERI*FACTU con certificado electrónico.</dd>
+<dt>Uso exclusivo como VERI*FACTU</dt><dd>Sí: el sistema solo funciona en la modalidad VERI*FACTU (remite todos los registros a la AEAT).</dd>
+<dt>Uso por varios obligados tributarios</dt><dd>No: cada instalación la usa un solo obligado tributario.</dd>
+<dt>Firma electrónica de los registros</dt><dd>No aplica (modalidad VERI*FACTU).</dd>
+<dt>Productor del sistema</dt><dd>${e(S.nombreRazon)} · NIF ${e(S.nif)}</dd><dt>Dirección postal del productor</dt><dd>${e(S.direccion)}</dd></dl>
+<p style="margin-top:22px">${e(S.nombreRazon)}, como productora del sistema informático de facturación indicado, declara bajo su responsabilidad que el sistema, en la versión indicada, cumple lo dispuesto en el artículo 29.2.j) de la Ley 58/2003, de 17 de diciembre, General Tributaria, en el Reglamento que establece los requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación de empresarios y profesionales, aprobado por el Real Decreto 1007/2023, de 5 de diciembre, y en la Orden HAC/1177/2024, de 17 de octubre, y en las especificaciones técnicas, funcionales y de contenido que la desarrollan.</p>
+<p>En Barcelona, a 17 de noviembre de 2026.</p></article></main></body></html>`); }
       if (action === 'fac-ver') { // la factura en PDF (con la firma del enlace o la contraseña del panel)
         const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || (!okPwd && String(q.k || '') !== FACX.firma(id))) return res.status(404).send('No encontrada');
         const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
@@ -7731,6 +7746,14 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
       }
+      // ── VERI*FACTU: certificado y envío a la AEAT ──
+      if (/^fac-vf-/.test(action)) { const VFE = require('./_vf_envio'), ent = q.entorno === 'real' ? 'real' : 'pruebas';
+        if (action === 'fac-vf-estado') return res.status(200).json({ ok: true, entorno: ent, ...(await VFE.estado(ent)) });
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'fac-vf-cert') { if (!q.file || String(q.file).length > 200000) return res.status(200).json({ ok: false, error: 'Sube el archivo .p12 o .pfx del certificado' }); return res.status(200).json({ ok: true, cert: await VFE.guardarCert(String(q.file), q.pass, q.quien) }); }
+        if (action === 'fac-vf-cert-borrar') { await VFE.borrarCert(); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-vf-enviar') return res.status(200).json({ ok: true, ...(await VFE.enviar(ent, { forzar: !!q.forzar })) });
+        return res.status(400).json({ ok: false }); }
       if (action === 'fac-registros') { // VERI*FACTU: registros de la cadena y comprobación de las huellas
         const ent = q.entorno === 'real' ? 'real' : 'pruebas'; return res.status(200).json({ ok: true, entorno: ent, ...(await FACX.registros(ent, 300)) });
       }
@@ -7816,6 +7839,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-gestoria-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const r = await mandaGestoria(q.desde, q.hasta, String(q.periodo || '').slice(0, 40), String(q.to || '').trim()); return res.status(200).json({ ok: true, ...r }); }
       // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
+        try { const VFE = require('./_vf_envio'), C1 = await FACX.config(); out.vf = {}; for (const e of [...new Set(['pruebas', C1.vf.entorno || 'pruebas'])]) out.vf[e] = await VFE.enviar(e, { forzar: true }).catch(x => ({ error: x.message })); } catch (e) { out.vfErr = e.message; }
         try { out.recurrentes = await require('./_recurrentes').correr(hoy, (id, to) => envioDoc({ id, op: 'email', to, yo: '' })); if (out.recurrentes.length) await pagoAvisar(null, 'Facturas que se repiten', out.recurrentes.map(x => x.codigo ? x.codigo + (x.enviada ? ' (enviada)' : '') : 'Error: ' + x.error).join(' · '), 'fac-rec'); } catch (e) { out.recErr = e.message; }
         const [a, m, d] = hoy.split('-').map(Number);
         for (const f of [`${a}-01-30`, `${a}-04-20`, `${a}-07-20`, `${a}-10-20`]) { const dif = Math.round((Date.parse(f) - Date.parse(hoy)) / 864e5);
@@ -7869,13 +7893,14 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
       if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await FACX.pago(String(q.id || ''), q.estado, q.modo) }); }
       if (action === 'fac-rectificar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const r = await FACX.rectificar({ id: q.id, modo: q.modo, lineas: q.lineas, motivo: q.motivo, fecha: q.fecha, por: q.quien, nota: q.nota });
+        const r = await FACX.rectificar({ id: q.id, modo: q.modo, lineas: q.lineas, motivo: q.motivo, fecha: q.fecha, por: q.quien, nota: q.nota }); await vfEnviarSuave();
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos, sustituye: Array.isArray(q.sustituye) ? q.sustituye.map(String) : null });
         await FACX.guardarCliente(r.actividad, q.cliente).catch(() => {});
         if (/^pre[0-9a-f]{16}$/.test(q.presupuesto || '')) await FACX.estadoPresupuesto(q.presupuesto, 'facturado', r.id).catch(() => {});
+        await vfEnviarSuave();
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) });
       }
       if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas
