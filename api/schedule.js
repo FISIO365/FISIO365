@@ -7791,6 +7791,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         if (action === 'fac-vf-estado') return res.status(200).json({ ok: true, entorno: ent, ...(await VFE.estado(ent)) });
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'fac-vf-cert') { if (!q.file || String(q.file).length > 200000) return res.status(200).json({ ok: false, error: 'Sube el archivo .p12 o .pfx del certificado' }); return res.status(200).json({ ok: true, cert: await VFE.guardarCert(String(q.file), q.pass, q.quien) }); }
+        if (action === 'fac-vf-reenviar') { const e = await VFE.reenviar(q.id); return res.status(200).json({ ok: true, ...(await VFE.enviar(e, { forzar: true })) }); }
         if (action === 'fac-vf-cert-borrar') { await VFE.borrarCert(); return res.status(200).json({ ok: true }); }
         if (action === 'fac-vf-enviar') return res.status(200).json({ ok: true, ...(await VFE.enviar(ent, { forzar: !!q.forzar })) });
         return res.status(400).json({ ok: false }); }
@@ -7881,6 +7882,11 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
         try { const VFE = require('./_vf_envio'), C1 = await FACX.config(); out.vf = {}; for (const e of [...new Set(['pruebas', C1.vf.entorno || 'pruebas'])]) out.vf[e] = await VFE.enviar(e, { forzar: true }).catch(x => ({ error: x.message })); } catch (e) { out.vfErr = e.message; }
         try { out.recurrentes = await require('./_recurrentes').correr(hoy, (id, to) => envioDoc({ id, op: 'email', to, yo: '' })); if (out.recurrentes.length) await pagoAvisar(null, 'Facturas que se repiten', out.recurrentes.map(x => x.codigo ? x.codigo + (x.enviada ? ' (enviada)' : '') : 'Error: ' + x.error).join(' · '), 'fac-rec'); } catch (e) { out.recErr = e.message; }
+        // Recordatorios de cobro automáticos (si están puestos): a los 15 y a los 30 días, a quien tenga email
+        try { const D = await FACX.db(), RC = ((await D.query(`select v from fac_config where k='recordar'`)).rows[0] || {}).v || {};
+          if (RC.auto) { const L = (await D.query(`select id, cliente, enviada, (current_date - fecha)::int dias from fac_facturas where estado='emitida' and not prueba and tipo<>'rectificativa' and pagos->>'estado' in ('pendiente','parcial') and (current_date - fecha) in (15, 30)`)).rows; out.recordatorios = 0;
+            for (const x of L) { const ya = (x.enviada || []).filter(e => /^recordatorio/.test(e.a)).length, toca = x.dias === 15 ? 1 : 2, to = String((x.cliente || {}).email || '').trim();
+              if (ya < toca && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { const r = await envioDoc({ id: x.id, op: 'email', to, yo: '', recordar: 1 }).catch(() => ({})); if (r.ok) out.recordatorios++; } } } } catch (e) { out.recErr2 = e.message; }
         const [a, m, d] = hoy.split('-').map(Number);
         for (const f of [`${a}-01-30`, `${a}-04-20`, `${a}-07-20`, `${a}-10-20`]) { const dif = Math.round((Date.parse(f) - Date.parse(hoy)) / 864e5);
           if (dif === 10 || dif === 3) { await pagoAvisar(null, 'IVA del trimestre', `El ${+f.slice(8)}/${+f.slice(5, 7)} acaba el plazo del IVA (modelo 303). En Facturación › Gestoría tienes todo para mandárselo a la gestoría.`, 'fac-iva'); out.avisoIva = f; } }
@@ -7898,9 +7904,10 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         const C = await FACX.config(), A = act ? FACX.actDe(C, act) : null;
         return enviaPdf(await GS.pdf(X, { empresa: C.emisor.razon, nif: C.emisor.nif, periodo: String(q.periodo || '').slice(0, 40), actNom: A ? (A.id === 'principal' ? (A.nombre || CLI.marca) : A.nombre) : '', color: (A && A.color) || '#c2552e' }), 'Gestoria_' + String(q.periodo || q.desde).replace(/\s+/g, '_')); }
       // ── Cobros pendientes: facturas emitidas que aún no están pagadas (las más antiguas primero) ──
+      if (action === 'fac-recordar-conf') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const D = await FACX.db(); await D.query(`insert into fac_config(k,v) values('recordar',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify({ auto: !!q.auto })]); return res.status(200).json({ ok: true }); }
       if (action === 'fac-pendientes') { const D = await FACX.db();
         const L = (await D.query(`select id, codigo, fecha::text fecha, total::float total, (total - case when pagos->>'estado'='parcial' then coalesce((pagos->>'cobrado')::numeric,0) else 0 end)::float falta, cliente, actividad, enviada, (current_date - fecha)::int dias from fac_facturas where estado='emitida' and tipo<>'rectificativa' and pagos->>'estado' in ('pendiente','parcial') and actividad=$1 order by fecha, numero`, [String(q.actividad || 'principal')])).rows;
-        return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
+        return res.status(200).json({ ok: true, auto: !!((((await D.query(`select v from fac_config where k='recordar'`)).rows[0] || {}).v || {}).auto), facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
       // ── Gastos y banco (api/_gastos.js) ──
       if (/^fac-(gas|banco|cuentas|ivareg)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
         if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro, prov: q.prov }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas(), esperados: await GX.esperados(String(q.actividad || 'principal')).catch(() => []) });

@@ -9,7 +9,9 @@ const crypto = require('crypto');
 const SQL = `
 create table if not exists fac_registros (id bigserial primary key, entorno text not null, nif text not null, factura text not null, tipo text not null, num_serie text not null, fecha date not null, tipo_factura text, cuota numeric(12,2), importe numeric(12,2), huella text not null, huella_prev text, fechahora text not null, estado text not null default 'pendiente', csv text, respuesta jsonb, enviado timestamptz, creado timestamptz not null default now());
 create index if not exists fac_registros_cadena on fac_registros (entorno, nif, id);
-create index if not exists fac_registros_factura on fac_registros (factura)
+create index if not exists fac_registros_factura on fac_registros (factura);
+alter table fac_registros add column if not exists subsanacion boolean not null default false;
+alter table fac_registros add column if not exists rechazo_previo boolean not null default false
 `;
 const URLS = { pruebas: 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR', real: 'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR' };
 const importe = n => (Math.round((Number(n) || 0) * 100) / 100).toFixed(2);

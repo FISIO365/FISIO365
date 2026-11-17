@@ -59,7 +59,8 @@ function desglose(F) {
 function xmlAlta(r, F, prev, emisor, inst) {
   const tf = r.tipo_factura, cl = F.cliente || {}, desc = [...new Set((F.lineas || []).map(l => l.concepto).filter(Boolean))].join(', ').slice(0, 500) || 'Servicios';
   let x = `<sf:IDVersion>1.0</sf:IDVersion><sf:IDFactura>${t('IDEmisorFactura', r.nif)}${t('NumSerieFactura', r.num_serie)}${t('FechaExpedicionFactura', fecha(r.fecha))}</sf:IDFactura>${t('NombreRazonEmisor', String(emisor.razon || '').slice(0, 120))}`;
-  if (r.subsanacion) x += t('Subsanacion', 'S') + (r.rechazo_previo ? t('RechazoPrevio', 'X') : '');
+  // Reenvío de un rechazado: si ya era una subsanación → Subsanacion S + RechazoPrevio S; si era el alta normal → RechazoPrevio X
+  if (r.rechazo_previo) x += r.subsanacion ? t('Subsanacion', 'S') + t('RechazoPrevio', 'S') : t('RechazoPrevio', 'X'); else if (r.subsanacion) x += t('Subsanacion', 'S');
   x += t('TipoFactura', tf);
   if (/^R/.test(tf)) { x += t('TipoRectificativa', 'I'); if (F.rect) x += `<sf:FacturasRectificadas><sf:IDFacturaRectificada>${t('IDEmisorFactura', r.nif)}${t('NumSerieFactura', F.rect.codigo)}${t('FechaExpedicionFactura', fecha(F.rect.fecha))}</sf:IDFacturaRectificada></sf:FacturasRectificadas>`; }
   if (tf === 'F3' && (F.sustituye || []).length) x += `<sf:FacturasSustituidas>${F.sustituye.map(s => `<sf:IDFacturaSustituida>${t('IDEmisorFactura', r.nif)}${t('NumSerieFactura', s.codigo)}${t('FechaExpedicionFactura', fecha(s.fecha))}</sf:IDFacturaSustituida>`).join('')}</sf:FacturasSustituidas>`;
@@ -122,8 +123,10 @@ async function enviar(entorno, o) {
     return { enviados: R.length, bien, mal, estado: X.estado, csv: X.csv };
   } finally { await D.query(`delete from fac_config where k=$1`, [lk]).catch(() => {}); }
 }
+// Volver a mandar un registro rechazado (subsanación con «rechazo previo»): para cuando el problema ya está resuelto (p. ej. un NIF que Hacienda no reconocía)
+async function reenviar(id) { const D = await FACX.db(); const r = (await D.query(`update fac_registros set estado='pendiente', rechazo_previo=(tipo<>'anulacion') where id=$1 and estado in ('rechazado','aceptado_errores') returning entorno`, [+id])).rows[0]; if (!r) throw new Error('Ese registro no está rechazado'); return r.entorno; }
 async function estado(entorno) { const D = await FACX.db(); entorno = entorno === 'real' ? 'real' : 'pruebas';
   const c = (await D.query(`select estado, count(*)::int n from fac_registros where entorno=$1 group by estado`, [entorno])).rows, cuenta = {}; c.forEach(x => { cuenta[x.estado] = x.n; });
   const errores = (await D.query(`select id, num_serie, tipo, fecha::text fecha, estado, respuesta from fac_registros where entorno=$1 and estado in ('rechazado','aceptado_errores') order by id desc limit 50`, [entorno])).rows;
   return { cuenta, errores, ultimo: await conf('vf_ultimo:' + entorno), cert: await certInfo() }; }
-module.exports = { SISTEMA, ENDPOINT, guardarCert, certInfo, borrarCert, enviar, estado, xmlAlta, xmlAnul, sobre, leerRespuesta, leerP12 };
+module.exports = { reenviar, SISTEMA, ENDPOINT, guardarCert, certInfo, borrarCert, enviar, estado, xmlAlta, xmlAnul, sobre, leerRespuesta, leerP12 };

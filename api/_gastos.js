@@ -186,6 +186,10 @@ async function sugerencias(id) {
       }
     }
   }
+  // Movimientos que otras veces se marcaron «sin factura» (traspasos, nóminas…): mismo concepto → misma respuesta
+  if (!S.length) { const clave = con.replace(/\d+/g, '').split(' ').filter(Boolean).slice(0, 4).join(' ');
+    const ig = clave && (await D.query(`select concepto, nota from fac_movimientos where estado='ignorado' and cuenta=$1 and sign(importe)=sign($2::numeric) order by fecha desc limit 300`, [m.cuenta, m.importe])).rows.find(x => normCon(x.concepto).replace(/\d+/g, '').split(' ').filter(Boolean).slice(0, 4).join(' ') === clave);
+    if (ig) S.push({ tipo: 'ignorar', ids: [], motivo: ig.nota || '', seguro: true, txt: 'Sin factura' + (ig.nota ? ': ' + ig.nota : '') + ' (como otras veces)', fecha: m.fecha, total: Math.abs(m.importe) }); }
   { const tp = S.filter(x => x.tipo === 'tpv'); if (tp.length > 1) tp.forEach(x => { x.seguro = false; }); }
   S.sort((a, b) => (b.seguro - a.seguro) || Math.abs(dias(m.fecha, a.fecha)) - Math.abs(dias(m.fecha, b.fecha)));
   return { mov: m, sugerencias: S.slice(0, 8), plantilla: plantilla || null };
