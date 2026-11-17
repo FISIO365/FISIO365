@@ -7939,6 +7939,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-gestoria-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const r = await mandaGestoria(q.desde, q.hasta, String(q.periodo || '').slice(0, 40), String(q.to || '').trim()); return res.status(200).json({ ok: true, ...r }); }
       // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
+        try { out.vfPendientes = await FACX.vfPendientes(300); } catch (e) { out.vfPendErr = e.message; }
         // Pagos con tarjeta que no volvieron a la página (cerraron antes): se miran en Stripe
         if (process.env.STRIPE_SECRET_KEY) try { const D0 = await FACX.db(); const L = (await D0.query(`select id from fac_facturas where pagos->>'sid' is not null and coalesce(pagos->>'estado','') <> 'pagada' and fecha > now() - interval '120 days' limit 40`)).rows; out.tarjeta = 0; for (const x of L) { const F = await FACX.una(x.id); if (F && await facPagoVerifica(F).catch(() => false)) out.tarjeta++; } } catch (e) { out.tarjetaErr = e.message; }
         try { const VFE = require('./_vf_envio'), C1 = await FACX.config(); out.vf = {}; for (const e of [...new Set(['pruebas', C1.vf.entorno || 'pruebas'])]) out.vf[e] = await VFE.enviar(e, { forzar: true }).catch(x => ({ error: x.message })); } catch (e) { out.vfErr = e.message; }

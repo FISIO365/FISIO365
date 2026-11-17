@@ -170,6 +170,13 @@ async function emitir(o) {
     return { id, codigo, total: c.total, actividad: s.actividad || 'principal' };
   });
 }
+// Copias de prueba que ya tienen su número de Holded pero se quedaron sin registro VERI*FACTU (y por eso sin QR): se registran ahora.
+// No las «traídas» de Holded (son de antes y las hizo Holded) ni las que siguen en borrador.
+async function vfPendientes(max = 200) { const D = await db();
+  const L = (await D.query(`select id from fac_facturas where prueba and estado='emitida' and coalesce(vf->>'alta','')='' and coalesce(por,'')<>'Holded (traída)' and codigo not like 'Borrador-%' order by emitida limit $1`, [max])).rows;
+  let n = 0; for (const x of L) await D.tx(async q => { const F = (await q.query(`select *, fecha::text fecha from fac_facturas where id=$1 for update`, [x.id])).rows[0];
+    if (F && !(F.vf && F.vf.alta)) { await registrarVF(q, 'pruebas', { id: F.id, emisor: F.emisor, codigo: F.codigo, fecha: F.fecha, tipo: F.tipo, total: F.total, cuota: F.cuota }); n++; } }).catch(e => console.log('VF pendiente', x.id, e.message));
+  return n; }
 // Registro VERI*FACTU de una factura (alta o anulación) y su referencia en la factura
 async function registrarVF(q, entorno, F, tipo = 'alta') {
   const r = await VF.registrar(q, entorno, F, tipo);
@@ -304,6 +311,7 @@ async function sincronizaHolded(getDoc, max = 25) {
   // Las primeras que se hicieron con numeración propia pasan a ser de prueba con el número de Holded
   await D.query(`update fac_facturas set prueba=true, codigo=coalesce(nullif(holded_num,''), 'Borrador-'||right(id,6)) where cobro is not null and not prueba`).catch(() => {});
   const L = (await D.query(`select id, holded from fac_facturas where prueba and holded is not null and coalesce(holded_num,'')='' and estado='emitida' order by emitida limit $1`, [max])).rows;
+  await vfPendientes(80).catch(e => console.log('VF pendientes', e.message));
   let n = 0;
   for (const x of L) { let d; try { d = await getDoc(x.holded); } catch (e) { continue; }
     if (d === null) { await anular(x.id, 'Ticket borrado en Holded').catch(() => {}); continue; }
@@ -370,4 +378,4 @@ async function guardarModo(o) { const D = await db(), ya = await modo(); const v
   await D.query(`insert into fac_config(k,v) values('modo',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
