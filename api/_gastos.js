@@ -10,6 +10,12 @@ const FACX = require('./_facturacion');
 const SQL = `
 create table if not exists fac_gastos (id text primary key, actividad text not null default 'principal', fecha date not null, proveedor jsonb not null default '{}'::jsonb, numero text, categoria text, concepto text, impuestos jsonb not null default '[]'::jsonb, base numeric(12,2) not null default 0, cuota numeric(12,2) not null default 0, irpf_tipo numeric(5,2) not null default 0, irpf numeric(12,2) not null default 0, total numeric(12,2) not null default 0, cuenta text, pago jsonb not null default '{}'::jsonb, archivo jsonb, a_nombre jsonb, nota text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now());
 create index if not exists fac_gastos_fecha on fac_gastos (actividad, fecha);
+alter table fac_gastos add column if not exists comun boolean not null default false;
+alter table fac_gastos add column if not exists isp text not null default '';
+alter table fac_gastos add column if not exists isp_cuota numeric(12,2) not null default 0;
+alter table fac_gastos add column if not exists moneda text not null default 'EUR';
+alter table fac_gastos add column if not exists importe_moneda numeric(12,2);
+alter table fac_gastos add column if not exists cada int not null default 0;
 create table if not exists fac_movimientos (id text primary key, cuenta text not null, fecha date not null, fvalor date, concepto text not null default '', importe numeric(12,2) not null, saldo numeric(12,2), huella text not null unique, estado text not null default 'pendiente', enlaces jsonb not null default '[]'::jsonb, nota text, importado timestamptz not null default now(), conciliado timestamptz);
 create index if not exists fac_movimientos_cuenta on fac_movimientos (cuenta, fecha)
 `;
@@ -31,12 +37,22 @@ async function guardarCuentas(L) { const D = await db();
   const v = (Array.isArray(L) ? L : []).slice(0, 30).map(c => ({ id: /^[a-z0-9]{3,20}$/.test(c.id || '') ? c.id : 'cta' + crypto.randomBytes(4).toString('hex'), nombre: txt(c.nombre, 60), iban: txt(c.iban, 40).toUpperCase().replace(/\s+/g, ' '), actividad: txt(c.actividad, 40) || 'principal' })).filter(c => c.nombre);
   await D.query(`insert into fac_config(k,v) values('cuentas',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 
+// ── Cómo se desgrava el IVA de los gastos (lo dice la gestoría) ──
+// general: todo el IVA soportado se deduce al % de prorrata · sectores: lo de la actividad con IVA al 100 %, lo de la exenta nada y lo común a prorrata
+// pct: el provisional del año (el definitivo del año anterior); vacío = se calcula con las facturas del año
+async function ivaReg() { const D = await db(); const v = ((await D.query(`select v from fac_config where k='iva_reg'`)).rows[0] || {}).v || {}; return { modo: v.modo === 'general' ? 'general' : 'sectores', pct: v.pct == null || v.pct === '' ? null : Math.max(0, Math.min(100, Number(v.pct) || 0)) }; }
+async function guardarIvaReg(o) { const D = await db(); const v = { modo: o.modo === 'general' ? 'general' : 'sectores', pct: o.pct == null || o.pct === '' ? null : Math.max(0, Math.min(100, Math.round(Number(o.pct) || 0))) };
+  await D.query(`insert into fac_config(k,v) values('iva_reg',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // ── Gastos ──
+// isp: proveedor de fuera de España ('ue' o 'fuera'): la factura viene sin IVA y la empresa se lo repercute y soporta a sí misma (21 %)
 function calcGasto(g) {
+  if (g.isp === 'ue' || g.isp === 'fuera') { const base = r2((Array.isArray(g.impuestos) ? g.impuestos : []).reduce((t, x) => t + r2(x.base) + r2(x.cuota), 0));
+    const irpf_tipo = Math.max(0, Math.min(50, Number(g.irpf_tipo) || 0)), irpf = r2(base * irpf_tipo / 100);
+    return { impuestos: base ? [{ tipo: 0, base, cuota: 0 }] : [], base, cuota: 0, irpf_tipo, irpf, total: r2(base - irpf), isp: g.isp, isp_cuota: r2(base * 0.21) }; }
   const imp = (Array.isArray(g.impuestos) ? g.impuestos : []).map(x => { const base = r2(x.base), tipo = Math.max(0, Math.min(100, Number(x.tipo) || 0)); return { tipo, base, cuota: x.cuota != null && x.cuota !== '' ? r2(x.cuota) : r2(base * tipo / 100) }; }).filter(x => x.base || x.cuota);
   const base = r2(imp.reduce((t, x) => t + x.base, 0)), cuota = r2(imp.reduce((t, x) => t + x.cuota, 0));
   const irpf_tipo = Math.max(0, Math.min(50, Number(g.irpf_tipo) || 0)), irpf = g.irpf != null && g.irpf !== '' ? r2(g.irpf) : r2(base * irpf_tipo / 100);
-  return { impuestos: imp, base, cuota, irpf_tipo, irpf, total: r2(base + cuota - irpf) };
+  return { impuestos: imp, base, cuota, irpf_tipo, irpf, total: r2(base + cuota - irpf), isp: '', isp_cuota: 0 };
 }
 const provLimpio = p => { p = p || {}; return { nombre: txt(p.nombre, 160), nif: txt(p.nif, 30).toUpperCase().replace(/[^A-Z0-9]/g, ''), direccion: txt(p.direccion, 300) }; };
 async function guardarGasto(o) {
@@ -47,18 +63,20 @@ async function guardarGasto(o) {
   const pago = o.pago && o.pago.estado === 'pendiente' ? { estado: 'pendiente', vence: esFecha(o.pago.vence) ? o.pago.vence : null } : { estado: 'pagado', fecha: esFecha((o.pago || {}).fecha) ? o.pago.fecha : fecha, mov: (o.pago || {}).mov || null };
   const archivo = o.archivo && o.archivo.url ? { url: txt(o.archivo.url, 300), nombre: txt(o.archivo.nombre, 160), tipo: txt(o.archivo.tipo, 80) } : null;
   const aNombre = o.a_nombre && (o.a_nombre.nombre || o.a_nombre.nif) ? { nombre: txt(o.a_nombre.nombre, 160), nif: txt(o.a_nombre.nif, 30).toUpperCase() } : null;
-  const vals = [txt(o.actividad, 40) || 'principal', fecha, prov, txt(o.numero, 60) || null, cat, txt(o.concepto, 300) || null, JSON.stringify(c.impuestos), c.base, c.cuota, c.irpf_tipo, c.irpf, c.total, txt(o.cuenta, 30) || null, pago, archivo, aNombre, txt(o.nota, 1000) || null];
+  const mon = /^[A-Z]{3}$/.test(o.moneda || '') ? o.moneda : 'EUR', imon = mon !== 'EUR' && isFinite(Number(o.importe_moneda)) && Number(o.importe_moneda) ? r2(o.importe_moneda) : null;
+  const vals = [txt(o.actividad, 40) || 'principal', fecha, prov, txt(o.numero, 60) || null, cat, txt(o.concepto, 300) || null, JSON.stringify(c.impuestos), c.base, c.cuota, c.irpf_tipo, c.irpf, c.total, txt(o.cuenta, 30) || null, pago, archivo, aNombre, txt(o.nota, 1000) || null,
+    !!o.comun, c.isp, c.isp_cuota, mon, imon, [0, 1, 2, 3, 6, 12].includes(+o.cada) ? +o.cada : 0];
   if (o.id) { const ya = (await D.query(`select pago from fac_gastos where id=$1`, [o.id])).rows[0]; if (!ya) throw new Error('No encuentro ese gasto');
     if ((ya.pago || {}).mov && pago.estado === 'pagado') pago.mov = ya.pago.mov; // la conciliación se mantiene
     vals[13] = pago;
-    await D.query(`update fac_gastos set actividad=$2, fecha=$3, proveedor=$4, numero=$5, categoria=$6, concepto=$7, impuestos=$8, base=$9, cuota=$10, irpf_tipo=$11, irpf=$12, total=$13, cuenta=$14, pago=$15, archivo=coalesce($16, archivo), a_nombre=$17, nota=$18, modificado=now() where id=$1`, [o.id, ...vals]);
+    await D.query(`update fac_gastos set actividad=$2, fecha=$3, proveedor=$4, numero=$5, categoria=$6, concepto=$7, impuestos=$8, base=$9, cuota=$10, irpf_tipo=$11, irpf=$12, total=$13, cuenta=$14, pago=$15, archivo=coalesce($16, archivo), a_nombre=$17, nota=$18, comun=$19, isp=$20, isp_cuota=$21, moneda=$22, importe_moneda=$23, cada=$24, modificado=now() where id=$1`, [o.id, ...vals]);
     return { id: o.id }; }
   const id = nuevoId('gas');
-  await D.query(`insert into fac_gastos(id,actividad,fecha,proveedor,numero,categoria,concepto,impuestos,base,cuota,irpf_tipo,irpf,total,cuenta,pago,archivo,a_nombre,nota,por) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`, [id, ...vals, txt(o.por, 60) || null]);
+  await D.query(`insert into fac_gastos(id,actividad,fecha,proveedor,numero,categoria,concepto,impuestos,base,cuota,irpf_tipo,irpf,total,cuenta,pago,archivo,a_nombre,nota,comun,isp,isp_cuota,moneda,importe_moneda,cada,por) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`, [id, ...vals, txt(o.por, 60) || null]);
   return { id };
 }
-const gastoFila = g => { ['base', 'cuota', 'irpf', 'irpf_tipo', 'total'].forEach(k => { g[k] = Number(g[k]); }); g.falta = !g.archivo && !SIN_DOC.has(g.categoria); return g; };
-async function gastos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ['actividad=$1'];
+const gastoFila = g => { ['base', 'cuota', 'irpf', 'irpf_tipo', 'total', 'isp_cuota'].forEach(k => { g[k] = Number(g[k]); }); g.falta = !g.archivo && !SIN_DOC.has(g.categoria); return g; };
+async function gastos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ['(actividad=$1 or comun)'];
   if (esFecha(f.desde)) { p.push(f.desde); w.push(`fecha>=$${p.length}`); } if (esFecha(f.hasta)) { p.push(f.hasta); w.push(`fecha<=$${p.length}`); }
   if (f.categoria) { p.push(f.categoria); w.push(`categoria=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(proveedor->>'nombre') like $${p.length} or lower(coalesce(numero,'')) like $${p.length} or lower(coalesce(concepto,'')) like $${p.length} or lower(coalesce(proveedor->>'nif','')) like $${p.length})`); }
@@ -71,7 +89,7 @@ async function borrarGasto(id) { const D = await db();
     if (mov) await q.query(`update fac_movimientos set estado='pendiente', enlaces='[]'::jsonb, conciliado=null where id=$1`, [mov]); }); }
 // Proveedores ya usados (para autocompletar): el último gasto de cada uno manda (categoría, cuenta, IVA)
 async function proveedores(actividad, q) { const D = await db(), t = '%' + String(q || '').trim().toLowerCase() + '%';
-  return (await D.query(`select distinct on (lower(proveedor->>'nombre')) proveedor, categoria, cuenta, concepto, irpf_tipo::float irpf_tipo, (select coalesce(max((x->>'tipo')::numeric),0) from jsonb_array_elements(impuestos) x)::float iva from fac_gastos where actividad=$1 and (lower(proveedor->>'nombre') like $2 or lower(coalesce(proveedor->>'nif','')) like $2) order by lower(proveedor->>'nombre'), fecha desc limit 12`, [actividad || 'principal', t])).rows; }
+  return (await D.query(`select distinct on (lower(proveedor->>'nombre')) proveedor, categoria, cuenta, concepto, irpf_tipo::float irpf_tipo, (select coalesce(max((x->>'tipo')::numeric),0) from jsonb_array_elements(impuestos) x)::float iva, actividad, comun, isp, moneda, cada from fac_gastos where (actividad=$1 or comun) and (lower(proveedor->>'nombre') like $2 or lower(coalesce(proveedor->>'nif','')) like $2) order by lower(proveedor->>'nombre'), fecha desc limit 12`, [actividad || 'principal', t])).rows; }
 async function duplicado(o) { const D = await db(); const nif = provLimpio(o.proveedor).nif, num = txt(o.numero, 60); if (!num) return null;
   return (await D.query(`select id, fecha::text fecha, total::float total from fac_gastos where lower(coalesce(numero,''))=lower($1) and (($2<>'' and proveedor->>'nif'=$2) or lower(proveedor->>'nombre')=lower($3)) and id<>coalesce($4,'') limit 1`, [num, nif, provLimpio(o.proveedor).nombre, o.id || ''])).rows[0] || null; }
 
@@ -87,7 +105,7 @@ async function leerFactura(b64, tipo, emisor) {
   const K = process.env.ANTHROPIC_API_KEY; if (!K) throw new Error('Falta la clave de la IA');
   const doc = tipo === 'application/pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } } : { type: 'image', source: { type: 'base64', media_type: /png|webp/.test(tipo) ? tipo : 'image/jpeg', data: b64 } };
   const pide = `Es una factura (o ticket) que ha recibido una empresa española${emisor && emisor.razon ? ` («${emisor.razon}», NIF ${emisor.nif})` : ''}. Saca los datos y responde SOLO con este JSON, sin texto alrededor:
-{"proveedor":{"nombre":"quien emite la factura","nif":"","direccion":""},"a_nombre":{"nombre":"a quién va la factura","nif":""},"numero":"nº de factura","fecha":"AAAA-MM-DD","concepto":"qué es, en pocas palabras y en castellano","categoria":"una de: ${CATEGORIAS.join(', ')}","impuestos":[{"tipo":21,"base":0,"cuota":0}],"irpf_tipo":0,"irpf":0,"total":0,"moneda":"EUR","vence":"AAAA-MM-DD o vacío"}
+{"proveedor":{"nombre":"quien emite la factura","nif":"","direccion":""},"a_nombre":{"nombre":"a quién va la factura","nif":""},"numero":"nº de factura","fecha":"AAAA-MM-DD","concepto":"qué es, en pocas palabras y en castellano","categoria":"una de: ${CATEGORIAS.join(', ')}","impuestos":[{"tipo":21,"base":0,"cuota":0}],"irpf_tipo":0,"irpf":0,"total":0,"moneda":"EUR","pais":"código ISO de 2 letras del país del proveedor (ES, IE, US…)","vence":"AAAA-MM-DD o vacío"}
 Una entrada en "impuestos" por cada tipo de IVA (0 si no lleva IVA o es exenta: tipo 0, base = importe). Importes con punto decimal. Si algo no aparece, déjalo vacío o 0.`;
   let ult;
   for (const model of ['claude-sonnet-4-5', 'claude-haiku-4-5-20251001']) {
@@ -172,7 +190,16 @@ async function conciliar(id, o) {
   await D.tx(async q => {
     if (o.tipo === 'ignorar') { await q.query(`update fac_movimientos set estado='ignorado', enlaces='[]'::jsonb, nota=$2, conciliado=now() where id=$1`, [id, txt(o.motivo, 200) || null]); return; }
     if (o.tipo === 'gasto') { for (const gid of (o.ids || []).slice(0, 20)) { const r = await q.query(`update fac_gastos set pago=jsonb_build_object('estado','pagado','fecha',$2::text,'mov',$3::text), cuenta=coalesce(cuenta,$4) where id=$1 returning id`, [gid, m.fecha, id, m.cuenta]); if (r.rows.length) enl.push({ tipo: 'gasto', id: gid }); } }
-    else if (o.tipo === 'facturas' || o.tipo === 'tpv') { for (const fid of (o.ids || []).slice(0, 300)) { const r = await q.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || jsonb_build_object('estado','pagada','mov',$2::text,'fecha_banco',$3::text) || case when coalesce(pagos->>'modo','')='' then jsonb_build_object('modo',$4::text) else '{}'::jsonb end where id=$1 returning id`, [fid, id, m.fecha, o.tipo === 'tpv' ? 'Tarjeta' : 'Transferencia']); if (r.rows.length) enl.push({ tipo: 'factura', id: fid }); }
+    else if (o.tipo === 'facturas' || o.tipo === 'tpv') {
+      // Cada factura se lleva lo que le falta por cobrar; si el dinero no llega para todas, la última queda cobrada en parte
+      let queda = o.tipo === 'tpv' ? Infinity : Math.abs(m.importe); const imps = o.importes || {};
+      for (const fid of (o.ids || []).slice(0, 300)) { const f = (await q.query(`select total::float total, pagos from fac_facturas where id=$1 and estado='emitida' for update`, [fid])).rows[0]; if (!f) continue;
+        const P = f.pagos || {}, cob = P.estado === 'parcial' ? Number(P.cobrado) || 0 : 0, falta = r2(f.total - cob); if (falta <= 0.004 && P.mov) continue;
+        let ap = imps[fid] != null ? r2(imps[fid]) : Math.min(falta, queda); if (o.tipo !== 'tpv' && ap <= 0) continue; if (o.tipo === 'tpv') ap = falta; queda = r2(queda - ap);
+        const cobrado = r2(cob + ap), entera = cobrado >= f.total - 0.004, movs = (P.movs || []).concat([{ mov: id, importe: ap }]);
+        const N = Object.assign({}, P, { estado: entera ? 'pagada' : 'parcial', cobrado, movs, mov: id, fecha_banco: m.fecha, modo: P.modo || (o.tipo === 'tpv' ? 'Tarjeta' : 'Transferencia') });
+        await q.query(`update fac_facturas set pagos=$2 where id=$1`, [fid, JSON.stringify(N)]);
+        enl.push({ tipo: 'factura', id: fid, importe: ap, antes: { estado: P.estado || null, modo: P.modo || '', mov: P.mov || null, fecha_banco: P.fecha_banco || null } }); }
       // Comisión del TPV: se apunta como gasto (sin factura: la pone el banco en la liquidación)
       const com = r2(o.comision); if (o.tipo === 'tpv' && com > 0) { const gid = nuevoId('gas');
         await q.query(`insert into fac_gastos(id,actividad,fecha,proveedor,categoria,concepto,impuestos,base,total,cuenta,pago,por) values($1,$2,$3,$4,'Comisiones bancarias','Comisión del TPV',$5,$6,$6,$7,$8,'banco')`, [gid, cta.actividad || 'principal', m.fecha, { nombre: cta.nombre ? 'Banco (' + cta.nombre + ')' : 'Banco', nif: '', direccion: '' }, JSON.stringify([{ tipo: 0, base: com, cuota: 0 }]), com, m.cuenta, { estado: 'pagado', fecha: m.fecha, mov: id }]);
@@ -188,7 +215,12 @@ async function desconciliar(id) { const D = await db();
     for (const e of m.enlaces || []) {
       if (e.tipo === 'gasto' && e.comision) await q.query(`delete from fac_gastos where id=$1`, [e.id]);
       else if (e.tipo === 'gasto') await q.query(`update fac_gastos set pago = pago - 'mov' where id=$1`, [e.id]);
-      else if (e.tipo === 'factura') await q.query(`update fac_facturas set pagos = pagos - 'mov' - 'fecha_banco' where id=$1`, [e.id]); }
+      else if (e.tipo === 'factura') { const f = (await q.query(`select total::float total, pagos from fac_facturas where id=$1 for update`, [e.id])).rows[0]; if (!f) continue;
+        const P = f.pagos || {}, movs = (P.movs || []).filter(x => x.mov !== id);
+        if (!e.antes) { await q.query(`update fac_facturas set pagos = pagos - 'mov' - 'fecha_banco' - 'movs' - 'cobrado' where id=$1`, [e.id]); continue; } // conciliaciones antiguas
+        let N; if (movs.length) { const cobrado = r2(movs.reduce((t, x) => t + x.importe, 0)); N = Object.assign({}, P, { movs, cobrado, mov: movs[movs.length - 1].mov, estado: cobrado >= f.total - 0.004 ? 'pagada' : 'parcial' }); }
+        else { N = Object.assign({}, P); delete N.movs; delete N.cobrado; delete N.mov; delete N.fecha_banco; N.estado = e.antes.estado || 'pagada'; N.modo = e.antes.modo || ''; if (N.estado === 'pendiente') N.fecha = null; }
+        await q.query(`update fac_facturas set pagos=$2 where id=$1`, [e.id, JSON.stringify(N)]); } }
     await q.query(`update fac_movimientos set estado='pendiente', enlaces='[]'::jsonb, nota=null, conciliado=null where id=$1`, [id]); }); }
 // Lo que hay unido a un movimiento (para enseñarlo)
 async function detalleEnlaces(m) { const D = await db(), out = [];
@@ -199,7 +231,7 @@ async function detalleEnlaces(m) { const D = await db(), out = [];
 // Buscar a mano (gastos o facturas sin conciliar)
 async function buscar(tipo, q, importe) { const D = await db(), t = '%' + String(q || '').trim().toLowerCase() + '%', imp = Math.abs(Number(importe) || 0);
   if (tipo === 'gasto') return (await D.query(`select id, fecha::text fecha, proveedor, numero, concepto, total::float total from fac_gastos where coalesce(pago->>'mov','')='' and ($1='%%' or lower(proveedor->>'nombre') like $1 or lower(coalesce(numero,'')) like $1 or total::text like $1) order by abs(total-$2), fecha desc limit 20`, [t, imp])).rows.map(g => ({ id: g.id, txt: `${g.proveedor.nombre} · ${g.numero || g.concepto || ''}`, fecha: g.fecha, total: g.total }));
-  return (await D.query(`select id, codigo, fecha::text fecha, total::float total, cliente from fac_facturas where estado='emitida' and tipo<>'rectificativa' and coalesce(pagos->>'mov','')='' and ($1='%%' or lower(codigo) like $1 or lower(cliente->>'nombre') like $1 or total::text like $1) order by abs(total-$2), fecha desc limit 20`, [t, imp])).rows.map(f => ({ id: f.id, txt: `Factura ${f.codigo} · ${(f.cliente || {}).nombre || ''}`, fecha: f.fecha, total: f.total })); }
+  return (await D.query(`select id, codigo, fecha::text fecha, (total - case when pagos->>'estado'='parcial' then coalesce((pagos->>'cobrado')::numeric,0) else 0 end)::float total, cliente, pagos->>'estado' estado from fac_facturas where estado='emitida' and tipo<>'rectificativa' and (coalesce(pagos->>'mov','')='' or pagos->>'estado'='parcial') and ($1='%%' or lower(codigo) like $1 or lower(cliente->>'nombre') like $1 or total::text like $1) order by abs(total-$2), fecha desc limit 20`, [t, imp])).rows.map(f => ({ id: f.id, parcial: f.estado === 'parcial', txt: `Factura ${f.codigo} · ${(f.cliente || {}).nombre || ''}${f.estado === 'parcial' ? ' (lo que falta)' : ''}`, fecha: f.fecha, total: f.total })); }
 async function borrarMovs(cuenta, ids) { const D = await db(); for (const id of ids || []) { await desconciliar(id); await D.query(`delete from fac_movimientos where id=$1 and cuenta=$2`, [id, cuenta]); } }
 
-module.exports = { CATEGORIAS, SIN_DOC, db, cuentas, guardarCuentas, calcGasto, guardarGasto, gastos, gasto, borrarGasto, proveedores, duplicado, subirArchivo, leerFactura, importar, movimientos, resumenBanco, sugerencias, mejores, conciliar, desconciliar, detalleEnlaces, buscar, borrarMovs };
+module.exports = { ivaReg, guardarIvaReg, CATEGORIAS, SIN_DOC, db, cuentas, guardarCuentas, calcGasto, guardarGasto, gastos, gasto, borrarGasto, proveedores, duplicado, subirArchivo, leerFactura, importar, movimientos, resumenBanco, sugerencias, mejores, conciliar, desconciliar, detalleEnlaces, buscar, borrarMovs };

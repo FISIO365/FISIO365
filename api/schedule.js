@@ -7788,10 +7788,10 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         return enviaPdf(await GS.pdf(X, { empresa: C.emisor.razon, nif: C.emisor.nif, periodo: String(q.periodo || '').slice(0, 40), actNom: A ? (A.id === 'principal' ? (A.nombre || CLI.marca) : A.nombre) : '', color: (A && A.color) || '#c2552e' }), 'Gestoria_' + String(q.periodo || q.desde).replace(/\s+/g, '_')); }
       // ── Cobros pendientes: facturas emitidas que aún no están pagadas (las más antiguas primero) ──
       if (action === 'fac-pendientes') { const D = await FACX.db();
-        const L = (await D.query(`select id, codigo, fecha::text fecha, total::float total, cliente, actividad, enviada, (current_date - fecha)::int dias from fac_facturas where estado='emitida' and tipo<>'rectificativa' and pagos->>'estado'='pendiente' and actividad=$1 order by fecha, numero`, [String(q.actividad || 'principal')])).rows;
+        const L = (await D.query(`select id, codigo, fecha::text fecha, total::float total, (total - case when pagos->>'estado'='parcial' then coalesce((pagos->>'cobrado')::numeric,0) else 0 end)::float falta, cliente, actividad, enviada, (current_date - fecha)::int dias from fac_facturas where estado='emitida' and tipo<>'rectificativa' and pagos->>'estado' in ('pendiente','parcial') and actividad=$1 order by fecha, numero`, [String(q.actividad || 'principal')])).rows;
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
       // ── Gastos y banco (api/_gastos.js) ──
-      if (/^fac-(gas|banco|cuentas)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
+      if (/^fac-(gas|banco|cuentas|ivareg)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
         if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas() });
         if (action === 'fac-gas-uno') { const g = await GX.gasto(String(q.id || '')); if (!g) return res.status(404).json({ ok: false, error: 'No encontrado' }); return res.status(200).json({ ok: true, gasto: g }); }
         if (action === 'fac-gas-prov') return res.status(200).json({ ok: true, proveedores: await GX.proveedores(String(q.actividad || 'principal'), q.q) });
@@ -7804,6 +7804,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         if (action === 'fac-gas-guardar') { const dup = q.forzar ? null : await GX.duplicado(q).catch(() => null); if (dup) return res.status(200).json({ ok: false, duplicado: dup, error: 'Ya hay un gasto con ese número de factura de este proveedor' });
           const r = await GX.guardarGasto(Object.assign({}, q, { por: q.quien })); return res.status(200).json({ ok: true, ...r }); }
         if (action === 'fac-gas-borrar') { await GX.borrarGasto(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        if (action === 'fac-ivareg') return res.status(200).json({ ok: true, regimen: await GX.guardarIvaReg(q) });
         if (action === 'fac-cuentas') return res.status(200).json({ ok: true, cuentas: await GX.guardarCuentas(q.cuentas) });
         if (action === 'fac-banco') return res.status(200).json({ ok: true, cuentas: await GX.cuentas(), resumen: await GX.resumenBanco(), movimientos: await GX.movimientos({ cuenta: q.cuenta, desde: q.desde, hasta: q.hasta, estado: q.estado, q: q.q }) });
         if (action === 'fac-banco-mejores') return res.status(200).json({ ok: true, mejores: await GX.mejores((q.ids || []).map(String)) });

@@ -12,17 +12,25 @@ async function datos(o) {
   const D = await GX.db(); if (!esFecha(o.desde) || !esFecha(o.hasta)) throw new Error('Elige el periodo');
   const p = [o.desde, o.hasta], wa = o.actividad ? (p.push(o.actividad), ' and actividad=$3') : '';
   const F = (await D.query(`select id, codigo, fecha::text fecha, tipo, cliente, base::float base, cuota::float cuota, total::float total, impuestos, actividad, prueba from fac_facturas where estado='emitida' and fecha between $1 and $2${wa} order by fecha, emitida`, p)).rows;
-  const G = (await D.query(`select id, fecha::text fecha, proveedor, numero, categoria, concepto, impuestos, base::float base, cuota::float cuota, irpf::float irpf, irpf_tipo::float irpf_tipo, total::float total, archivo, actividad, cuenta from fac_gastos where fecha between $1 and $2${wa} order by fecha, creado`, p)).rows;
+  const G = (await D.query(`select id, fecha::text fecha, proveedor, numero, categoria, concepto, impuestos, base::float base, cuota::float cuota, irpf::float irpf, irpf_tipo::float irpf_tipo, total::float total, archivo, actividad, cuenta, comun, isp, isp_cuota::float isp_cuota, moneda, importe_moneda::float importe_moneda from fac_gastos where fecha between $1 and $2${wa ? ' and (actividad=$3 or comun)' : ''} order by fecha, creado`, p)).rows;
+  // Prorrata: lo facturado con IVA entre todo lo facturado en el año (toda la empresa), redondeado al entero de arriba
+  const C = await FACX.config(), reg = await GX.ivaReg(), anio = o.desde.slice(0, 4);
+  const Y = (await D.query(`select coalesce(sum((x->>'base')::numeric) filter (where (x->>'tipo')::numeric > 0),0)::float suj, coalesce(sum((x->>'base')::numeric),0)::float tot from fac_facturas f, jsonb_array_elements(f.impuestos) x where f.estado='emitida' and extract(year from f.fecha)=$1`, [+anio])).rows[0];
+  const pctAuto = Y.tot > 0 ? Math.min(100, Math.ceil(Y.suj / Y.tot * 100 - 1e-9)) : 0, pct = reg.pct != null ? reg.pct : pctAuto;
+  const conIva = a => { const A = FACX.actDe(C, a || 'principal'); const t = A.id === 'principal' ? (C.iva.def || {}).tipo : (A.iva || C.iva.def || {}).tipo; return Number(t) > 0; };
+  G.forEach(g => { const sop = r2(g.cuota + (g.isp_cuota || 0)), f = reg.modo === 'general' ? pct / 100 : g.comun ? pct / 100 : conIva(g.actividad) ? 1 : 0; g.deducible = r2(sop * f); g.no_deducible = r2(sop - g.deducible); });
   const porTipo = (L) => { const M = {}; L.forEach(x => (x.impuestos || []).forEach(i => { const k = i.tipo ? String(i.tipo) : 'exenta'; const m = M[k] = M[k] || { tipo: i.tipo || 0, base: 0, cuota: 0 }; m.base = r2(m.base + Number(i.base || 0)); m.cuota = r2(m.cuota + Number(i.cuota || 0)); })); return Object.values(M).sort((a, b) => b.tipo - a.tipo); };
   const rep = porTipo(F), sop = porTipo(G);
+  const isp = { ue: { base: 0, cuota: 0 }, fuera: { base: 0, cuota: 0 } }; G.filter(g => g.isp === 'ue' || g.isp === 'fuera').forEach(g => { isp[g.isp].base = r2(isp[g.isp].base + g.base); isp[g.isp].cuota = r2(isp[g.isp].cuota + g.isp_cuota); });
   const ret = { alquiler: { base: 0, irpf: 0 }, profesionales: { base: 0, irpf: 0 } };
   G.filter(g => g.irpf).forEach(g => { const k = g.categoria === 'Alquiler' ? 'alquiler' : 'profesionales'; ret[k].base = r2(ret[k].base + g.base); ret[k].irpf = r2(ret[k].irpf + g.irpf); });
   const sum = (L, k) => r2(L.reduce((t, x) => t + (Number(x[k]) || 0), 0));
   const R = { emitidas: { n: F.length, base: sum(F, 'base'), cuota: sum(F, 'cuota'), total: sum(F, 'total') }, recibidas: { n: G.length, base: sum(G, 'base'), cuota: sum(G, 'cuota'), irpf: sum(G, 'irpf'), total: sum(G, 'total') } };
-  R.resultado = r2(R.emitidas.cuota - R.recibidas.cuota);
+  R.isp = r2(isp.ue.cuota + isp.fuera.cuota); R.recibidas.soportado = r2(R.recibidas.cuota + R.isp); R.recibidas.deducible = sum(G, 'deducible'); R.recibidas.no_deducible = sum(G, 'no_deducible');
+  R.devengado = r2(R.emitidas.cuota + R.isp); R.resultado = r2(R.devengado - R.recibidas.deducible);
   const falta = G.filter(g => !g.archivo && !GX.SIN_DOC.has(g.categoria)).length, pruebas = F.filter(f => f.prueba).length;
   const banco = (await D.query(`select count(*)::int n from fac_movimientos where estado='pendiente' and fecha between $1 and $2`, [o.desde, o.hasta])).rows[0].n;
-  return { desde: o.desde, hasta: o.hasta, actividad: o.actividad || '', facturas: F, gastos: G, iva: { repercutido: rep, soportado: sop }, retenciones: ret, resumen: R, avisos: { falta, pruebas, banco } };
+  return { desde: o.desde, hasta: o.hasta, actividad: o.actividad || '', facturas: F, gastos: G, iva: { repercutido: rep, soportado: sop, isp, regimen: { modo: reg.modo, pct, pctAuto, fijo: reg.pct != null } }, retenciones: ret, resumen: R, avisos: { falta, pruebas, banco } };
 }
 
 const eur = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -46,7 +54,8 @@ async function pdf(X, o) {
   txt(`${o.empresa || ''}${o.nif ? ' · NIF ' + o.nif : ''}`, M, fR, 10, GR); y -= 26;
   // Tarjetas
   const R = X.resumen, cw = (W - 2 * M - 20) / 3;
-  [['IVA repercutido', eur(R.emitidas.cuota), `${R.emitidas.n} facturas · base ${eur(R.emitidas.base)}`], ['IVA soportado', eur(R.recibidas.cuota), `${R.recibidas.n} gastos · base ${eur(R.recibidas.base)}`], [R.resultado >= 0 ? 'A ingresar (aprox.)' : 'A compensar (aprox.)', eur(Math.abs(R.resultado)), 'Repercutido − soportado']].forEach(([a, b, c], i) => {
+  const Rg = X.iva.regimen;
+  [['IVA devengado', eur(R.devengado), `${R.emitidas.n} facturas${R.isp ? ' · ' + eur(R.isp) + ' de proveedores de fuera' : ''}`], ['IVA deducible', eur(R.recibidas.deducible), `de ${eur(R.recibidas.soportado)} soportado · ${Rg.modo === 'general' ? 'prorrata ' + Rg.pct + ' %' : 'sectores dif.'}`], [R.resultado >= 0 ? 'A ingresar (aprox.)' : 'A compensar (aprox.)', eur(Math.abs(R.resultado)), 'Devengado − deducible']].forEach(([a, b, c], i) => {
     const x = M + i * (cw + 10); pg.drawRectangle({ x, y: y - 62, width: cw, height: 66, color: i === 2 ? CR : rgb(1, 1, 1), borderColor: LN, borderWidth: 0.8 });
     pg.drawText(a.toUpperCase(), { x: x + 12, y: y - 14, size: 7, font: fB, color: GR }); pg.drawText(b, { x: x + 12, y: y - 36, size: 15, font: fM, color: i === 2 ? AC : NEG }); pg.drawText(corta(c, fR, 7.5, cw - 24), { x: x + 12, y: y - 52, size: 7.5, font: fR, color: GR }); });
   y -= 86;
@@ -57,7 +66,9 @@ async function pdf(X, o) {
     if (tot) fila(tot, fM, NEG); y -= 12; };
   const civa = [{ t: 'Tipo', w: 140 }, { t: 'Base', w: 120, r: 1 }, { t: 'Cuota', w: 120, r: 1 }];
   tabla('IVA repercutido (facturas emitidas)', civa, X.iva.repercutido.map(i => [i.tipo ? i.tipo + ' %' : 'Exenta / sin IVA', eur(i.base), eur(i.cuota)]), ['Total', eur(R.emitidas.base), eur(R.emitidas.cuota)]);
-  tabla('IVA soportado (gastos)', civa, X.iva.soportado.map(i => [i.tipo ? i.tipo + ' %' : 'Sin IVA', eur(i.base), eur(i.cuota)]), ['Total', eur(R.recibidas.base), eur(R.recibidas.cuota)]);
+  const Ip = X.iva.isp; if (Ip.ue.base || Ip.fuera.base) tabla('Inversión del sujeto pasivo (proveedores de fuera de España, 21 %)', civa, [Ip.ue.base ? ['Servicios de la UE', eur(Ip.ue.base), eur(Ip.ue.cuota)] : null, Ip.fuera.base ? ['De fuera de la UE', eur(Ip.fuera.base), eur(Ip.fuera.cuota)] : null].filter(Boolean), ['Total', eur(Ip.ue.base + Ip.fuera.base), eur(R.isp)]);
+  tabla('IVA soportado (gastos)', civa, X.iva.soportado.map(i => [i.tipo ? i.tipo + ' %' : 'Sin IVA', eur(i.base), eur(i.cuota)]).concat(R.isp ? [['Sujeto pasivo (arriba)', '', eur(R.isp)]] : []), ['Total soportado', eur(R.recibidas.base), eur(R.recibidas.soportado)]);
+  tabla(`IVA deducible · ${Rg.modo === 'general' ? 'prorrata general al ' + Rg.pct + ' %' : 'sectores diferenciados (lo común al ' + Rg.pct + ' %)'}`, [{ t: 'Qué', w: 240 }, { t: '', w: 120, r: 1 }, { t: 'Cuota', w: 120, r: 1 }], [['Se puede deducir', '', eur(R.recibidas.deducible)], ['No se puede deducir (es más gasto)', '', eur(R.recibidas.no_deducible)]]);
   const Rt = X.retenciones; if (Rt.alquiler.irpf || Rt.profesionales.irpf) tabla('Retenciones practicadas', [{ t: 'Qué', w: 240 }, { t: 'Base', w: 120, r: 1 }, { t: 'Retención', w: 120, r: 1 }], [Rt.alquiler.irpf ? ['Alquiler del local (modelo 115)', eur(Rt.alquiler.base), eur(Rt.alquiler.irpf)] : null, Rt.profesionales.irpf ? ['Profesionales (modelo 111)', eur(Rt.profesionales.base), eur(Rt.profesionales.irpf)] : null].filter(Boolean));
   const av = []; if (X.avisos.falta) av.push(`Hay ${X.avisos.falta} gasto${X.avisos.falta > 1 ? 's' : ''} sin la factura subida.`); if (X.avisos.banco) av.push(`Quedan ${X.avisos.banco} movimiento${X.avisos.banco > 1 ? 's' : ''} del banco por revisar en este periodo.`); if (X.avisos.pruebas) av.push(`${X.avisos.pruebas} facturas son la copia de prueba de los tickets de Holded (las que valen son las de Holded).`);
   if (av.length) { sitio(20 + av.length * 13); av.forEach(a => { txt('· ' + a, M, fR, 8.5, AC); y -= 13; }); y -= 10; }
@@ -65,7 +76,7 @@ async function pdf(X, o) {
   y -= 6; tabla('Facturas emitidas', [{ t: 'Fecha', w: 52 }, { t: 'Nº', w: 78 }, { t: 'Cliente', w: 170 }, { t: 'NIF', w: 70 }, { t: 'Base', w: 48, r: 1 }, { t: 'IVA', w: 42, r: 1 }, { t: 'Total', w: 51, r: 1 }],
     X.facturas.map(f => [fFmt(f.fecha), f.codigo, (f.cliente || {}).nombre || '', (f.cliente || {}).nif || '', eur(f.base).replace(' €', ''), eur(f.cuota).replace(' €', ''), eur(f.total).replace(' €', '')]), ['', '', `${X.facturas.length} facturas`, '', eur(R.emitidas.base).replace(' €', ''), eur(R.emitidas.cuota).replace(' €', ''), eur(R.emitidas.total).replace(' €', '')]);
   tabla('Facturas recibidas (gastos)', [{ t: 'Fecha', w: 52 }, { t: 'Proveedor', w: 140 }, { t: 'NIF', w: 66 }, { t: 'Nº', w: 70 }, { t: 'Base', w: 46, r: 1 }, { t: 'IVA', w: 40, r: 1 }, { t: 'Ret.', w: 36, r: 1 }, { t: 'Total', w: 61, r: 1 }],
-    X.gastos.map(g => [fFmt(g.fecha), g.proveedor.nombre, g.proveedor.nif || '', g.numero || (g.archivo ? '' : 'sin factura'), eur(g.base).replace(' €', ''), eur(g.cuota).replace(' €', ''), g.irpf ? eur(g.irpf).replace(' €', '') : '', eur(g.total).replace(' €', '')]), ['', `${X.gastos.length} gastos`, '', '', eur(R.recibidas.base).replace(' €', ''), eur(R.recibidas.cuota).replace(' €', ''), R.recibidas.irpf ? eur(R.recibidas.irpf).replace(' €', '') : '', eur(R.recibidas.total).replace(' €', '')]);
+    X.gastos.map(g => [fFmt(g.fecha), g.proveedor.nombre + (g.isp ? ' (ISP)' : '') + (g.comun ? ' · común' : ''), g.proveedor.nif || '', g.numero || (g.archivo ? '' : 'sin factura'), eur(g.base).replace(' €', ''), eur(g.cuota).replace(' €', ''), g.irpf ? eur(g.irpf).replace(' €', '') : '', eur(g.total).replace(' €', '')]), ['', `${X.gastos.length} gastos`, '', '', eur(R.recibidas.base).replace(' €', ''), eur(R.recibidas.cuota).replace(' €', ''), R.recibidas.irpf ? eur(R.recibidas.irpf).replace(' €', '') : '', eur(R.recibidas.total).replace(' €', '')]);
   sitio(30); txt('Importes en euros. El resultado del IVA es orientativo: lo calcula y lo presenta la gestoría.', M, fR, 7.5, GR);
   return Buffer.from(await doc.save());
 }
