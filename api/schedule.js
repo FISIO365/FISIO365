@@ -165,7 +165,7 @@ const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
 async function buscarContactos(campo, valor) {
   if (!valor) return [];
-  return holdedTodos('/contacts?limit=100&' + campo + '=' + encodeURIComponent(valor), 3).catch(e => { console.log('holded contactos', campo, String(e.message).slice(0, 200)); if (/ 40[13] | 429 |rate|too many/i.test(e.message)) throw e; return []; });
+  return holdedTodos('/contacts?limit=100&' + campo + '=' + encodeURIComponent(valor), 3).catch(e => { console.log('holded contactos', campo, String(e.message).slice(0, 200)); if (/ 40[13] | 429 | 5\d\d |rate|too many/i.test(e.message)) throw e; return []; });
 }
 async function contactoPorDni(dni) {
   const n = normDni(dni); if (n.length < 8) return [];
@@ -8190,7 +8190,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         } catch (e) {}
         return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo: saldo2, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, enHolded: ids.length, facturas: facturas.concat(propiasF).sort((a, b) => b.fecha - a.fecha) });
       }
-      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: propiasF, error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : 'No se han podido cargar las facturas (' + e.message + ').' }); }
+      catch (e) { return res.status(200).json({ ok: true, holded: true, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: propiasF, error: /401|403/.test(e.message) ? 'Holded no acepta la clave (revisa la clave y sus permisos).' : / 5\d\d /.test(e.message) ? 'Holded no responde ahora mismo (es un fallo suyo). Prueba en un rato: las facturas siguen ahí.' : / 429 /.test(e.message) ? 'Holded está saturado de peticiones. Prueba en unos minutos.' : 'No se han podido cargar las facturas (' + e.message.slice(0, 80) + ').' }); }
     }
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (action === 'facturar-sesion-pack') { // emite la factura de una sesión de un pack cobrado entero «con factura por sesión»
