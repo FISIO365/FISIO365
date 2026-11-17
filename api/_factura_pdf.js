@@ -47,7 +47,7 @@ async function pdfFactura(F, o) {
   if (!MIN) redondo(X0 - 16, yC, AN + 32, hCab, 16, { color: d === 'moderno' ? ACs : CREMA });
   else pg.drawLine({ start: { x: X0, y: yC - hCab }, end: { x: X1, y: yC - hCab }, thickness: 0.8, color: NEGRO });
   let yl = yC - 26, conLogo = false;
-  if (o.logo) try { const im = /^\x89PNG/.test(o.logo.slice(0, 4).toString('latin1')) ? await doc.embedPng(o.logo) : await doc.embedJpg(o.logo); const h = 15, w = Math.min(100, im.width * h / im.height); pg.drawImage(im, { x: X0, y: yl - h + 4, width: w, height: w * im.height / im.width }); conLogo = true; } catch (e) {}
+  if (o.logo) try { const im = /^\x89PNG/.test(o.logo.slice(0, 4).toString('latin1')) ? await doc.embedPng(o.logo) : await doc.embedJpg(o.logo); const ra = im.width / im.height, w = Math.min(ra > 4.5 ? 95 : 120, 30 * ra), h = w / ra; pg.drawImage(im, { x: X0, y: yl - h + 4 + (h > 16 ? 6 : 0), width: w, height: h }); conLogo = true; } catch (e) {}
   if (!conLogo) txt(o.marca || E.razon || '', X0, yl - 10, fB, 14, AC);
   yl -= 32;
   [[E.razon, fM, NEGRO], [E.nif ? 'NIF ' + E.nif : '', fR, GRIS], [dirE, fR, GRIS], [[E.tel, E.email, E.web].filter(Boolean).join(' · '), fR, GRIS]].forEach(([t, f, c]) => { if (!t) return; partir(t, f, 7.8, 290).forEach(p => { txt(p, X0, yl, f, 7.8, c); yl -= 11.5; }); });

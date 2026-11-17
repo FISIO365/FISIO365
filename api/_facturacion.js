@@ -12,7 +12,9 @@ create table if not exists fac_contadores (serie text not null, anio int not nul
 create table if not exists fac_facturas (id text primary key, serie text not null, anio int not null, numero bigint not null, codigo text not null unique, tipo text not null, fecha date not null, emitida timestamptz not null default now(), emisor jsonb not null, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, paciente text, fisio text, cobro text, holded text, holded_num text, pagos jsonb, nota text, rectifica text, motivo text, estado text not null default 'emitida', diseno text, por text, vf jsonb, unique (serie, anio, numero));
 alter table fac_facturas add column if not exists prueba boolean not null default false;
 alter table fac_series add column if not exists formato text not null default '{P}{AAAA}-{N5}';
-alter table fac_series add column if not exists anual boolean not null default true
+alter table fac_series add column if not exists anual boolean not null default true;
+alter table fac_series add column if not exists actividad text not null default 'principal';
+alter table fac_facturas add column if not exists actividad text not null default 'principal'
 `;
 const ini = { p: null };
 async function db() {
@@ -29,19 +31,34 @@ const CONF_DEF = {
   iva: { def: { tipo: 0, exencion: 'E1' }, conceptos: {} }, // conceptos: { 'Sesión de fisioterapia': { tipo: 0, exencion: 'E1' }, 'Venta de material': { tipo: 21 } }
   pie: '', // texto al pie (protección de datos)
   pago: '', // texto de forma de pago para completas (IBAN…)
-  vf: { entorno: 'pruebas' } // VERI*FACTU: «pruebas» (AEAT de pruebas) o «real»
+  vf: { entorno: 'pruebas' }, // VERI*FACTU: «pruebas» (AEAT de pruebas) o «real»
+  // Actividades de la misma empresa (mismo NIF y misma cadena VeriFactu), cada una con su marca, sus series y su IVA.
+  // «principal» es la clínica (logo y datos de siempre); el resto, p. ej. CerraPoint
+  actividades: [{ id: 'principal', nombre: '', logo: '', color: '', tel: '', email: '', web: '', direccion: '', iva: null }]
 };
+const actLimpia = a => ({ id: String(a.id || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'principal', nombre: String(a.nombre || '').trim().slice(0, 60), logo: /^data:image\/(png|jpeg);base64,/.test(a.logo || '') && String(a.logo).length < 700000 ? a.logo : '',
+  color: /^#[0-9a-f]{6}$/i.test(a.color || '') ? a.color : '', tel: String(a.tel || '').slice(0, 40), email: String(a.email || '').slice(0, 120), web: String(a.web || '').slice(0, 120), direccion: String(a.direccion || '').slice(0, 200), iva: a.iva ? ivaLimpio(a.iva) : null });
 async function config() { const D = await db(); const r = await D.query(`select v from fac_config where k='config'`); const g = (r.rows[0] || {}).v || {};
-  return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '', vf: { entorno: (g.vf || {}).entorno === 'real' ? 'real' : 'pruebas' } }; }
+  return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '', vf: { entorno: (g.vf || {}).entorno === 'real' ? 'real' : 'pruebas' },
+    actividades: (Array.isArray(g.actividades) && g.actividades.length ? g.actividades : CONF_DEF.actividades).map(actLimpia).filter((a, i, L) => L.findIndex(x => x.id === a.id) === i) }; }
 async function guardarConfig(c) { const D = await db(); const v = await config();
   if (c.emisor) Object.keys(CONF_DEF.emisor).forEach(k => { if (c.emisor[k] != null) v.emisor[k] = String(c.emisor[k]).trim().slice(0, 200); });
   if (c.iva) { if (c.iva.def) v.iva.def = ivaLimpio(c.iva.def); if (c.iva.conceptos) { v.iva.conceptos = {}; Object.entries(c.iva.conceptos).slice(0, 200).forEach(([k, x]) => { k = String(k).trim().slice(0, 120); if (k) v.iva.conceptos[k] = ivaLimpio(x); }); } }
   if (c.pie != null) v.pie = String(c.pie).slice(0, 2000);
   if (c.pago != null) v.pago = String(c.pago).slice(0, 500);
+  if (Array.isArray(c.actividades)) { const L = c.actividades.slice(0, 10).map(actLimpia); if (!L.some(a => a.id === 'principal')) L.unshift(actLimpia({ id: 'principal' }));
+    // Logo que no se manda: se queda el que había
+    L.forEach(a => { if (!a.logo && !(c.actividades.find(x => x.id === a.id) || {}).quitarLogo) a.logo = ((v.actividades.find(x => x.id === a.id) || {}).logo) || ''; });
+    const nuevas = L.filter(a => !v.actividades.some(x => x.id === a.id)); v.actividades = L;
+    // Actividad nueva: sus series (completas, simplificadas y rectificativas) con su prefijo
+    for (const a of nuevas) { const P = (a.nombre || a.id).replace(/[^A-Za-z]/g, '').slice(0, 1).toUpperCase() || 'X', crea = async (id, nom, pre, tipo, orden) => D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,actividad,orden) values($1,$2,$3,$4,'clasico',$5,$6) on conflict do nothing`, [id, nom, pre, tipo, a.id, orden]).catch(() => {});
+      const libre = async b => { let p = b, i = 2; while ((await D.query(`select 1 from fac_series where prefijo=$1`, [p])).rows.length) p = b + (i++); return p; };
+      await crea(a.id + '-F', 'Facturas ' + (a.nombre || a.id), await libre(P), 'completa', 20); await crea(a.id + '-S', 'Tickets ' + (a.nombre || a.id), await libre(P + 'T'), 'simplificada', 21); await crea(a.id + '-R', 'Rectificativas ' + (a.nombre || a.id), await libre(P + 'R'), 'rectificativa', 22); } }
   await D.query(`insert into fac_config(k,v,modificado) values('config',$1,now()) on conflict (k) do update set v=excluded.v, modificado=now()`, [v]); return v; }
 const TIPOS_IVA = [0, 4, 10, 21];
 function ivaLimpio(x) { x = x || {}; const t = Number(x.tipo); const tipo = TIPOS_IVA.includes(t) ? t : 0; return tipo ? { tipo } : { tipo: 0, exencion: EXENCIONES[x.exencion] ? x.exencion : 'E1' }; }
 const ivaDe = (C, concepto) => ivaLimpio(C.iva.conceptos[concepto] || C.iva.def);
+const actDe = (C, id) => C.actividades.find(a => a.id === id) || C.actividades[0] || actLimpia({});
 
 // ── Series ──
 const TIPOS = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' };
@@ -54,14 +71,14 @@ async function guardarSerie(x) { const D = await db();
   const nombre = String(x.nombre || '').trim().slice(0, 60), prefijo = String(x.prefijo || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10);
   if (!nombre || !prefijo) throw new Error('Pon el nombre y el prefijo de la serie');
   const tipo = TIPOS[x.tipo] ? x.tipo : 'simplificada', diseno = DISENOS[x.diseno] ? x.diseno : 'clasico', color = /^#[0-9a-f]{6}$/i.test(x.color || '') ? x.color : null;
-  const formato = String(x.formato || '{P}{AAAA}-{N5}').trim(), anual = x.anual !== false;
+  const formato = String(x.formato || '{P}{AAAA}-{N5}').trim(), anual = x.anual !== false, actividad = String(x.actividad || 'principal');
   if (!formatoOk(formato)) throw new Error('El formato tiene que llevar {N} (el número) y solo letras, números, guiones o barras');
   if (x.id) { const ya = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) usadas from fac_series s where id=$1`, [x.id])).rows[0]; if (!ya) throw new Error('No encuentro esa serie');
     // Con facturas ya hechas, el prefijo y el tipo no se tocan (cambiarían números ya emitidos)
     if (ya.usadas && (prefijo !== ya.prefijo || tipo !== ya.tipo || formato !== ya.formato || anual !== ya.anual)) throw new Error('Esta serie ya tiene facturas: no se le puede cambiar el prefijo, el tipo ni el formato del número. Crea una serie nueva.');
     await D.query(`update fac_series set nombre=$2, prefijo=$3, tipo=$4, diseno=$5, color=$6, activa=$7, nota=$8, formato=$9, anual=$10 where id=$1`, [x.id, nombre, prefijo, tipo, diseno, color, x.activa !== false, String(x.nota || '').slice(0, 300), formato, anual]);
   } else { const id = 'S' + crypto.randomBytes(5).toString('hex');
-    await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,color,nota,formato,anual,orden) values($1,$2,$3,$4,$5,$6,$7,$8,$9,(select coalesce(max(orden),0)+1 from fac_series))`, [id, nombre, prefijo, tipo, diseno, color, String(x.nota || '').slice(0, 300), formato, anual]).catch(e => { if (/unique/i.test(e.message)) throw new Error('Ya hay una serie con ese prefijo'); throw e; }); x.id = id; }
+    await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,color,nota,formato,anual,actividad,orden) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,(select coalesce(max(orden),0)+1 from fac_series))`, [id, nombre, prefijo, tipo, diseno, color, String(x.nota || '').slice(0, 300), formato, anual, actividad]).catch(e => { if (/unique/i.test(e.message)) throw new Error('Ya hay una serie con ese prefijo'); throw e; }); x.id = id; }
   // Por qué número sigue (p. ej. el siguiente al último ticket de Holded). Nunca hacia atrás: no puede repetir números ya usados
   if (x.siguiente != null && String(x.siguiente).trim() !== '') { const sig = Math.floor(Number(x.siguiente)), s2 = (await D.query(`select * from fac_series where id=$1`, [x.id])).rows[0], anio = +isoMad().slice(0, 4), k = s2.anual ? anio : 0;
     if (!(sig >= 1 && sig < 1e9)) throw new Error('El número por el que sigue no es válido');
@@ -128,10 +145,10 @@ async function emitir(o) {
     const n = (await q.query(`insert into fac_contadores(serie,anio,n) values($1,$2,1) on conflict (serie,anio) do update set n=fac_contadores.n+1 returning n`, [s.id, s.anual ? anio : 0])).rows[0].n;
     const codigo = codigoDe(s, anio, n), id = 'fac' + crypto.randomBytes(8).toString('hex');
     if ((await q.query(`select 1 from fac_facturas where codigo=$1`, [codigo])).rows.length) throw new Error(`Ya existe una factura con el número ${codigo}: revisa el formato o el número de la serie`);
-    const emisor = Object.assign({}, C.emisor);
-    await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,rectifica,motivo,diseno,por)
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
-      [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null]);
+    const A = actDe(C, s.actividad), emisor = Object.assign({}, C.emisor, A.id !== 'principal' ? { marca: A.nombre } : {}, ...['tel', 'email', 'web', 'direccion'].filter(k => A[k]).map(k => ({ [k]: A[k] })));
+    await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,rectifica,motivo,diseno,por,actividad)
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)`,
+      [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null, s.actividad || 'principal']);
     let rectSimpl = false; if (o.rectifica) rectSimpl = ((await q.query(`select tipo from fac_facturas where id=$1`, [o.rectifica])).rows[0] || {}).tipo === 'simplificada';
     await registrarVF(q, C.vf.entorno, { id, emisor, codigo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota, rectSimpl });
     return { id, codigo, total: c.total };
@@ -162,7 +179,7 @@ async function rectificar(o) {
   if (F.estado === 'anulada') throw new Error('Esa factura está anulada');
   if (F.tipo === 'rectificativa') throw new Error('No se puede rectificar una rectificativa: rectifica la factura original');
   const motivo = String(o.motivo || '').trim(); if (motivo.length < 3) throw new Error('Explica el motivo de la rectificación');
-  const S = (await D.query(`select id from fac_series where activa and tipo='rectificativa' order by orden`)).rows; const serie = o.serie || (S[0] || {}).id;
+  const S = (await D.query(`select id from fac_series where activa and tipo='rectificativa' and actividad=$1 order by orden`, [F.actividad || 'principal'])).rows; const serie = o.serie || (S[0] || {}).id;
   if (!serie) throw new Error('Crea primero una serie de rectificativas (Facturación › Ajustes)');
   let lineas = o.modo === 'total' ? F.lineas.map(l => ({ concepto: l.concepto, detalle: l.detalle, uds: -l.uds, precio: l.precio, dto: l.dto, iva: l.iva })) : (o.lineas || []);
   const c = calcular(lineas); if (!c.lineas.length || !c.total) throw new Error('Pon lo que se corrige');
@@ -177,7 +194,7 @@ async function desdeCobro(o) {
   if (o.cobro) { const ya = (await D.query(`select id, codigo from fac_facturas where cobro=$1 and estado='emitida' limit 1`, [o.cobro])).rows[0]; if (ya) return ya; }
   const C = await config();
   const completa = !!(o.cliente && o.cliente.nif && o.cliente.direccion && o.otro);
-  const S = (await D.query(`select id, tipo from fac_series where activa order by auto desc, orden`)).rows;
+  const S = (await D.query(`select id, tipo from fac_series where activa and actividad='principal' order by auto desc, orden`)).rows;
   const s = completa ? (S.find(x => x.tipo === 'completa') || S[0]) : (S.find(x => x.tipo === 'simplificada') || S[0]);
   if (!s) throw new Error('No hay series');
   const lineas = o.lineas.map(l => Object.assign({ iva: ivaDe(C, l.ivaDe || l.concepto) }, l));
@@ -189,6 +206,7 @@ async function lista(f) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(f.desde || '')) { p.push(f.desde); w.push(`fecha>=$${p.length}`); }
   if (/^\d{4}-\d{2}-\d{2}$/.test(f.hasta || '')) { p.push(f.hasta); w.push(`fecha<=$${p.length}`); }
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
+  if (f.actividad) { p.push(f.actividad); w.push(`actividad=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
   const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf, pagos from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
@@ -278,4 +296,6 @@ async function registros(entorno, limite) { const D = await db(), C = await conf
 // Marcar una factura como pagada (o pendiente). No cambia nada fiscal: solo cómo está el cobro
 async function pago(id, estado, modo) { const D = await db(); const P = { estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() };
   const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return P; }
-module.exports = { pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+// Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
+async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
+module.exports = { unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
