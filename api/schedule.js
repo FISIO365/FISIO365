@@ -7724,6 +7724,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      // La gestoría lleva el IVA con prorrata general (una vez; se cambia en Gestoría)
+      await FACX.unaVez('iva-prorrata-general', async () => { const GXr = require('./_gastos'), R0 = await GXr.ivaReg(); await GXr.guardarIvaReg({ modo: 'general', pct: R0.pct }); }).catch(() => {});
       // Las compras de Holded son de la SL (de las dos actividades), no solo de la clínica (una vez)
       await FACX.unaVez('holded-gastos-comun', async () => { const D0 = await FACX.db(); await D0.query(`update fac_gastos set comun=true where holded is not null and not comun`).catch(() => {}); }).catch(() => {});
       // Las compras traídas de Holded salían «pendientes»: estaban todas pagadas (una vez)
