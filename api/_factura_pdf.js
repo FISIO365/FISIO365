@@ -36,45 +36,46 @@ async function pdfFactura(F, o) {
     if (d === 'minimal') { pg.drawLine({ start: { x, y: yTop - h }, end: { x: x + w, y: yTop - h }, thickness: 0.6, color: NEGRO }); return; }
     pg.drawSvgPath(P, Object.assign({ x, y: yTop }, d === 'moderno' ? { color: (o2 || {}).color || CREMA } : { borderColor: LINEA, borderWidth: 0.8, color: (o2 || {}).color || BLANCO })); };
   const linea = (yy, c, g) => pg.drawLine({ start: { x: X0, y: yy }, end: { x: X1, y: yy }, thickness: g || 0.6, color: c || LINEA });
-  const arriba = () => { if (d !== 'minimal') pg.drawRectangle({ x: 0, y: H - 5, width: W, height: 5, color: AC }); };
-  arriba();
+  const redondo = (x, yTop, w, h, r, op) => { r = Math.min(r, h / 2, w / 2); pg.drawSvgPath(`M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r} V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`, Object.assign({ x, y: yTop }, op)); };
+  const arriba = () => {};
+  const MIN = d === 'minimal';
 
-  // ── Cabecera: logo pequeño y datos de la clínica · QR tributario a la derecha ──
+  // ── Cabecera: una banda crema con el logo y los datos de la clínica; el QR tributario sobre blanco ──
   const E = F.emisor || {}, Cl = F.cliente || {};
-  let yl = y;
-  let conLogo = false;
-  if (o.logo) try { const im = /^\x89PNG/.test(o.logo.slice(0, 4).toString('latin1')) ? await doc.embedPng(o.logo) : await doc.embedJpg(o.logo); const h = 16, w = Math.min(110, im.width * h / im.height); pg.drawImage(im, { x: X0, y: yl - h, width: w, height: w * im.height / im.width }); conLogo = true; } catch (e) {}
-  if (!conLogo) txt(o.marca || E.razon || '', X0, yl - 14, fB, 15, AC);
-  yl -= 36;
   const dirE = [E.direccion, [E.cp, E.ciudad].filter(Boolean).join(' '), E.provincia].filter(Boolean).join(' · ');
-  [[E.razon, fM, NEGRO], [E.nif ? 'NIF ' + E.nif : '', fR, GRIS], [dirE, fR, GRIS], [[E.tel, E.email, E.web].filter(Boolean).join(' · '), fR, GRIS]].forEach(([t, f, c]) => { if (!t) return; partir(t, f, 8, 300).forEach(p => { txt(p, X0, yl, f, 8, c); yl -= 11.5; }); });
-  let yq = y;
-  if (o.qr && o.qr.url) {
+  const conQR = !!(o.qr && o.qr.url), lado = 85.1, hCab = conQR ? lado + 46 : 104, yC = H - 40;
+  if (!MIN) redondo(X0 - 16, yC, AN + 32, hCab, 16, { color: d === 'moderno' ? ACs : CREMA });
+  else pg.drawLine({ start: { x: X0, y: yC - hCab }, end: { x: X1, y: yC - hCab }, thickness: 0.8, color: NEGRO });
+  let yl = yC - 26, conLogo = false;
+  if (o.logo) try { const im = /^\x89PNG/.test(o.logo.slice(0, 4).toString('latin1')) ? await doc.embedPng(o.logo) : await doc.embedJpg(o.logo); const h = 15, w = Math.min(100, im.width * h / im.height); pg.drawImage(im, { x: X0, y: yl - h + 4, width: w, height: w * im.height / im.width }); conLogo = true; } catch (e) {}
+  if (!conLogo) txt(o.marca || E.razon || '', X0, yl - 10, fB, 14, AC);
+  yl -= 32;
+  [[E.razon, fM, NEGRO], [E.nif ? 'NIF ' + E.nif : '', fR, GRIS], [dirE, fR, GRIS], [[E.tel, E.email, E.web].filter(Boolean).join(' · '), fR, GRIS]].forEach(([t, f, c]) => { if (!t) return; partir(t, f, 7.8, 290).forEach(p => { txt(p, X0, yl, f, 7.8, c); yl -= 11.5; }); });
+  if (conQR) {
     // 30 × 30 mm: lo mínimo que pide la norma (Orden HAC/1177/2024, art. 21)
-    const QR = require('qrcode').create(o.qr.url, { errorCorrectionLevel: 'M' }), n = QR.modules.size, lado = 85.1, m = lado / n, qx = X1 - lado, qy = y + 2;
-    txt('QR tributario:', qx + lado / 2, qy + 4, fR, 6, GRIS2, 'c');
+    const QR = require('qrcode').create(o.qr.url, { errorCorrectionLevel: 'M' }), n = QR.modules.size, m = lado / n, qx = X1 - lado, qy = yC - 22;
+    if (!MIN) redondo(qx - 7, qy + 7, lado + 14, lado + 14, 8, { color: BLANCO });
+    txt('QR tributario:', qx + lado / 2, qy + 11, fR, 5.8, GRIS2, 'c');
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (QR.modules.get(r, c)) pg.drawRectangle({ x: qx + c * m, y: qy - (r + 1) * m, width: m + 0.04, height: m + 0.04, color: rgb(0, 0, 0) });
-    txt('VERI*FACTU', qx + lado / 2, qy - lado - 9, fM, 6.5, GRIS, 'c');
-    if (o.qr.pruebas) txt('Entorno de pruebas de la AEAT', qx + lado / 2, qy - lado - 17, fR, 5.5, GRIS2, 'c');
-    yq = qy - lado - (o.qr.pruebas ? 18 : 10);
+    txt('VERI*FACTU' + (o.qr.pruebas ? ' · pruebas AEAT' : ''), qx + lado / 2, qy - lado - 15, fM, 6, GRIS, 'c');
   }
-  y = Math.min(yl, yq) - 26;
+  y = yC - hCab - 40;
 
-  // ── Título y número ──
+  // ── Título, número, fecha y si está pagada ──
   const tit = TITULOS[F.tipo] || 'Factura';
-  esp(tit, X0, y, 7.5, AC, null, 1.4); y -= 20;
-  txt(F.codigo, X0, y, fM, 14, NEGRO);
-  const fw = txt(fechaL(F.fecha), X1, y, fM, 11, NEGRO, 'd'); esp('Fecha', X1, y + 16, 6.5, GRIS2, 'd');
-  if (F.rectifica_codigo) { txt(F.rectifica_codigo, X1 - fw - 40, y, fM, 11, NEGRO, 'd'); esp('Rectifica a', X1 - fw - 40, y + 16, 6.5, GRIS2, 'd'); }
-  // Pagada o pendiente de pago: etiqueta delineada bajo la fecha
+  txt(tit, X0, y, fM, 19, NEGRO);
+  txt('Nº ' + F.codigo, X0, y - 17, fR, 9.5, GRIS);
+  const fw = txt(fechaL(F.fecha), X1, y, fM, 11, NEGRO, 'd'); esp('Fecha', X1, y + 15, 6.2, GRIS2, 'd');
+  if (F.rectifica_codigo) { txt(F.rectifica_codigo, X1 - fw - 36, y, fM, 11, NEGRO, 'd'); esp('Rectifica a', X1 - fw - 36, y + 15, 6.2, GRIS2, 'd'); }
   const P = F.pagos || {}, pend = P.estado === 'pendiente';
   if (F.tipo !== 'rectificativa' && (pend || P.estado === 'pagada' || P.modo)) {
-    const t = pend ? 'Pendiente de pago' : 'Pagada' + (P.modo && P.modo !== 'Varias' ? ' · ' + P.modo : ''), s2 = 7.5, w = ancho(t, fM, s2) + 18, hP = 15, xP = X1 - w, yP = y - 10;
-    const cP = pend ? AC : rgb(0.18, 0.49, 0.29);
-    pg.drawSvgPath(`M 7.5 0 H ${w - 7.5} A 7.5 7.5 0 0 1 ${w - 7.5} ${hP} H 7.5 A 7.5 7.5 0 0 1 7.5 0 Z`, { x: xP, y: yP, borderColor: cP, borderWidth: 0.8 });
-    txt(t, xP + w / 2, yP - 10.5, fM, s2, cP, 'c'); y -= 14;
+    const t = pend ? 'Pendiente de pago' : 'Pagada' + (P.modo && P.modo !== 'Varias' ? ' · ' + P.modo : ''), s2 = 7.2, w = ancho(t, fM, s2) + 26, hP = 16, xP = X1 - w, yP = y - 11;
+    const cP = pend ? hex('#c2552e') : rgb(0.16, 0.47, 0.28), fP = pend ? mezcla('#c2552e', 0.9) : rgb(0.91, 0.96, 0.92);
+    redondo(xP, yP, w, hP, 8, { color: fP });
+    pg.drawCircle({ x: xP + 10, y: yP - hP / 2, size: 2.2, color: cP });
+    txt(t, xP + 16, yP - 10.8, fM, s2, cP);
   }
-  y -= 24;
+  y -= 44;
 
   // ── Cliente · Atendido por ──
   const dirC = [Cl.direccion, [Cl.cp, Cl.ciudad].filter(Boolean).join(' '), Cl.provincia, Cl.pais && Cl.pais !== 'España' ? Cl.pais : ''].filter(Boolean).join(' · ');
@@ -92,30 +93,34 @@ async function pdfFactura(F, o) {
   // ── Líneas ──
   const L = F.lineas || [], conDto = L.some(l => l.dto);
   const C = conDto ? { con: X0, uds: X1 - 248, pre: X1 - 178, dto: X1 - 128, iva: X1 - 78, imp: X1 } : { con: X0, uds: X1 - 228, pre: X1 - 152, iva: X1 - 82, imp: X1 };
-  const cab = () => { const c = GRIS2; esp('Concepto', C.con, y, 6.5, c); esp('Uds.', C.uds, y, 6.5, c, 'd'); esp('Precio', C.pre, y, 6.5, c, 'd'); if (conDto) esp('Dto.', C.dto, y, 6.5, c, 'd'); esp('IVA', C.iva, y, 6.5, c, 'd'); esp('Importe', C.imp, y, 6.5, c, 'd');
-    linea(y - 9, d === 'minimal' ? NEGRO : LINEA, d === 'minimal' ? 0.8 : 0.8); y -= 30; };
+  const cab = () => { const c = MIN ? NEGRO : GRIS;
+    if (!MIN) redondo(X0 - 12, y + 12, AN + 24, 24, 12, { color: CREMA }); else linea(y - 9, NEGRO, 0.8);
+    esp('Concepto', C.con, y - 3, 6.3, c); esp('Uds.', C.uds, y - 3, 6.3, c, 'd'); esp('Precio', C.pre, y - 3, 6.3, c, 'd'); if (conDto) esp('Dto.', C.dto, y - 3, 6.3, c, 'd'); esp('IVA', C.iva, y - 3, 6.3, c, 'd'); esp('Importe', C.imp, y - 3, 6.3, c, 'd');
+    y -= 34; };
   const nuevaPagina = () => { pg = doc.addPage([W, H]); arriba(); y = H - 60; txt(`${tit} ${F.codigo} (continuación)`, X0, y, fM, 9, GRIS); y -= 34; cab(); };
   cab();
   L.forEach((l, i) => {
     const conL = partir(l.concepto, fM, 10, C.uds - C.con - 60), detL = l.detalle ? partir(l.detalle, fR, 8.5, C.uds - C.con - 60) : [];
     if (y - (conL.length * 14 + detL.length * 12 + 16) < 220) nuevaPagina();
-    let yy = y; conL.forEach(p => { txt(p, C.con, yy, fM, 10, NEGRO); yy -= 14; }); detL.forEach(p => { txt(p, C.con, yy, fR, 8.5, GRIS); yy -= 12; });
+    if (!MIN) pg.drawCircle({ x: C.con - 6, y: y + 3.4, size: 1.6, color: AC });
+    let yy = y; conL.forEach(p => { txt(p, C.con + 2, yy, fM, 10, NEGRO); yy -= 14; }); detL.forEach(p => { txt(p, C.con + 2, yy, fR, 8.5, GRIS); yy -= 12; });
     txt(num(l.uds), C.uds, y, fR, 10, NEGRO, 'd'); txt(eur(l.precio), C.pre, y, fR, 10, GRIS, 'd'); if (conDto) txt(l.dto ? num(l.dto) + ' %' : '', C.dto, y, fR, 10, GRIS, 'd');
     txt(l.iva && l.iva.tipo ? l.iva.tipo + ' %' : 'Exenta', C.iva, y, fR, 9, GRIS2, 'd'); txt(eur(l.base), C.imp, y, fM, 10, NEGRO, 'd');
     y = Math.min(yy, y - 14) - 10; if (i < L.length - 1) linea(y + 8); y -= 8;
   });
-  linea(y + 8, d === 'minimal' ? NEGRO : LINEA, 0.8);
+  linea(y + 8, MIN ? NEGRO : LINEA, 0.8);
 
   // ── Totales ──
   y -= 14; const wT = 220, xT = X1 - wT, I = F.impuestos || [];
   const filasT = []; I.forEach(g => { filasT.push([g.tipo ? `Base imponible (${g.tipo} %)` : 'Base exenta', eur(g.base)]); if (g.tipo) filasT.push([`IVA ${g.tipo} %`, eur(g.cuota)]); });
-  const hT = filasT.length * 16 + 58;
+  const hT = filasT.length * 16 + 54;
   const notaL = []; [F.nota, F.motivo ? 'Motivo de la rectificación: ' + F.motivo : ''].filter(Boolean).forEach(t => String(t).split('\n').forEach(t2 => partir(t2, fR, 8.5, AN - wT - 50).forEach(p => notaL.push(p))));
   if (notaL.length) { esp('Notas', X0, y - 16, 6.5, GRIS2); let yn = y - 32; notaL.slice(0, 14).forEach(p => { txt(p, X0, yn, fR, 8.5, GRIS); yn -= 12; }); }
   caja(xT, y, wT, hT, d === 'moderno' ? { color: CREMA } : null);
   let yt = y - 20; filasT.forEach(([a, b]) => { txt(a, xT + 16, yt, fR, 8.5, GRIS); txt(b, X1 - 16, yt, fR, 8.5, NEGRO, 'd'); yt -= 16; });
-  pg.drawLine({ start: { x: xT + 16, y: yt + 4 }, end: { x: X1 - 16, y: yt + 4 }, thickness: 0.6, color: d === 'minimal' ? NEGRO : LINEA });
-  esp('Total', xT + 16, yt - 18, 7.5, NEGRO, null, 1.2); txt(eur(F.total), X1 - 16, yt - 21, fB, 18, AC, 'd');
+  if (MIN) pg.drawLine({ start: { x: xT + 16, y: yt + 4 }, end: { x: X1 - 16, y: yt + 4 }, thickness: 0.6, color: NEGRO });
+  else redondo(xT + 6, yt + 6, wT - 12, 38, 10, { color: ACs });
+  esp('Total', xT + 18, yt - 16, 7.2, MIN ? NEGRO : AC, null, 1.3); txt(eur(F.total), X1 - 18, yt - 19, fB, 17, MIN ? NEGRO : AC, 'd');
   y -= Math.max(hT, notaL.length ? 32 + Math.min(14, notaL.length) * 12 : 0) + 20;
 
   // ── Pie: notas, exenciones, protección de datos ──
@@ -124,8 +129,9 @@ async function pdfFactura(F, o) {
   const rg = o.rgpd ? partir(o.rgpd, fR, 6.5, AN) : [];
   const piL = []; pie.forEach(t => String(t).split('\n').forEach(t2 => partir(t2, fR, 7.8, AN).forEach(p => piL.push(p))));
   let yp = 44 + rg.length * 8.5 + (rg.length ? 12 : 0) + piL.length * 11;
-  if (yp > y - 10) { pg = doc.addPage([W, H]); arriba(); }
+  if (yp + 30 > y - 10) { pg = doc.addPage([W, H]); arriba(); }
   linea(yp + 10);
+  if (!MIN) txt('Gracias por confiar en ' + limpio(o.marca || E.razon || 'nosotros') + '.', X0, yp + 24, fM, 8.5, AC);
   piL.forEach(p => { yp -= 11; txt(p, X0, yp + 3, fR, 7.8, GRIS); }); yp -= 10;
   rg.forEach(p => { yp -= 8.5; txt(p, X0, yp + 3, fR, 6.5, GRIS2); });
   // Marcas: anulada / prueba
