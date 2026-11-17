@@ -8093,7 +8093,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       }
       if (action === 'fac-sin-cliente') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, ...(await repararSinCliente(String(q.desde || '2026-11-16'))) }); }
       // Comparar un día: cobros del panel (y lo hecho en Holded) frente a las copias. HD = tickets reales de Holded de ese día (si se tienen)
-      const compDia = (filas, nuestras, HD) => { const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
+      const compDia = (filas, nuestras, HD) => { const porCobro = {}; nuestras.forEach(x => { if (x.cobro && x.prueba && x.estado === 'emitida') porCobro[x.cobro] = x; });
         // Solo las copias de Holded (las facturas hechas de verdad en el panel no van a Holded y no cuentan aquí)
         const viva = nuestras.filter(x => x.estado === 'emitida' && x.prueba), porHid = {}; viva.forEach(x => { if (x.holded) porHid[x.holded] = x; });
         const prop = x => x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null;
