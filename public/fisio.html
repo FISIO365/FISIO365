@@ -13387,7 +13387,7 @@ const WIKI_RUTAS = [
  desc: 'El panel del equipo, siempre al día',
  etiqueta: 'Todo el equipo',
  info: `<strong>¿Qué aprenderás aquí?</strong><br><br>Cómo moverte por el panel: agenda, citas, mensajes, fichas, cobros, pendientes, check-list, valoraciones… (Lo que ve el paciente en su app está en el curso «La app del paciente».)<br><br><strong>Siempre al día</strong><br><br>Cada vez que cambia la app, se actualiza este curso. En muchas lecciones tienes el botón <b>Enséñamelo</b>: te lleva a la pantalla de verdad y te señala dónde tocar.<br><br><strong>¿Cuánto dura?</strong><br><br>Un módulo corto cada día, con preguntas de situaciones reales.`,
- get pasos(){ return esDireccionSeguro()?30:26; },
+ get pasos(){ return esDireccionSeguro()?31:26; },
  emoji: '',
  imgs: [],
  tits: [],
@@ -13621,6 +13621,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',dir:1,t:'School › «Cómo funciona la app»: nueva lección «Dirección: Facturación» con todo lo de facturas, cobros, gastos, banco, gestoría y VeriFactu.',ver:{sec:'school'}},
  {f:'2026-11-17',aviso:1,adm:1,t:'Administración ya puede entrar en Facturación (menú de tu perfil): en «Gastos» subes la foto o el PDF de las facturas de proveedores y se rellenan solas, y en «Por cobrar» ves lo que nos deben y mandas el recordatorio.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas pendientes llevan un botón «Pagar con tarjeta» en el email (y el enlace en el WhatsApp). Cuando el cliente paga, la factura queda pagada sola y os llega un aviso. Se puede quitar por actividad en Ajustes.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Ajustes: «Traer de Holded lo de antes» trae las ventas, las compras y los clientes de Holded para que Gestoría, Resultados y el 347 tengan el año entero. Y en Banco, «Traer de Holded» baja los movimientos del BBVA (también se hace solo cada día).',ver:{sec:'fx'}},
@@ -16189,6 +16190,22 @@ function renderFormacion(wrap, ruta){
  {q:'Juan no envió ayer su check-list. ¿Qué haces?',opts:['Avisar a Juan desde el Daily report','Nada','Lo envío yo'],ok:0,fb:['¡Bien!','Mejor avisarle.','Lo tiene que revisar él.']},
  {q:'Quieres comparar cuántos pacientes nuevos hubo este trimestre y el anterior. ¿Dónde?',opts:['Estadísticas › Trimestre','En la agenda','En Rendimiento'],ok:0,fb:['¡Eso es!','No.','Rendimiento es por fisio y sesiones.']},
  {q:'Un paciente activo lleva 3 semanas sin cita. ¿Qué pasa?',opts:['Nada','Pasa solo a «pendiente de continuar»','Se le da de alta'],ok:1,fb:['Sí pasa algo.','¡Correcto!','No.']}
+ ]},
+ {t:'Dirección: Facturación',sub:'Solo lo ve dirección',dir:1,
+ cards:[
+ {ti:'Cómo está ordenada',body:`En <b>Facturación</b> (menú de tu perfil) arriba eliges la <b>actividad</b> (la clínica o CerraPoint) y uno de los 5 apartados: <b>Ventas</b>, <b>Gastos</b>, <b>Contactos</b>, <b>Impuestos</b> y <b>Ajustes</b>. Debajo, un desplegable con sus partes.<br><br>El <b>periodo</b> (este mes, un trimestre, un día, entre dos fechas…) se elige con la pastilla de fechas y vale para todo.`,ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'Los 5 apartados.'},{el:'.fx-top',txt:'Y aquí sus partes.'}]}},
+ {ti:'Ventas: facturas y tickets',body:`<b>Facturas</b> son las completas (con NIF y dirección) y <b>Tickets</b> las simplificadas; cada lista lleva también sus rectificativas.<br><br>Al tocar una ves sus líneas y tienes <b>Ver</b>, <b>Descargar</b>, <b>Enviar</b> (email con el PDF o WhatsApp con un enlace), <b>Rectificar</b> y <b>Duplicar</b>. Una factura hecha no se borra: si está mal, se rectifica.`,ver:{sec:'fx',pasos:[{el:'.fx-c',txt:'Toca una para ver sus botones.'}]}},
+ {ti:'Cobrar lo pendiente',body:`En <b>Ventas › Por cobrar</b> está lo que nos deben y desde cuándo. <b>Recordar</b> manda el email o el WhatsApp, y puedes dejar puestos los recordatorios automáticos.<br><br>Las pendientes llevan un botón <b>Pagar con tarjeta</b>: cuando el cliente paga, la factura queda pagada sola y te llega un aviso. Administración también ve esta parte.`},
+ {ti:'Gastos y banco',body:`En <b>Gastos</b> subes la foto o el PDF de la factura del proveedor y se rellena sola (revísala antes de guardar). Recepción también puede subirlos.<br><br>En <b>Banco</b> están los movimientos del BBVA (llegan solos desde Holded cada día o con <b>Traer de Holded</b>). Cada movimiento se une a su factura o a su gasto; lo que se repite, el panel lo recuerda.`},
+ {ti:'Impuestos: la gestoría',body:`En <b>Impuestos › Gestoría</b> tienes el trimestre resumido (IVA repercutido y soportado, retenciones y los libros) y lo mandas a la gestoría en PDF, Excel o todo en un ZIP. En <b>Año entero</b>, el 347.<br><br><b>Resultados</b> enseña lo que entra y lo que sale cada mes y por actividad.`},
+ {ti:'Hacienda: VeriFactu',body:`Cada factura del panel lleva su huella encadenada y su <b>QR</b>, y se manda sola a Hacienda con el certificado de la empresa (en <b>Ajustes › VeriFactu</b> ves cómo va cada envío y reenvías las rechazadas).<br><br>Mientras estemos <b>en pruebas</b>, Holded sigue siendo la que vale: el panel hace una copia con su mismo número. El día del cambio se activa desde Facturas.`},
+ {ti:'Lo de antes y los ajustes',body:`En <b>Ajustes</b>, <b>Traer de Holded lo de antes</b> trae las ventas, las compras y los clientes antiguos para que el año salga entero. Ahí también están las series, el diseño de las facturas, los datos de cada actividad y si llevan el enlace para pagar con tarjeta.`}
+ ],
+ qs:[
+ {q:'Una factura completa tiene mal el NIF del cliente. ¿Qué haces?',opts:['La borro y la hago de nuevo','La rectifico desde su detalle','Le cambio el NIF a mano en el PDF'],ok:1,fb:['Una factura hecha no se borra.','¡Eso es!','No: se hace con una rectificativa.']},
+ {q:'Un proveedor te da su factura en papel. ¿Cómo entra?',opts:['Gastos › «＋ Nuevo gasto» y una foto: se rellena sola','Se la mando a la gestoría y ya','La guardo en un cajón'],ok:0,fb:['¡Bien! Y repasa lo que ha leído antes de guardar.','Mejor que esté en el panel: así sale en el IVA del trimestre.','No.'],ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'En Gastos.'}]}},
+ {q:'Un club te debe una factura de hace un mes. ¿Qué es lo más rápido?',opts:['Llamarles','Por cobrar › Recordar: le llega con el enlace para pagar con tarjeta','Esperar'],ok:1,fb:['También vale, pero así queda registrado.','¡Correcto! Y se marca pagada sola.','Mejor recordárselo.']},
+ {q:'La gestoría te pide lo del tercer trimestre. ¿Dónde?',opts:['Impuestos › Gestoría con el periodo «3.er trimestre»','En Estadísticas','En el Daily report'],ok:0,fb:['¡Eso es! PDF, Excel o ZIP.','No.','No.']}
  ]},
  ];
  const MODS_APP_CLIENTE = [
