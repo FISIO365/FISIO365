@@ -3097,6 +3097,11 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
 }
 
 // Facturas del panel (no las copias de Holded) de un paciente, con la misma forma que las de Holded
+// Factura hecha a mano en Facturación: si la persona es paciente (por DNI, email o móvil), se une a su ficha y a su app
+async function pacDeCliente(cli) { cli = cli || {}; const dni = String(cli.nif || '').toLowerCase().replace(/[^a-z0-9]/g, ''), em = String(cli.email || '').trim().toLowerCase(), tel = String(cli.tel || '').replace(/\D/g, '').slice(-9);
+  const c = []; if (dni.length >= 6) c.push(`SUBSTITUTE(SUBSTITUTE(LOWER(TRIM({DNI})),' ',''),'-','')='${cEsc(dni)}'`); if (/@/.test(em)) c.push(`LOWER(TRIM({EMAIL}))='${cEsc(em)}'`); if (tel.length === 9) c.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${tel}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${tel}'`);
+  if (!c.length) return null; const d = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent('OR(' + c.join(',') + ')')}&fields[]=DNI&maxRecords=2`).catch(() => ({}));
+  const L = d.records || []; return L.length === 1 ? L[0].id : null; }
 async function propiasDe(pac) { try { const L = await FACX.lista({ paciente: pac }); return L.filter(x => !x.prueba && x.estado === 'emitida').map(x => ({ id: x.id, tipo: 'propia', k: FACX.firma(x.id), numero: x.codigo, borrador: false, fecha: Math.floor(Date.parse(String(x.fecha).slice(0, 10) + 'T12:00:00Z') / 1000), total: Number(x.total), pagada: (x.pagos || {}).estado !== 'pendiente', concepto: '' })); } catch (e) { return []; } }
 async function listarFacturas(ids, conBorradores) {
   let facturas = [];
@@ -7724,6 +7729,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      // Facturas hechas a mano antes de unirlas a la ficha: se buscan sus pacientes (una vez)
+      await FACX.unaVez('fac-mano-paciente', async () => { const D0 = await FACX.db(); const L = (await D0.query(`select id, cliente from fac_facturas where paciente is null and not prueba and actividad='principal' and coalesce(por,'')<>'Holded (traída)' limit 300`)).rows;
+        for (const f of L) { const p = await pacDeCliente(f.cliente).catch(() => null); if (p) await D0.query(`update fac_facturas set paciente=$2 where id=$1`, [f.id, p]); } }).catch(e => console.log('fac-mano-paciente', e.message));
       // Ventas traídas de Holded: repartir una a una entre clínica y CerraPoint (las series estaban mezcladas) (una vez)
       await FACX.unaVez('holded-reparte', () => require('./_holded_import').reparte()).catch(e => console.log('reparte', e.message));
       // La gestoría lleva el IVA con prorrata general (una vez; se cambia en Gestoría)
@@ -8021,7 +8029,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos, sustituye: Array.isArray(q.sustituye) ? q.sustituye.map(String) : null });
+        const pacF = /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : await pacDeCliente(q.cliente).catch(() => null);
+        const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: pacF, fisio: q.fisio, por: q.quien, pagos: q.pagos, sustituye: Array.isArray(q.sustituye) ? q.sustituye.map(String) : null });
         await FACX.guardarCliente(r.actividad, q.cliente).catch(() => {});
         if (/^pre[0-9a-f]{16}$/.test(q.presupuesto || '')) await FACX.estadoPresupuesto(q.presupuesto, 'facturado', r.id).catch(() => {});
         await vfEnviarSuave();
