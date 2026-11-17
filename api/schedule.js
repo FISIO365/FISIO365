@@ -8099,9 +8099,19 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
         if (await arreglarDia(dia, filas).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
         const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
-        const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, x = porCobro[r.id]; return { cobro: r.id, num: (x && x.holded_num) || F['Nº FACTURA'] || '', total: Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null }; });
-        const sueltas = nuestras.filter(x => x.estado === 'emitida').filter(x => !x.cobro || !holdedL.some(h => h.cobro === x.cobro)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
-        return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(nuestras.filter(x => x.estado === 'emitida').reduce((t, x) => t + x.total, 0) * 100) / 100 });
+        // Lo que hay de verdad en Holded ese día (también lo hecho allí directamente y con su importe real)
+        let HD = null; if (HOLDED_KEY) try { const q2 = `limit=200&start_date=${dia}&end_date=${dia}`; const [tk, fa] = await Promise.all([holdedTodos('/sales-receipts?' + q2, 5), holdedTodos('/invoices?' + q2, 3).catch(() => [])]);
+          const fMad = d => { const v = d.date; if (typeof v === 'number' || /^\d{9,13}$/.test(String(v || ''))) { const n = Number(v); return FACX.isoMad(new Date(n < 1e12 ? n * 1000 : n)); } return String(v || '').slice(0, 10); };
+          HD = new Map(); [...tk, ...fa].filter(d => d && d.id && fMad(d) === dia).forEach(d => HD.set(String(d.id), d)); } catch (e) { HD = null; }
+        const viva = nuestras.filter(x => x.estado === 'emitida'), porHid = {}; viva.forEach(x => { if (x.holded) porHid[x.holded] = x; });
+        const prop = x => x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null;
+        const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, hid = String(F['HOLDED ID'] || ''), d = HD && HD.get(hid), x = porCobro[r.id] || porHid[hid];
+          return { cobro: r.id, hid, num: (d && d.document_number) || (x && x.holded_num) || F['Nº FACTURA'] || '', total: d ? importeDoc(d) : Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: prop(x) }; });
+        // Tickets hechos directamente en Holded (sin cobro en el panel): cuentan en Holded
+        if (HD) { const ya = new Set(holdedL.map(h => h.hid)); for (const [hid, d] of HD) if (!ya.has(hid)) holdedL.push({ cobro: null, hid, enHolded: true, num: d.document_number || 'Borrador', total: importeDoc(d), nombre: String(d.contact_name || ''), propia: prop(porHid[hid]) }); }
+        const usadas = new Set(holdedL.filter(h => h.propia).map(h => h.propia.id));
+        const sueltas = viva.filter(x => !usadas.has(x.id)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
+        return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(viva.reduce((t, x) => t + x.total, 0) * 100) / 100 });
       }
       return res.status(400).json({ ok: false, error: 'Acción desconocida' });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
