@@ -7718,6 +7718,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       }
       if (action === 'fac-una') { const F = await FACX.una(String(q.id || '')); if (!F) return res.status(404).json({ ok: false, error: 'No encontrada' });
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
+      if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await FACX.pago(String(q.id || ''), q.estado, q.modo) }); }
       if (action === 'fac-rectificar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const r = await FACX.rectificar({ id: q.id, modo: q.modo, lineas: q.lineas, motivo: q.motivo, fecha: q.fecha, por: q.quien, nota: q.nota });
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }

@@ -181,7 +181,7 @@ async function desdeCobro(o) {
   const s = completa ? (S.find(x => x.tipo === 'completa') || S[0]) : (S.find(x => x.tipo === 'simplificada') || S[0]);
   if (!s) throw new Error('No hay series');
   const lineas = o.lineas.map(l => Object.assign({ iva: ivaDe(C, l.ivaDe || l.concepto) }, l));
-  return emitir(Object.assign({}, o, { serie: s.id, lineas, prueba: true, codigoFijo: o.holdedNum || '' }));
+  return emitir(Object.assign({}, o, { serie: s.id, lineas, prueba: true, codigoFijo: o.holdedNum || '', pagos: Object.assign({ estado: 'pagada', fecha: isoMad() }, o.pagos || {}) }));
 }
 
 async function lista(f) {
@@ -191,7 +191,7 @@ async function lista(f) {
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf, pagos from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
@@ -275,4 +275,7 @@ async function sincronizaHolded(getDoc, max = 25) {
 async function registros(entorno, limite) { const D = await db(), C = await config(), nif = String(C.emisor.nif || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const L = (await D.query(`select r.id, r.factura, r.tipo, r.num_serie, r.fecha::text fecha, r.tipo_factura, r.importe, r.huella, r.fechahora, r.estado from fac_registros r where entorno=$1 order by id desc limit $2`, [entorno, Math.min(1000, limite || 200)])).rows;
   return { lista: L, cadena: nif ? await VF.comprobar(D, entorno, nif) : { n: 0, mal: [] } }; }
-module.exports = { rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+// Marcar una factura como pagada (o pendiente). No cambia nada fiscal: solo cómo está el cobro
+async function pago(id, estado, modo) { const D = await db(); const P = { estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() };
+  const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return P; }
+module.exports = { pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
