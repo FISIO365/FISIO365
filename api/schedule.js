@@ -7864,25 +7864,27 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-config') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, config: await FACX.guardarConfig(q.config || {}) }); }
       if (action === 'fac-serie') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const id = await FACX.guardarSerie(q.serie || {}); return res.status(200).json({ ok: true, id, series: await FACX.series() }); }
       // Antes de enseñar facturas: las de prueba cuyo ticket de Holded ya tiene número cogen ese mismo número
-      if ((action === 'fac-lista' || action === 'fac-comparar') && HOLDED_KEY) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
+      // Como mucho cada 5 minutos (mira en Holded los tickets en borrador: con muchos, tardaba)
+      if ((action === 'fac-comparar' || (action === 'fac-lista' && !(global._facSinc && Date.now() - global._facSinc < 300e3))) && HOLDED_KEY && (global._facSinc = Date.now())) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
       // Un día: cada cobro del panel con su copia (une la que ya haya con su ticket o la hace) y los «Borrador» con el número de Holded
-      const arreglarDia = async (dia, filas) => {
+      const arreglarDia = async (dia, filas, hasta) => {
         if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set((await D0.query(`select cobro from fac_facturas where cobro is not null`)).rows.map(x => x.cobro)); let n = 0, cambio = false;
-          for (const r of filas) { const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue; n++;
-            try { const pacR = String(F['PacienteId'] || '') || null, ya = (await D0.query(`select id from fac_facturas where holded=$1 and cobro is null limit 1`, [hid])).rows[0];
-              const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
+          for (const r of filas) { if (hasta && Date.now() > hasta) break; const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue;
+            try { const pacR = String(F['PacienteId'] || '') || null, otra = (await D0.query(`select id, cobro from fac_facturas where holded=$1 order by emitida limit 1`, [hid])).rows[0];
+              // Ya hay copia de ese ticket: si no tiene cobro, se une (sin preguntar a Holded); si es de otro cobro, se deja
+              if (otra) { if (!otra.cobro) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [otra.id, r.id, pacR]); cambio = true; } continue; }
+              n++; const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
               if (numH && /^borrador$/i.test(String(F['Nº FACTURA'] || ''))) await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: numH }, typecast: true }) }).catch(() => {});
-              if (ya) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [ya.id, r.id, pacR]); cambio = true; continue; }
-              if (!d || (await D0.query(`select 1 from fac_facturas where holded=$1 limit 1`, [hid])).rows.length) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
+              if (!d) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
               await FACX.desdeCobro({ cobro: r.id, paciente: pacR, fecha: dia, otro: !!String(F['A NOMBRE DE'] || '').trim(), cliente: { nombre: String(d.contact_name || F['A NOMBRE DE'] || ''), nif: String(d.contact_code || '') }, lineas: L.length ? L : [{ concepto: 'Sesión de fisioterapia', uds: 1, precio: Number(F['TOTAL'] || 0) }], holded: hid, holdedNum: numH, por: 'Recuperada al comparar' }); cambio = true; }
             catch (e) { console.log('comparar arreglo', e.message); } }
           return cambio; }
         return false;
       };
       // Al ver la lista, los últimos días (hasta 10, sin contar el futuro) se arreglan solos como en «Comparar con Holded» (como mucho cada 10 minutos)
-      if (action === 'fac-lista' && HOLDED_KEY && /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') && /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '')) try { const hoyA = FACX.isoMad(), G = global._facArr = global._facArr || {}, t0 = Date.now();
-        let d0 = q.hasta > hoyA ? hoyA : q.hasta; for (let k = 0; k < 10 && d0 >= q.desde && Date.now() - t0 < 20000; k++) {
-          if (!G[d0] || Date.now() - G[d0] > 600e3) { G[d0] = Date.now(); const filasD = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${d0}')`)}`).catch(() => []); await arreglarDia(d0, filasD).catch(() => {}); }
+      if (action === 'fac-lista' && HOLDED_KEY && /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') && /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '')) try { const hoyA = FACX.isoMad(), G = global._facArr = global._facArr || {}, t0 = Date.now(), lim = t0 + 5000;
+        let d0 = q.hasta > hoyA ? hoyA : q.hasta; for (let k = 0; k < 3 && d0 >= q.desde && Date.now() < lim; k++) {
+          if (!G[d0] || Date.now() - G[d0] > 600e3) { G[d0] = Date.now(); const filasD = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${d0}')`)}`).catch(() => []); await arreglarDia(d0, filasD, lim).catch(() => {}); }
           const x = new Date(d0 + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - 1); d0 = x.toISOString().slice(0, 10); } } catch (e) { console.log('arreglar lista', e.message); }
       if (action === 'fac-lista') {
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad, clase: q.clase });
@@ -8007,6 +8009,9 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-gestoria-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const r = await mandaGestoria(q.desde, q.hasta, String(q.periodo || '').slice(0, 40), String(q.to || '').trim()); return res.status(200).json({ ok: true, ...r }); }
       // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
+        // Cada cobro de los últimos 10 días con su copia (lo pesado se hace aquí, no al abrir la lista)
+        if (HOLDED_KEY) try { const t0 = Date.now(); out.arreglados = 0; for (let k = 0; k < 10 && Date.now() - t0 < 25000; k++) { const x = new Date(hoy + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - k); const d0 = x.toISOString().slice(0, 10);
+          const filasD = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${d0}')`)}`).catch(() => []); if (await arreglarDia(d0, filasD, t0 + 25000).catch(() => false)) out.arreglados++; } } catch (e) { out.arreglarErr = e.message; }
         try { out.vfPendientes = await FACX.vfPendientes(300); } catch (e) { out.vfPendErr = e.message; }
         // Pagos con tarjeta que no volvieron a la página (cerraron antes): se miran en Stripe
         if (process.env.STRIPE_SECRET_KEY) try { const D0 = await FACX.db(); const L = (await D0.query(`select id from fac_facturas where pagos->>'sid' is not null and coalesce(pagos->>'estado','') <> 'pagada' and fecha > now() - interval '120 days' limit 40`)).rows; out.tarjeta = 0; for (const x of L) { const F = await FACX.una(x.id); if (F && await facPagoVerifica(F).catch(() => false)) out.tarjeta++; } } catch (e) { out.tarjetaErr = e.message; }

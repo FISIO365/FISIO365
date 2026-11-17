@@ -321,7 +321,8 @@ async function sincronizaHolded(getDoc, max = 25) {
   const L = (await D.query(`select id, holded from fac_facturas where prueba and holded is not null and coalesce(holded_num,'')='' and estado='emitida' order by emitida limit $1`, [max])).rows;
   await vfPendientes(80).catch(e => console.log('VF pendientes', e.message));
   let n = 0;
-  for (const x of L) { let d; try { d = await getDoc(x.holded); } catch (e) { continue; }
+  const docs = await Promise.all(L.map(x => getDoc(x.holded).then(d => ({ d }), () => null))); // a la vez, que una a una tardaba
+  for (const [i, x] of L.entries()) { if (!docs[i]) continue; const d = docs[i].d;
     if (d === null) { await anular(x.id, 'Ticket borrado en Holded').catch(() => {}); continue; }
     const num = String((d && d.document_number) || '').trim(); if (!num) continue;
     await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2 where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num])).rows[0];
