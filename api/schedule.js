@@ -7747,6 +7747,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      await FACX.quitarRepetidas().catch(() => {});
       // Tickets de Holded que se quedaron sin cliente el 17/11 por la tarde: se les pone (una vez) y se avisa a dirección
       if (HOLDED_KEY) await FACX.unaVez('holded-sin-cliente-1711', async () => { const x = await repararSinCliente('2026-11-16');
         await pagoAvisar(null, x.errores.length ? '⚠️ Tickets de Holded sin cliente' : '✅ Tickets de Holded arreglados', `${x.arreglados} ticket${x.arreglados === 1 ? '' : 's'} de hoy ya tienen su cliente en Holded.${x.errores.length ? ' No se han podido: ' + x.errores.join(' · ').slice(0, 300) : ''}`, 'holded-sin-cliente'); }).catch(e => console.log('sin cliente', e.message));
@@ -8063,13 +8064,14 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
         let nuestras = await FACX.lista({ desde: dia, hasta: dia });
         // Arreglos: un ticket de Holded del panel sin su copia → se une a la que ya haya con su mismo ticket (p. ej. traída de Holded) o se hace ahora
-        if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set(nuestras.map(x => x.cobro).filter(Boolean)); let n = 0, cambio = false;
+        if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set((await D0.query(`select cobro from fac_facturas where cobro is not null`)).rows.map(x => x.cobro)); let n = 0, cambio = false;
           for (const r of filas) { const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue; n++;
             try { const pacR = String(F['PacienteId'] || '') || null, ya = (await D0.query(`select id from fac_facturas where holded=$1 and cobro is null limit 1`, [hid])).rows[0];
               const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
               if (numH && /^borrador$/i.test(String(F['Nº FACTURA'] || ''))) await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: numH }, typecast: true }) }).catch(() => {});
               if (ya) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [ya.id, r.id, pacR]); cambio = true; continue; }
-              if (!d) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
+              if (!d || (await D0.query(`select 1 from fac_facturas where holded=$1 limit 1`, [hid])).rows.length) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
               await FACX.desdeCobro({ cobro: r.id, paciente: pacR, fecha: dia, otro: !!String(F['A NOMBRE DE'] || '').trim(), cliente: { nombre: String(d.contact_name || F['A NOMBRE DE'] || ''), nif: String(d.contact_code || '') }, lineas: L.length ? L : [{ concepto: 'Sesión de fisioterapia', uds: 1, precio: Number(F['TOTAL'] || 0) }], holded: hid, holdedNum: numH, por: 'Recuperada al comparar' }); cambio = true; }
             catch (e) { console.log('comparar arreglo', e.message); } }
           if (cambio) nuestras = await FACX.lista({ desde: dia, hasta: dia }); }

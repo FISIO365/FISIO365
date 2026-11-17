@@ -184,6 +184,14 @@ async function registrarVF(q, entorno, F, tipo = 'alta') {
   return r;
 }
 // Anular una factura (de momento, las de prueba cuyo ticket se borró en Holded): queda su registro de anulación
+// Copias de prueba repetidas (dos copias del mismo cobro o del mismo ticket de Holded): se deja la primera y las demás se quitan
+// (si no llegaron a registrarse en VeriFactu se borran; si sí, se anulan para que la cadena quede bien)
+async function quitarRepetidas() { const D = await db();
+  const L = (await D.query(`select id, vf, row_number() over (partition by k order by emitida, id) n from (select id, vf, emitida, coalesce(cobro, holded) k from fac_facturas where prueba and estado='emitida' and coalesce(cobro, holded) is not null) x`)).rows.filter(r => +r.n > 1);
+  // Y las que se hicieron al comparar si ya había otra del mismo paciente, día e importe
+  const R = (await D.query(`select a.id, a.vf from fac_facturas a where a.prueba and a.estado='emitida' and a.por='Recuperada al comparar' and exists (select 1 from fac_facturas b where b.id<>a.id and b.estado='emitida' and b.paciente=a.paciente and b.fecha=a.fecha and b.total=a.total and coalesce(b.por,'')<>'Recuperada al comparar')`)).rows;
+  let n = 0; for (const r of [...L, ...R.filter(x => !L.some(y => y.id === x.id))]) { if (r.vf && r.vf.alta) await anular(r.id, 'Copia repetida'); else await D.query(`delete from fac_facturas where id=$1 and prueba`, [r.id]); n++; }
+  return n; }
 async function anular(id, motivo) {
   const D = await db();
   return D.tx(async q => { const F = (await q.query(`select f.*, f.fecha::text fecha from fac_facturas f where id=$1 for update`, [id])).rows[0];
@@ -378,4 +386,4 @@ async function guardarModo(o) { const D = await db(), ya = await modo(); const v
   await D.query(`insert into fac_config(k,v) values('modo',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { quitarRepetidas, vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
