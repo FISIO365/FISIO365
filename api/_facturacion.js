@@ -15,6 +15,7 @@ alter table fac_series add column if not exists formato text not null default '{
 alter table fac_series add column if not exists anual boolean not null default true;
 alter table fac_series add column if not exists actividad text not null default 'principal';
 alter table fac_facturas add column if not exists actividad text not null default 'principal';
+alter table fac_facturas add column if not exists enviada jsonb not null default '[]'::jsonb;
 create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
 create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
 `;
@@ -341,6 +342,8 @@ async function presupuesto(id) { const D = await db(); const r = (await D.query(
 async function estadoPresupuesto(id, estado, factura) { const D = await db(); if (!['pendiente', 'aceptado', 'rechazado', 'facturado'].includes(estado)) throw new Error('Estado no válido');
   await D.query(`update fac_presupuestos set estado=$2, factura=coalesce($3, factura), modificado=now() where id=$1 and (estado<>'facturado' or $2='facturado')`, [id, estado, factura || null]); }
 
+// A quién se ha enviado (email): se ve en el detalle de la factura
+async function marcaEnviada(id, x) { const D = await db(); await D.query(`update fac_facturas set enviada = coalesce(enviada,'[]'::jsonb) || jsonb_build_array(jsonb_build_object('a',$2::text,'por',$3::text,'t',now()))  where id=$1`, [id, String(x.a || '').slice(0, 120), String(x.por || '').slice(0, 40)]); }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

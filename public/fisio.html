@@ -1405,7 +1405,7 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fxb-si{font:600 12px var(--font);font-style:normal;border:1.5px solid #c2552e;color:#c2552e;background:#fff;border-radius:99px;padding:3px 11px;cursor:pointer;flex:none}
 .fxb-sug{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:var(--font);background:#fff;border:1.5px solid #ece6e0;border-radius:14px;padding:11px 14px;cursor:pointer;margin-bottom:8px;color:#1a1a1a;box-sizing:border-box}.fxb-sug.seg{border-color:#c2552e;background:#fdf6f2}.fxb-sug.fxb-ya{cursor:default}.fxb-sug span{flex:1;min-width:0;display:flex;flex-direction:column}.fxb-sug b{font-size:13.5px;font-weight:600}.fxb-sug small{color:#9a8d84;font-size:12px}
 .fxb-ctas{align-items:center}.fxb-n{font-style:normal;background:#c2552e;color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;font-weight:700}.fxb-edc{border-style:dashed!important}
-.fxb-seg[hidden]{display:none!important}.fxb-seg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fdf6f2;border:1.5px solid #f3d9cc;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:13.5px}.fxb-seg .hz-ok{flex:none}
+.fxb-seg[hidden]{display:none!important}.fxs-g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.fxs-c{padding:18px 20px}.fxs-r{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #f3eee9;font-size:13.5px;font-variant-numeric:tabular-nums}.fxs-r>*:not(:first-child){text-align:right}.fxs-h{font-size:11px;font-weight:700;color:#9a8d84;text-transform:uppercase;letter-spacing:.06em}.fxs-bts{display:flex;gap:8px;flex-wrap:wrap}.fxs-bts .fx-btn{text-decoration:none}.fxg-aviso .fxb-si{margin-left:6px}@media(max-width:700px){.fxs-g{grid-template-columns:1fr}}.fxp-bts{display:flex;gap:6px;flex:none}.fx-res3{grid-template-columns:repeat(3,1fr)}.fx-rojo{color:#c2552e}.fx-vista button.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}@media(max-width:600px){.fxp-f{flex-wrap:wrap}.fxp-bts{width:100%;justify-content:flex-end}.fx-res3{grid-template-columns:1fr 1fr}}.fxb-seg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fdf6f2;border:1.5px solid #f3d9cc;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:13.5px}.fxb-seg .hz-ok{flex:none}
 .fxb-cab{background:#faf8f5;border:1.5px solid #f0ebe6;border-radius:14px;padding:12px 14px;margin-bottom:6px}.fxb-cab b{font-size:20px}.fxb-cab p{margin:4px 0 0;font-size:13px;color:#5f554e;line-height:1.45;word-break:break-word}
 .fxb-res{margin-top:8px}.fxb-vacio{padding:22px}.fxb-cr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto 30px;gap:6px;align-items:center;margin-bottom:8px}.fxb-cr:not(:has(select)){grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px}
 .fxb-prev{display:flex;flex-direction:column;gap:6px}.fxb-prev div{display:flex;gap:10px;font-size:12.5px;align-items:baseline}.fxb-prev span:first-child{color:#9a8d84;flex:none;width:40px}.fxb-prev span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -13618,6 +13618,8 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',dir:1,t:'Facturación › Gestoría: el trimestre resumido (IVA repercutido y soportado, retenciones y los dos libros) y tres botones para mandárselo a la gestoría: resumen en PDF, Excel con los libros y las facturas de gastos en un ZIP.',ver:{sec:'fx'}},
+ {f:'2026-11-17',dir:1,t:'Facturación: las facturas y los presupuestos se envían desde el panel, por email (con el PDF) o por WhatsApp (con un enlace). Y en Facturas › «Por cobrar» está lo que os deben, con «Recordar» y «Cobrada».',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: Gastos y Banco. En «Gastos» subes la foto o el PDF de una factura de proveedor y se rellena sola. En «Banco» subes el extracto de cada cuenta (Excel o Norma 43) y cada movimiento se cruza con sus facturas y gastos: un «Sí» y queda cuadrado. Los cobros con tarjeta del TPV se cuadran juntos y la comisión se apunta como gasto.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: presupuestos y clientes guardados. En «Presupuestos» haces uno, lo marcas aceptado o rechazado y con «Hacer la factura» se convierte en factura con todo relleno. Al escribir el nombre en una factura nueva salen los clientes ya usados y se rellenan sus datos.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: ahora hay actividades. Arriba eliges FISIO365 o CerraPoint; cada una tiene sus series, su logo, su color y su IVA (CerraPoint, 21 %). Mismo NIF y misma cadena VeriFactu.'},
@@ -16617,16 +16619,16 @@ async function renderFacturacion(wrap){
  const m=ce('div','fx');wrap.appendChild(m);
  let I=null;try{I=await fxInicio();}catch(e){}
  const pinta=()=>{const A=(I&&I.config.actividades)||[{id:'principal'}];if(!A.some(a=>a.id===FX.act))FX.act='principal';const prin=FX.act==='principal';
-  const tabs=[['lista','Facturas'],['pres','Presupuestos'],['cli','Clientes'],['gas','Gastos'],['banco','Banco'],prin?['comp','Comparar con Holded']:null,['vf','VeriFactu'],['aj','Ajustes']].filter(Boolean);if(!tabs.some(t=>t[0]===FX.tab))FX.tab='lista';
+  const tabs=[['lista','Facturas'],['pres','Presupuestos'],['cli','Clientes'],['gas','Gastos'],['banco','Banco'],['gest','Gestoría'],prin?['comp','Comparar con Holded']:null,['vf','VeriFactu'],['aj','Ajustes']].filter(Boolean);if(!tabs.some(t=>t[0]===FX.tab))FX.tab='lista';
   m.innerHTML=`${A.length>1?`<div class="fx-acts">${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.act===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
   <div class="fx-top"><div class="fx-tabs">${tabs.map(([k,t])=>`<button type="button" data-t="${k}" class="${FX.tab===k?'on':''}">${t}</button>`).join('')}</div><button type="button" class="fx-nueva">＋ Nueva factura</button></div>
   ${prin&&FX.tab==='lista'?'<div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con el mismo número que el ticket de Holded (si Holded lo deja en borrador, coge el número cuando lo aprobáis). Holded sigue siendo la que vale hasta que lo cambiemos.</div>':''}<div class="fx-c"></div>`;
   m.querySelectorAll('.fx-acts button').forEach(b=>b.onclick=()=>{FX.act=b.dataset.a;FX.serie='';try{sessionStorage.setItem('f365_fx_act',FX.act);}catch(e){}pinta();});
   m.querySelectorAll('.fx-tabs button').forEach(b=>b.onclick=()=>{FX.tab=b.dataset.t;pinta();});
-  const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxNueva(()=>pinta(),{modo:'pres'});}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxCliente(null,()=>pinta());}else if(FX.tab==='gas'){bn.textContent='＋ Nuevo gasto';bn.onclick=()=>fxGasto(null,()=>pinta());}else if(FX.tab==='banco'){bn.textContent='＋ Subir extracto';bn.onclick=()=>fxImportar(()=>pinta());}else bn.onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
-  const c=m.querySelector('.fx-c');({lista:fxLista,pres:fxPres,cli:fxClientes,gas:fxGastos,banco:fxBanco,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();})})[FX.tab](c);};
+  const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxNueva(()=>pinta(),{modo:'pres'});}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxCliente(null,()=>pinta());}else if(FX.tab==='gas'){bn.textContent='＋ Nuevo gasto';bn.onclick=()=>fxGasto(null,()=>pinta());}else if(FX.tab==='banco'){bn.textContent='＋ Subir extracto';bn.onclick=()=>fxImportar(()=>pinta());}else if(FX.tab==='gest')bn.hidden=true;else bn.onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
+  const c=m.querySelector('.fx-c');({lista:fxLista,pres:fxPres,cli:fxClientes,gas:fxGastos,banco:fxBanco,gest:fxGestoria,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();})})[FX.tab](c);};
  pinta();}
-async function fxLista(c){
+async function fxLista(c){if(FX.fpend)return fxPendientes(c);
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  let I;try{I=await fxInicio();}catch(e){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(e.message)}</div></div>`;return;}
  const [a,mm]=FX.mes.split('-').map(Number),fin=new Date(Date.UTC(a,mm,0)).getUTCDate();
@@ -16641,6 +16643,7 @@ async function fxLista(c){
   <div class="card fx-l">${L.length?L.map(x=>`<button type="button" class="fx-f${x.estado==='anulada'?' anul':''}" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)} · ${escH((S[x.serie]||{}).nombre||'')}</small></span>
    <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}${(x.pagos||{}).estado==='pendiente'?' · <em class="fx-pend">Pendiente de pago</em>':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">No hay facturas este mes'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
  c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>fxLista(c)));
+ {const fl=c.querySelector('.fx-fil'),v=ce('div','fx-chips fx-vista');v.innerHTML='<button type="button" class="on">Por meses</button><button type="button">Por cobrar</button>';fl.prepend(v);v.lastChild.onclick=()=>{FX.fpend=1;fxPendientes(c);};}
  c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>{FX.mes=mesMov(+b.dataset.d);fxLista(c);});
  c.querySelectorAll('.fx-chips [data-s]').forEach(b=>b.onclick=()=>{FX.serie=b.dataset.s;fxLista(c);});
  const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
@@ -16666,9 +16669,11 @@ async function fxDetalle(id,listo){const r=await (await fetch(`/api/schedule?act
   ${F.rectifica_codigo?`<p class="fx-p">Rectifica a <b>${escH(F.rectifica_codigo)}</b>${F.motivo?' · '+escH(F.motivo):''}</p>`:''}
   ${(F.rects||[]).length?`<div class="fx-sub">Rectificativas</div>${F.rects.map(x=>`<a class="fx-f" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}</small></span><span class="fx-cli"><small>${escH(x.motivo||'')}</small></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join('')}`:''}
   ${F.prueba?'<p class="fx-p">Es la copia de prueba de un ticket de Holded: si hay que corregirla, se hace en Holded.</p>':''}
-  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxUrl(F.id,F.k)}" target="_blank" rel="noopener">Ver o descargar</a>${puede?'<button type="button" class="hz-ok fx-rect">Rectificar</button>':''}</div>`);
+  ${(F.enviada||[]).length?`<p class="fx-p">Enviada por email a ${F.enviada.map(e=>`<b>${escH(e.a)}</b> el ${new Date(e.t).toLocaleDateString('es-ES',{timeZone:'Europe/Madrid',day:'numeric',month:'numeric'})}`).join(', ')}.</p>`:''}
+  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxUrl(F.id,F.k)}" target="_blank" rel="noopener">Ver o descargar</a>${!F.prueba&&F.estado!=='anulada'?'<button type="button" class="hz-re fx-env">Enviar</button>':''}${puede?'<button type="button" class="hz-ok fx-rect">Rectificar</button>':''}</div>`);
  mm.querySelector('.hz-x').onclick=()=>mm.remove();
  const b=mm.querySelector('.fx-rect');if(b)b.onclick=()=>{mm.remove();fxRectificar(F,dev,listo);};
+ const be=mm.querySelector('.fx-env');if(be)be.onclick=()=>fxEnviar(F.id,be,()=>{mm.remove();fxDetalle(F.id,listo);});
  mm.querySelectorAll('[data-pm]').forEach(x=>x.onclick=async()=>{const r2=await agPost('fac-pago',{id:F.id,estado:x.dataset.pm?'pagada':'pendiente',modo:x.dataset.pm}).catch(()=>({}));if(!r2.ok){toast(r2.error||'No se ha podido guardar',false);return;}toast(x.dataset.pm?'Marcada como pagada':'Marcada como pendiente',true);mm.remove();fxDetalle(F.id,listo);listo&&listo();});}
 async function fxRectificar(F,dev,listo){let I;try{I=await fxInicio();}catch(e){toast(e.message,false);return;}
  if(!I.series.some(s=>s.activa&&s.tipo==='rectificativa'&&(s.actividad||'principal')===(F.actividad||'principal'))){toast('Crea primero una serie de rectificativas (Ajustes)',false);return;}
@@ -17060,6 +17065,78 @@ async function fxImportar(listo){const C=FXG.ctas||[];if(!C.length){fxCuentas(()
    mm.remove();FX.cta=cta;FX.best='pendiente';toast(`${n} movimiento${n===1?'':'s'} nuevo${n===1?'':'s'}${rep?` (${rep} ya estaban)`:''}`,true);listo&&listo();};};
  inp.click();}
 
+// ── Para la gestoría: el trimestre (IVA, retenciones, libros) en PDF, Excel y las facturas de gastos en un ZIP ──
+function fxBajar(blob,nombre){const f=new File([blob],nombre,{type:blob.type});if(navigator.canShare&&/iPhone|iPad|Android/i.test(navigator.userAgent)&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return;}
+ const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nombre;a.dataset.vz='1';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);}
+async function fxGestoria(c){const hoy=fxHoy();if(!FX.gtri)FX.gtri=hoy.slice(0,4)+'-'+Math.ceil(+hoy.slice(5,7)/3);if(FX.gtodo==null)FX.gtodo=1;
+ const [an,tq]=FX.gtri.split('-').map(Number),desde=`${an}-${String((tq-1)*3+1).padStart(2,'0')}-01`,hasta=new Date(Date.UTC(an,tq*3,0)).toISOString().slice(0,10),periodo=`${tq}º trimestre ${an}`;
+ let I={};try{I=await fxInicio();}catch(e){}const A=(I.config||{}).actividades||[],aN=fxActNom(A.find(x=>x.id===FX.act)||{id:'principal'}),act=FX.gtodo||A.length<2?'':FX.act;
+ c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
+ const r=await (await fetch(`/api/schedule?action=fac-gestoria&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}&actividad=${act}`)).json().catch(()=>({}));
+ if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
+ const R=r.resumen,Rt=r.retenciones,mov=d=>{let y=an,q=tq+d;if(q<1){q=4;y--;}if(q>4){q=1;y++;}return y+'-'+q;},fut=mov(1).split('-').join('')>hoy.slice(0,4)+Math.ceil(+hoy.slice(5,7)/3);
+ const pdfU=`/api/schedule?action=fac-gestoria-pdf&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}&actividad=${act}&periodo=${encodeURIComponent(periodo)}&pdf=1`;
+ const tab=(L,vacio)=>L.length?L.map(i=>`<div class="fxs-r"><span>${i.tipo?i.tipo+' %':vacio}</span><span>${fxEur(i.base)}</span><b>${fxEur(i.cuota)}</b></div>`).join(''):'<p class="fx-p">Nada en este periodo.</p>';
+ const av=[];if(r.avisos.falta)av.push(`<div class="fxg-aviso">Hay <b>${r.avisos.falta} gasto${r.avisos.falta>1?'s':''}</b> sin la factura subida. <button type="button" class="fxb-si fxs-falta">Verlos</button></div>`);
+ if(r.avisos.banco)av.push(`<div class="fxg-aviso">Quedan <b>${r.avisos.banco} movimiento${r.avisos.banco>1?'s':''} del banco</b> por revisar en este trimestre. <button type="button" class="fxb-si fxs-banco">Revisar</button></div>`);
+ if(r.avisos.pruebas)av.push(`<div class="fxg-aviso ok">Mientras estemos en pruebas, las facturas que valen son las de Holded: aquí salen sus copias (${r.avisos.pruebas}).</div>`);
+ c.innerHTML=`<div class="fx-fil"><div class="fx-mes"><button type="button" data-d="-1" aria-label="Trimestre anterior">‹</button><b>${periodo}</b><button type="button" data-d="1" aria-label="Trimestre siguiente"${fut?' disabled':''}>›</button></div>
+  ${A.length>1?`<div class="fx-chips"><button type="button" data-t="1" class="${FX.gtodo?'on':''}">Toda la empresa</button><button type="button" data-t="0" class="${FX.gtodo?'':'on'}">Solo ${escH(aN)}</button></div>`:''}</div>
+  <div class="fx-res fx-res3"><div><small>IVA repercutido</small><b>${fxEur(R.emitidas.cuota)}</b></div><div><small>IVA soportado</small><b>${fxEur(R.recibidas.cuota)}</b></div><div><small>${R.resultado>=0?'A ingresar':'A compensar'} (aprox.)</small><b class="fx-rojo">${fxEur(Math.abs(R.resultado))}</b></div></div>
+  ${av.join('')}
+  <div class="fxs-g"><div class="card fxs-c"><h3 class="fx-h">IVA repercutido</h3><p class="fx-p">${R.emitidas.n} facturas emitidas · ${fxEur(R.emitidas.total)}</p><div class="fxs-r fxs-h"><span>Tipo</span><span>Base</span><span>Cuota</span></div>${tab(r.iva.repercutido,'Exenta')}</div>
+  <div class="card fxs-c"><h3 class="fx-h">IVA soportado</h3><p class="fx-p">${R.recibidas.n} gastos · ${fxEur(R.recibidas.total)}</p><div class="fxs-r fxs-h"><span>Tipo</span><span>Base</span><span>Cuota</span></div>${tab(r.iva.soportado,'Sin IVA')}
+  ${Rt.alquiler.irpf||Rt.profesionales.irpf?`<h3 class="fx-h" style="margin-top:14px">Retenciones</h3>${Rt.alquiler.irpf?`<div class="fxs-r"><span>Alquiler (115)</span><span>${fxEur(Rt.alquiler.base)}</span><b>${fxEur(Rt.alquiler.irpf)}</b></div>`:''}${Rt.profesionales.irpf?`<div class="fxs-r"><span>Profesionales (111)</span><span>${fxEur(Rt.profesionales.base)}</span><b>${fxEur(Rt.profesionales.irpf)}</b></div>`:''}`:''}</div></div>
+  <div class="card fxs-c"><h3 class="fx-h">Para mandar a la gestoría</h3><p class="fx-p">Al acabar el trimestre, les mandas estos tres archivos y tienen todo para hacer el IVA y las retenciones.</p>
+  <div class="fxs-bts"><a class="fx-btn fxs-pdf" href="${pdfU}" target="_blank" rel="noopener">Resumen en PDF</a><button type="button" class="fx-btn sec fxs-xls">Excel con los libros</button><button type="button" class="fx-btn sec fxs-zip"${r.gastos.some(g=>g.archivo)?'':' disabled'}>Facturas de gastos (ZIP)</button></div></div>`;
+ c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>{FX.gtri=mov(+b.dataset.d);fxGestoria(c);});
+ c.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{FX.gtodo=+b.dataset.t;fxGestoria(c);});
+ const vf=c.querySelector('.fxs-falta');if(vf)vf.onclick=()=>{FX.tab='gas';FX.gfil='falta';document.querySelector(`.fx-tabs [data-t="gas"]`).click();};
+ const vb=c.querySelector('.fxs-banco');if(vb)vb.onclick=()=>{FX.best='pendiente';document.querySelector(`.fx-tabs [data-t="banco"]`).click();};
+ const nomA=`Gestoria_${an}_T${tq}${act?'_'+aN.replace(/\W+/g,''):''}`;
+ c.querySelector('.fxs-xls').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await xlsxJs();}catch(_){toast('No se ha podido preparar el Excel. Revisa la conexión.',false);b.disabled=false;return;}
+  const wb=XLSX.utils.book_new(),n=v=>Math.round((+v||0)*100)/100;
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r.facturas.map(f=>({Fecha:f.fecha.split('-').reverse().join('/'),'Nº':f.codigo,Tipo:f.tipo,Cliente:(f.cliente||{}).nombre||'',NIF:(f.cliente||{}).nif||'',Base:n(f.base),'Tipo IVA':(f.impuestos||[]).map(i=>i.tipo?i.tipo+'%':'exenta').join(' + '),IVA:n(f.cuota),Total:n(f.total),Actividad:fxActNom(A.find(x=>x.id===f.actividad)||{id:f.actividad})}))),'Emitidas');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r.gastos.map(g=>({Fecha:g.fecha.split('-').reverse().join('/'),Proveedor:g.proveedor.nombre,NIF:g.proveedor.nif||'','Nº factura':g.numero||'',Categoría:g.categoria||'',Concepto:g.concepto||'',Base:n(g.base),'Tipo IVA':(g.impuestos||[]).map(i=>i.tipo?i.tipo+'%':'sin IVA').join(' + '),IVA:n(g.cuota),'Retención':n(g.irpf),Total:n(g.total),Factura:g.archivo?'sí':'falta'}))),'Recibidas');
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});fxBajar(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),nomA+'.xlsx');b.disabled=false;};
+ c.querySelector('.fxs-zip').onclick=async e=>{const b=e.currentTarget,t0=b.textContent;b.disabled=true;
+  try{if(!window.JSZip)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});}catch(_){toast('No se ha podido preparar el ZIP. Revisa la conexión.',false);b.disabled=false;return;}
+  const z=new JSZip(),G=r.gastos.filter(g=>g.archivo),usados={};let k=0,mal=0;
+  for(const g of G){b.textContent=`Preparando ${++k} de ${G.length}…`;try{const x=await fetch(g.archivo.url);if(!x.ok)throw 0;const bl=await x.blob(),ext=/pdf/.test(bl.type)?'pdf':/png/.test(bl.type)?'png':'jpg';
+    let nm=`${g.fecha} ${g.proveedor.nombre}${g.numero?' '+g.numero:''}`.replace(/[\\/:*?"<>|]+/g,'-').slice(0,90);if(usados[nm])nm+=' ('+(++usados[nm])+')';else usados[nm]=1;z.file(nm+'.'+ext,bl);}catch(_){mal++;}}
+  try{const p=await fetch(pdfU.replace('&pdf=1',''));if(p.ok)z.file(nomA+'_resumen.pdf',await p.blob());}catch(_){}
+  const out=await z.generateAsync({type:'blob'});fxBajar(out,nomA+'_gastos.zip');b.textContent=t0;b.disabled=false;if(mal)toast(`${mal} archivo${mal>1?'s':''} no se ha${mal>1?'n':''} podido añadir`,false);};}
+// Enviar una factura o un presupuesto: email con el PDF o WhatsApp con el enlace
+async function fxEnviar(id,btn,listo,op){op=op||{};btn.disabled=true;const d=await agPost('fac-enviar',{id,op:'datos'}).catch(()=>({}));btn.disabled=false;
+ if(!d.ok){toast(d.error||'No se ha podido preparar',false);return;}
+ const yo=miNombreCorto(),Nom=d.nomDoc.charAt(0).toUpperCase()+d.nomDoc.slice(1);
+ const m=hzModal(`<div class="hz-top"><div><small>${escH(Nom)} ${escH(d.numero)} · ${escH(d.total)}</small><b>${op.recordar?'Recordar el pago':'Enviar '+(d.tipo==='factura'?'la factura':'el presupuesto')}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Por email · con el PDF adjunto</div><input type="email" inputmode="email" class="ag-in fe-em" placeholder="Email" value="${escH(d.email||'')}">
+  <div class="hz-bts" style="margin-top:10px"><button type="button" class="hz-ok fe-go">Enviar email</button></div><div class="ient-err fe-er" hidden style="margin-top:8px"></div>
+  <div class="hz-lab" style="margin-top:18px">Por WhatsApp · con un enlace para verlo y descargarlo</div>
+  <input type="tel" inputmode="tel" class="ag-in fe-tel" placeholder="Teléfono" value="${escH(d.tel?('+'+d.tel).replace(/^\+34(\d{9})$/,'$1'):'')}">
+  <div class="hz-bts" style="margin-top:8px"><button type="button" class="seg-resb fe-wa">Abrir WhatsApp</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const ie=m.querySelector('.fe-em'),go=m.querySelector('.fe-go'),er=m.querySelector('.fe-er');
+ go.onclick=async()=>{const to=ie.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){er.hidden=false;er.textContent='Revisa el email';ie.focus();return;}
+  go.disabled=true;go.textContent='Enviando…';er.hidden=true;const x=await agPost('fac-enviar',{id,op:'email',to,yo,recordar:op.recordar?1:0}).catch(()=>({}));
+  if(!x.ok){go.disabled=false;go.textContent='Enviar email';er.hidden=false;er.textContent=x.error||'No se ha podido enviar';return;}
+  m.remove();toast(op.recordar?'Recordatorio enviado a '+to:Nom+' enviad'+(d.tipo==='factura'?'a':'o')+' a '+to,true);listo&&listo();};
+ m.querySelector('.fe-wa').onclick=()=>{let t=m.querySelector('.fe-tel').value.replace(/\D/g,'');if(t.length===9)t='34'+t;m.remove();
+  abrirWA(t,op.recordar?`Hola${d.pila?' '+d.pila:''}, soy ${yo} de ${d.marca}. Te recuerdo que la factura ${d.numero} (${d.total}) está pendiente de pago. Aquí la tienes:\n${d.url}\n\nSi ya la has pagado, no hagas caso. ¡Gracias!`:`Hola${d.pila?' '+d.pila:''}, soy ${yo} de ${d.marca}. Aquí tienes ${d.tipo==='factura'?'tu '+d.nomDoc:'el presupuesto'} ${d.numero} (${d.total}):\n${d.url}`);};}
+// ── Cobros pendientes (dentro de Facturas): lo que os deben, lo más antiguo arriba ──
+async function fxPendientes(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
+ const r=await (await fetch(`/api/schedule?action=fac-pendientes&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}`)).json().catch(()=>({}));
+ if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
+ const L=r.facturas,tot=L.reduce((t,x)=>t+x.total,0),vie=L.filter(x=>x.dias>30).reduce((t,x)=>t+x.total,0);
+ c.innerHTML=`<div class="fx-fil"><div class="fx-chips fx-vista"><button type="button" data-v="">Por meses</button><button type="button" data-v="1" class="on">Por cobrar${L.length?' · '+L.length:''}</button></div></div>
+  <div class="fx-res fx-res3"><div><small>Facturas</small><b>${L.length}</b></div><div><small>Por cobrar</small><b class="fx-rojo">${fxEur(tot)}</b></div><div><small>De hace más de 30 días</small><b>${fxEur(vie)}</b></div></div>
+  <div class="card fx-l">${L.length?L.map(x=>{const env=(x.enviada||[]).filter(e=>/^recordatorio/.test(e.a)).length;return `<div class="fx-f fxp-f" data-id="${x.id}" role="button" tabindex="0"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${fxD(x.fecha)}/${x.fecha.slice(2,4)}</small></span><span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small><em class="fx-est ${x.dias>30?'no':'pend'}">${x.dias<=0?'De hoy':x.dias===1?'Hace 1 día':'Hace '+x.dias+' días'}</em>${env?' · recordada '+(env>1?env+' veces':'una vez'):''}</small></span><span class="fx-tot">${fxEur(x.total)}</span><span class="fxp-bts"><button type="button" class="fxb-si fxp-rec">Recordar</button><button type="button" class="fxb-si fxp-ok">Cobrada</button></span></div>`;}).join(''):'<div class="fac-vacio">No os deben nada ✓</div>'}</div>`;
+ c.querySelector('[data-v=""]').onclick=()=>{FX.fpend=0;fxLista(c);};
+ c.querySelectorAll('.fxp-f').forEach(d=>{const id=d.dataset.id;d.onclick=()=>fxDetalle(id,()=>fxPendientes(c));
+  d.querySelector('.fxp-rec').onclick=e=>{e.stopPropagation();fxEnviar(id,e.currentTarget,()=>fxPendientes(c),{recordar:1});};
+  d.querySelector('.fxp-ok').onclick=e=>{e.stopPropagation();const m=hzModal(`<p class="pq-t">¿Cómo la han pagado?</p><div class="fx-chips fxp-modo">${['Transferencia','Tarjeta','Bizum','Efectivo'].map(t=>`<button type="button">${t}</button>`).join('')}</div><div class="hz-bts"><button type="button" class="hz-re">Cancelar</button></div>`);
+   m.querySelector('.hz-re').onclick=()=>m.remove();m.querySelectorAll('.fxp-modo button').forEach(b=>b.onclick=async()=>{const x=await agPost('fac-pago',{id,estado:'pagada',modo:b.textContent}).catch(()=>({}));if(!x.ok){toast(x.error||'No se ha podido',false);return;}m.remove();toast('Marcada como cobrada',true);fxPendientes(c);});};});}
 // ── Presupuestos ──
 const FX_EST={pendiente:['Pendiente','pend'],aceptado:['Aceptado','ok'],rechazado:['Rechazado','no'],facturado:['Facturado','fac']};
 const fxPresUrl=(id,k)=>`/api/schedule?action=fac-pres-ver&id=${id}&k=${encodeURIComponent(k)}&pdf=1`;
@@ -17076,9 +17153,10 @@ async function fxPresDet(id,listo){const r=await (await fetch(`/api/schedule?act
  const mm=hzModal(`<div class="hz-top"><div><small>Presupuesto</small><b>${escH(P.codigo)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="fx-det"><div><small>Para</small><b>${escH(capTit(Cl.nombre||'—'))}</b>${Cl.nif?`<span>${escH(Cl.nif)}</span>`:''}</div><div><small>Válido hasta</small><b>${ff(P.validez)}</b></div><div><small>Total</small><b>${fxEur(P.total)}</b></div></div>
   ${fac?`<div class="fx-pagst ok">Facturado${P.factura_codigo?' · '+escH(P.factura_codigo):''}</div>`:`<div class="fx-sub">Estado</div><div class="fx-chips fx-pest">${['pendiente','aceptado','rechazado'].map(k=>`<button type="button" data-e="${k}" class="${P.estado===k?'on':''}">${FX_EST[k][0]}</button>`).join('')}</div>`}
-  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxPresUrl(P.id,P.k)}" target="_blank" rel="noopener">Ver o descargar</a>${fac?'':'<button type="button" class="hz-re fx-ped">Cambiar</button><button type="button" class="hz-ok fx-pfac">Hacer la factura</button>'}</div>`);
+  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxPresUrl(P.id,P.k)}" target="_blank" rel="noopener">Ver o descargar</a><button type="button" class="hz-re fx-env">Enviar</button>${fac?'':'<button type="button" class="hz-re fx-ped">Cambiar</button><button type="button" class="hz-ok fx-pfac">Hacer la factura</button>'}</div>`);
  mm.querySelector('.hz-x').onclick=()=>mm.remove();
  mm.querySelectorAll('.fx-pest [data-e]').forEach(b=>b.onclick=async()=>{const r2=await agPost('fac-pres-estado',{id:P.id,estado:b.dataset.e}).catch(()=>({}));if(!r2.ok){toast('No se ha podido',false);return;}mm.querySelectorAll('.fx-pest button').forEach(x=>x.classList.toggle('on',x===b));toast('Marcado como '+FX_EST[b.dataset.e][0].toLowerCase(),true);listo&&listo();});
+ mm.querySelector('.fx-env').onclick=e=>fxEnviar(P.id,e.currentTarget);
  const ed=mm.querySelector('.fx-ped');if(ed)ed.onclick=()=>{mm.remove();fxNueva(listo,{modo:'pres',editId:P.id,datos:P});};
  const fa=mm.querySelector('.fx-pfac');if(fa)fa.onclick=()=>{mm.remove();fxNueva(listo,{presId:P.id,datos:{cliente:Cl,lineas:P.lineas,nota:P.nota?P.nota+'\nPresupuesto '+P.codigo:'Presupuesto '+P.codigo}});};}
 // ── Clientes guardados ──
