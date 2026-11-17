@@ -7708,6 +7708,11 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-registros') { // VERI*FACTU: registros de la cadena y comprobación de las huellas
         const ent = q.entorno === 'real' ? 'real' : 'pruebas'; return res.status(200).json({ ok: true, entorno: ent, ...(await FACX.registros(ent, 300)) });
       }
+      if (action === 'fac-una') { const F = await FACX.una(String(q.id || '')); if (!F) return res.status(404).json({ ok: false, error: 'No encontrada' });
+        return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
+      if (action === 'fac-rectificar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const r = await FACX.rectificar({ id: q.id, modo: q.modo, lineas: q.lineas, motivo: q.motivo, fecha: q.fecha, por: q.quien, nota: q.nota });
+        return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos });

@@ -10,7 +10,9 @@ create table if not exists fac_config (k text primary key, v jsonb not null defa
 create table if not exists fac_series (id text primary key, nombre text not null, prefijo text not null unique, tipo text not null default 'simplificada', diseno text not null default 'clasico', color text, activa boolean not null default true, auto boolean not null default false, nota text, orden int not null default 0, creado timestamptz not null default now());
 create table if not exists fac_contadores (serie text not null, anio int not null, n bigint not null default 0, primary key (serie, anio));
 create table if not exists fac_facturas (id text primary key, serie text not null, anio int not null, numero bigint not null, codigo text not null unique, tipo text not null, fecha date not null, emitida timestamptz not null default now(), emisor jsonb not null, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, paciente text, fisio text, cobro text, holded text, holded_num text, pagos jsonb, nota text, rectifica text, motivo text, estado text not null default 'emitida', diseno text, por text, vf jsonb, unique (serie, anio, numero));
-alter table fac_facturas add column if not exists prueba boolean not null default false
+alter table fac_facturas add column if not exists prueba boolean not null default false;
+alter table fac_series add column if not exists formato text not null default '{P}{AAAA}-{N5}';
+alter table fac_series add column if not exists anual boolean not null default true
 `;
 const ini = { p: null };
 async function db() {
@@ -46,20 +48,39 @@ const TIPOS = { simplificada: 'Factura simplificada', completa: 'Factura', recti
 const DISENOS = { clasico: 'Clásico', moderno: 'Moderno', minimal: 'Minimal' };
 async function sembrar() { const D = PG.db(); const r = await D.query(`select count(*)::int n from fac_series`); if (r.rows[0].n) return;
   await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,auto,orden) values ('S','Tickets (simplificadas)','T','simplificada','clasico',true,1),('F','Facturas completas','F','completa','clasico',false,2),('R','Rectificativas','R','rectificativa','clasico',false,3) on conflict do nothing`); }
-async function series() { const D = await db(); return (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) as usadas from fac_series s order by orden, creado`)).rows; }
+async function series() { const D = await db(), anio = +isoMad().slice(0, 4); const L = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id and not f.prueba) as usadas from fac_series s order by orden, creado`)).rows;
+  for (const s of L) { s.siguiente = await siguiente(D, s, anio); s.proxima = codigoDe(s, anio, s.siguiente); } return L; }
 async function guardarSerie(x) { const D = await db();
   const nombre = String(x.nombre || '').trim().slice(0, 60), prefijo = String(x.prefijo || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10);
   if (!nombre || !prefijo) throw new Error('Pon el nombre y el prefijo de la serie');
   const tipo = TIPOS[x.tipo] ? x.tipo : 'simplificada', diseno = DISENOS[x.diseno] ? x.diseno : 'clasico', color = /^#[0-9a-f]{6}$/i.test(x.color || '') ? x.color : null;
+  const formato = String(x.formato || '{P}{AAAA}-{N5}').trim(), anual = x.anual !== false;
+  if (!formatoOk(formato)) throw new Error('El formato tiene que llevar {N} (el número) y solo letras, números, guiones o barras');
   if (x.id) { const ya = (await D.query(`select s.*, (select count(*)::int from fac_facturas f where f.serie=s.id) usadas from fac_series s where id=$1`, [x.id])).rows[0]; if (!ya) throw new Error('No encuentro esa serie');
     // Con facturas ya hechas, el prefijo y el tipo no se tocan (cambiarían números ya emitidos)
-    if (ya.usadas && (prefijo !== ya.prefijo || tipo !== ya.tipo)) throw new Error('Esta serie ya tiene facturas: no se le puede cambiar el prefijo ni el tipo. Crea una serie nueva.');
-    await D.query(`update fac_series set nombre=$2, prefijo=$3, tipo=$4, diseno=$5, color=$6, activa=$7, nota=$8 where id=$1`, [x.id, nombre, prefijo, tipo, diseno, color, x.activa !== false, String(x.nota || '').slice(0, 300)]);
+    if (ya.usadas && (prefijo !== ya.prefijo || tipo !== ya.tipo || formato !== ya.formato || anual !== ya.anual)) throw new Error('Esta serie ya tiene facturas: no se le puede cambiar el prefijo, el tipo ni el formato del número. Crea una serie nueva.');
+    await D.query(`update fac_series set nombre=$2, prefijo=$3, tipo=$4, diseno=$5, color=$6, activa=$7, nota=$8, formato=$9, anual=$10 where id=$1`, [x.id, nombre, prefijo, tipo, diseno, color, x.activa !== false, String(x.nota || '').slice(0, 300), formato, anual]);
   } else { const id = 'S' + crypto.randomBytes(5).toString('hex');
-    await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,color,nota,orden) values($1,$2,$3,$4,$5,$6,$7,(select coalesce(max(orden),0)+1 from fac_series))`, [id, nombre, prefijo, tipo, diseno, color, String(x.nota || '').slice(0, 300)]).catch(e => { if (/unique/i.test(e.message)) throw new Error('Ya hay una serie con ese prefijo'); throw e; }); x.id = id; }
+    await D.query(`insert into fac_series(id,nombre,prefijo,tipo,diseno,color,nota,formato,anual,orden) values($1,$2,$3,$4,$5,$6,$7,$8,$9,(select coalesce(max(orden),0)+1 from fac_series))`, [id, nombre, prefijo, tipo, diseno, color, String(x.nota || '').slice(0, 300), formato, anual]).catch(e => { if (/unique/i.test(e.message)) throw new Error('Ya hay una serie con ese prefijo'); throw e; }); x.id = id; }
+  // Por qué número sigue (p. ej. el siguiente al último ticket de Holded). Nunca hacia atrás: no puede repetir números ya usados
+  if (x.siguiente != null && String(x.siguiente).trim() !== '') { const sig = Math.floor(Number(x.siguiente)), s2 = (await D.query(`select * from fac_series where id=$1`, [x.id])).rows[0], anio = +isoMad().slice(0, 4), k = s2.anual ? anio : 0;
+    if (!(sig >= 1 && sig < 1e9)) throw new Error('El número por el que sigue no es válido');
+    const act = await siguiente(D, s2, anio);
+    if (sig !== act) { const usados = Number(((await D.query(`select max(numero) m from fac_facturas where serie=$1 and ${s2.anual ? 'anio=$2' : '$2=$2'} and not prueba`, [x.id, anio])).rows[0] || {}).m || 0);
+      if (sig <= usados) throw new Error(`Ya hay facturas hasta el nº ${usados} en esta serie: tiene que seguir por el ${usados + 1} o más`);
+      await D.query(`insert into fac_contadores(serie,anio,n) values($1,$2,$3) on conflict (serie,anio) do update set n=$3`, [x.id, k, sig - 1]); } }
   // Serie de los cobros del panel: solo una (simplificada o completa)
   if (x.auto) await D.query(`update fac_series set auto=(id=$1)`, [x.id]);
   return x.id; }
+
+// ── Formato del número: {P} prefijo, {AAAA} año, {AA} año corto, {N} número (con {N4}, {N5}… cifras mínimas) ──
+function codigoDe(s, anio, n) {
+  let f = String(s.formato || '{P}{AAAA}-{N5}');
+  return f.replace(/\{P\}/g, s.prefijo).replace(/\{AAAA\}/g, String(anio)).replace(/\{AA\}/g, String(anio).slice(2)).replace(/\{N(\d?)\}/g, (m, d) => String(n).padStart(+d || 1, '0'));
+}
+const formatoOk = f => /\{N\d?\}/.test(f) && f.length <= 40 && !/[^A-Za-z0-9{}\-\/_.]/.test(f);
+// Siguiente número de una serie (el que tocará en la próxima factura de este año)
+async function siguiente(D, s, anio) { const k = s.anual ? anio : 0; const r = (await D.query(`select n from fac_contadores where serie=$1 and anio=$2`, [s.id, k])).rows[0]; return Number((r || {}).n || 0) + 1; }
 
 // ── Importes ──
 const r2 = x => Math.round((Number(x) || 0) * 100) / 100;
@@ -104,8 +125,9 @@ async function emitir(o) {
     // Las fechas van en orden dentro de la serie: no puede ir antes que la última emitida
     const ult = (await q.query(`select max(fecha)::text f from fac_facturas where serie=$1 and anio=$2`, [s.id, anio])).rows[0].f;
     if (ult && fecha < ult) throw new Error(`La fecha es anterior a la última factura de la serie (${ult.split('-').reverse().join('/')})`);
-    const n = (await q.query(`insert into fac_contadores(serie,anio,n) values($1,$2,1) on conflict (serie,anio) do update set n=fac_contadores.n+1 returning n`, [s.id, anio])).rows[0].n;
-    const codigo = `${s.prefijo}${anio}-${String(n).padStart(5, '0')}`, id = 'fac' + crypto.randomBytes(8).toString('hex');
+    const n = (await q.query(`insert into fac_contadores(serie,anio,n) values($1,$2,1) on conflict (serie,anio) do update set n=fac_contadores.n+1 returning n`, [s.id, s.anual ? anio : 0])).rows[0].n;
+    const codigo = codigoDe(s, anio, n), id = 'fac' + crypto.randomBytes(8).toString('hex');
+    if ((await q.query(`select 1 from fac_facturas where codigo=$1`, [codigo])).rows.length) throw new Error(`Ya existe una factura con el número ${codigo}: revisa el formato o el número de la serie`);
     const emisor = Object.assign({}, C.emisor);
     await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,rectifica,motivo,diseno,por)
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
@@ -131,6 +153,24 @@ async function anular(id, motivo) {
     return true; });
 }
 
+// ── Rectificativa: devuelve toda la factura o una parte (o corrige importes). Va en una serie de rectificativas ──
+// modo «total»: las mismas líneas en negativo. modo «parcial»: las líneas que se pasan (en negativo lo que se devuelve).
+async function rectificar(o) {
+  const D = await db(), F = await una(o.id);
+  if (!F) throw new Error('No encuentro esa factura');
+  if (F.prueba) throw new Error('Esta es una copia de prueba de un ticket de Holded: mientras estemos en pruebas, se rectifica en Holded');
+  if (F.estado === 'anulada') throw new Error('Esa factura está anulada');
+  if (F.tipo === 'rectificativa') throw new Error('No se puede rectificar una rectificativa: rectifica la factura original');
+  const motivo = String(o.motivo || '').trim(); if (motivo.length < 3) throw new Error('Explica el motivo de la rectificación');
+  const S = (await D.query(`select id from fac_series where activa and tipo='rectificativa' order by orden`)).rows; const serie = o.serie || (S[0] || {}).id;
+  if (!serie) throw new Error('Crea primero una serie de rectificativas (Facturación › Ajustes)');
+  let lineas = o.modo === 'total' ? F.lineas.map(l => ({ concepto: l.concepto, detalle: l.detalle, uds: -l.uds, precio: l.precio, dto: l.dto, iva: l.iva })) : (o.lineas || []);
+  const c = calcular(lineas); if (!c.lineas.length || !c.total) throw new Error('Pon lo que se corrige');
+  // No se puede devolver más de lo que se facturó
+  const ya = Number(((await D.query(`select coalesce(sum(total),0) t from fac_facturas where rectifica=$1 and estado='emitida'`, [F.id])).rows[0] || {}).t || 0);
+  if (Number(F.total) + ya + c.total < -0.004) throw new Error(`Con esto se devolvería más de lo facturado (quedan ${(Math.round((Number(F.total) + ya) * 100) / 100).toFixed(2).replace('.', ',')} € por devolver)`);
+  return emitir({ serie, fecha: o.fecha, cliente: F.cliente, lineas: c.lineas.map(l => ({ concepto: l.concepto, detalle: l.detalle, uds: l.uds, precio: l.precio, dto: l.dto, iva: l.iva })), rectifica: F.id, motivo, paciente: F.paciente, fisio: F.fisio, por: o.por, nota: o.nota });
+}
 // Desde un cobro del panel (lo que ya va a Holded): misma factura con nuestra numeración. Si ya existe, no repite.
 async function desdeCobro(o) {
   const D = await db();
@@ -154,7 +194,11 @@ async function lista(f) {
   const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
-async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0]; return r || null; }
+async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
+  (select codigo from fac_facturas o where o.id=f.rectifica) rectifica_codigo,
+  (select coalesce(json_agg(json_build_object('id',x.id,'codigo',x.codigo,'total',x.total,'fecha',x.fecha::text,'motivo',x.motivo) order by x.emitida),'[]'::json) from fac_facturas x where x.rectifica=f.id and x.estado='emitida') rects
+  from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0];
+  if (r) ['base', 'cuota', 'total'].forEach(k => { r[k] = Number(r[k]); }); return r || null; }
 
 // Enlace firmado para ver una factura (el paciente desde su app, o compartirla)
 const firma = (id) => crypto.createHmac('sha256', String(process.env.FISIO_PASSWORD || process.env.MIGRAR_KEY || 'f365')).update('fac:' + id).digest('base64url').slice(0, 22);
@@ -231,4 +275,4 @@ async function sincronizaHolded(getDoc, max = 25) {
 async function registros(entorno, limite) { const D = await db(), C = await config(), nif = String(C.emisor.nif || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const L = (await D.query(`select r.id, r.factura, r.tipo, r.num_serie, r.fecha::text fecha, r.tipo_factura, r.importe, r.huella, r.fechahora, r.estado from fac_registros r where entorno=$1 order by id desc limit $2`, [entorno, Math.min(1000, limite || 200)])).rows;
   return { lista: L, cadena: nif ? await VF.comprobar(D, entorno, nif) : { n: 0, mal: [] } }; }
-module.exports = { sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

@@ -1391,7 +1391,13 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fx-cod{display:flex;flex-direction:column;min-width:130px;text-decoration:none;color:inherit}.fx-cod b{font-size:13.5px;font-variant-numeric:tabular-nums}.fx-cod small,.fx-cli small{font-size:11.5px;color:#9a8d84}
 .fx-cli{flex:1;min-width:0;display:flex;flex-direction:column}.fx-cli b{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fx-tot{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;margin-left:auto;display:flex;flex-direction:column}.fx-dif{color:#b42318;font-weight:500;font-size:11.5px}
-.fx-flecha{color:#c9bdb4}.fx-hu{font-family:ui-monospace,Menlo,monospace;font-size:12px!important;color:#7d6a60;font-weight:500!important}.fx-falta b{color:#b42318}
+.fx-flecha{color:#c9bdb4}
+button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;font-family:var(--font);text-align:left;cursor:pointer}
+.fx-det{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:6px 0 14px}.fx-det small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9a8d84;font-weight:600}.fx-det b{font-size:15px}.fx-det span{display:block;font-size:12.5px;color:#7d6a60}
+.fx-ver{text-decoration:none;display:flex;align-items:center;justify-content:center}
+.fx-modos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px}.fx-modos button{font-family:var(--font);text-align:left;border:2px solid #f0ebe6;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px}.fx-modos button.on{border-color:#c2552e;background:#fdf6f2}.fx-modos b{font-size:14px}.fx-modos small{font-size:12px;color:#7d6a60}
+.fx-li.fx-lr{grid-template-columns:minmax(0,3fr) 80px 100px 80px}.fx-lcx{font-size:14px}.fx-liv{font-size:13px;color:#7d6a60;text-align:right}
+.fx-parc{margin-bottom:8px}.fx-fmt{margin:6px 0 4px}.fx-hu{font-family:ui-monospace,Menlo,monospace;font-size:12px!important;color:#7d6a60;font-weight:500!important}.fx-falta b{color:#b42318}
 .fx-cuadra{border-radius:14px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.fx-cuadra span{font-weight:500}.fx-cuadra.ok{background:#ecf7ef;color:#1d7a3e}.fx-cuadra.mal{background:#fdecea;color:#b42318}
 .fx-sub{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:#9a8d84;font-weight:700;margin:16px 0 8px}
 .fx-h{margin:0 0 4px;font-size:16px}.fx-p{margin:0 0 12px;font-size:13px;color:#7d6a60;line-height:1.5}
@@ -13580,6 +13586,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',dir:1,t:'Facturación: al tocar una factura puedes rectificarla (devolver todo o una parte, con su motivo), y en cada serie eliges el formato del número y por qué número sigue.'},
  {f:'2026-11-17',dir:1,t:'Facturación (en pruebas): cada cobro del panel hace también su factura propia, con el mismo número que el ticket de Holded. En Más › Facturación ves las facturas, comparas cada día con Holded, haces facturas a mano y eliges series, diseños e IVA.',ver:{sec:'fx',pasos:[{el:'.fx-tabs',txt:'Facturas, comparar con Holded y ajustes.'}]}},
  {f:'2026-11-17',t:'Ficha › Historia › Archivos: ahora se ven en miniatura y puedes ordenarlos en carpetas (p. ej. «Rodilla derecha» y «Rodilla izquierda») con «＋ Carpeta». Con la papelera de cada archivo lo borras.',ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí: «＋ Carpeta» para crear una y el icono de carpeta de cada archivo para moverlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
 {f:'2026-11-16',t:'Buzón: las solicitudes de vacaciones y horas libres ya se pueden contestar («Responder a…»), también después de aprobarlas. Lo ve quien la pidió y el resto de dirección.'},
@@ -16586,8 +16593,9 @@ async function fxLista(c){
   <div class="fx-chips"><button type="button" data-s="" class="${FX.serie?'':'on'}">Todas</button>${I.series.map(s=>`<button type="button" data-s="${s.id}" class="${FX.serie===s.id?'on':''}">${escH(s.nombre)}</button>`).join('')}</div>
   <input class="fx-in fx-bus" type="search" placeholder="Buscar por nº, nombre o NIF" value="${escH(FX.q)}"></div>
   <div class="fx-res"><div><small>Facturas</small><b>${L.length}</b></div><div><small>Base</small><b>${fxEur(sum('base'))}</b></div><div><small>IVA</small><b>${fxEur(sum('cuota'))}</b></div><div><small>Total</small><b>${fxEur(sum('total'))}</b></div></div>
-  <div class="card fx-l">${L.length?L.map(x=>`<a class="fx-f${x.estado==='anulada'?' anul':''}" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)} · ${escH((S[x.serie]||{}).nombre||'')}</small></span>
-   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join(''):'<div class="fac-vacio">No hay facturas este mes'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
+  <div class="card fx-l">${L.length?L.map(x=>`<button type="button" class="fx-f${x.estado==='anulada'?' anul':''}" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)} · ${escH((S[x.serie]||{}).nombre||'')}</small></span>
+   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">No hay facturas este mes'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
+ c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>fxLista(c)));
  c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>{FX.mes=mesMov(+b.dataset.d);fxLista(c);});
  c.querySelectorAll('.fx-chips [data-s]').forEach(b=>b.onclick=()=>{FX.serie=b.dataset.s;fxLista(c);});
  const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
@@ -16602,6 +16610,40 @@ async function fxComparar(c,dia){
   <div class="card fx-l">${r.holded.length?r.holded.map(x=>`<div class="fx-cp"><span class="fx-cod"><small>Holded</small><b>${escH(x.num)}</b></span><span class="fx-flecha">→</span>${x.propia?`<a class="fx-cod" href="${fxUrl(x.propia.id,x.propia.k)}" target="_blank" rel="noopener"><small>Propia</small><b>${escH(x.propia.codigo)}</b></a>`:'<span class="fx-cod fx-falta"><small>Propia</small><b>Falta</b></span>'}<span class="fx-tot">${fxEur(x.total)}${x.propia&&Math.abs(x.propia.total-x.total)>0.009?`<small class="fx-dif">propia ${fxEur(x.propia.total)}</small>`:''}</span></div>`).join(''):'<div class="fac-vacio">Ese día no hay tickets de Holded hechos desde el panel.</div>'}
   ${r.sueltas.length?`<div class="fx-sub">Solo en las propias (hechas a mano)</div>${r.sueltas.map(x=>`<a class="fx-f" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b></span><span class="fx-cli"><b>${escH(capTit(x.nombre||'—'))}</b></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join('')}`:''}</div>`;
  c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>fxComparar(c,mov(+b.dataset.d)));}
+// ── Una factura: verla, y rectificarla (devolver todo o una parte) ──
+async function fxDetalle(id,listo){const r=await (await fetch(`/api/schedule?action=fac-una&id=${id}&pwd=${encodeURIComponent(apiPwd)}`)).json().catch(()=>({}));if(!r.ok){toast(r.error||'No se ha podido abrir',false);return;}
+ const F=r.factura,Cl=F.cliente||{},dev=Math.round((F.total+(F.rects||[]).reduce((t,x)=>t+Number(x.total),0))*100)/100;
+ const puede=!F.prueba&&F.estado!=='anulada'&&F.tipo!=='rectificativa'&&dev>0.004;
+ const mm=hzModal(`<div class="hz-top"><div><small>${escH(F.serie_nombre||'')}${F.prueba?' · prueba':''}</small><b>${escH(F.codigo)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="fx-det"><div><small>Para</small><b>${escH(capTit(Cl.nombre||'—'))}</b>${Cl.nif?`<span>${escH(Cl.nif)}</span>`:''}</div><div><small>Fecha</small><b>${+F.fecha.slice(8)}/${+F.fecha.slice(5,7)}/${F.fecha.slice(0,4)}</b></div><div><small>Total</small><b>${fxEur(F.total)}</b></div></div>
+  ${F.estado==='anulada'?'<div class="fx-cuadra mal">Anulada'+(F.motivo?' · '+escH(F.motivo):'')+'</div>':''}
+  ${F.rectifica_codigo?`<p class="fx-p">Rectifica a <b>${escH(F.rectifica_codigo)}</b>${F.motivo?' · '+escH(F.motivo):''}</p>`:''}
+  ${(F.rects||[]).length?`<div class="fx-sub">Rectificativas</div>${F.rects.map(x=>`<a class="fx-f" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}</small></span><span class="fx-cli"><small>${escH(x.motivo||'')}</small></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join('')}`:''}
+  ${F.prueba?'<p class="fx-p">Es la copia de prueba de un ticket de Holded: si hay que corregirla, se hace en Holded.</p>':''}
+  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxUrl(F.id,F.k)}" target="_blank" rel="noopener">Ver o descargar</a>${puede?'<button type="button" class="hz-ok fx-rect">Rectificar</button>':''}</div>`);
+ mm.querySelector('.hz-x').onclick=()=>mm.remove();
+ const b=mm.querySelector('.fx-rect');if(b)b.onclick=()=>{mm.remove();fxRectificar(F,dev,listo);};}
+async function fxRectificar(F,dev,listo){let I;try{I=await fxInicio();}catch(e){toast(e.message,false);return;}
+ if(!I.series.some(s=>s.activa&&s.tipo==='rectificativa')){toast('Crea primero una serie de rectificativas (Ajustes)',false);return;}
+ let modo='total';const num=v=>Number(String(v||'').replace(/\s/g,'').replace(',','.'))||0;
+ const ivaTxt=v=>v.tipo?v.tipo+' %':'Exenta';
+ const mm=hzModal(`<div class="hz-top"><div><small>Rectificar ${escH(F.codigo)}</small><b>¿Qué quieres corregir?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="fx-modos"><button type="button" data-m="total" class="on"><b>Devolver todo</b><small>Se anula la factura entera (${fxEur(dev)})</small></button><button type="button" data-m="parcial"><b>Devolver una parte o corregir</b><small>Pones lo que cambia: en negativo lo que se devuelve</small></button></div>
+  <div class="fx-parc" hidden><div class="fx-li fx-lh fx-lr"><span>Concepto</span><span>Uds.</span><span>Precio</span><span>IVA</span></div>${F.lineas.map((l,i)=>`<div class="fx-li fx-lr" data-i="${i}"><span class="fx-lcx">${escH(l.concepto)}</span><input class="fx-in fx-lu" inputmode="decimal" value="0" aria-label="Unidades"><input class="fx-in fx-lp" inputmode="decimal" value="${l.precio}" aria-label="Precio"><span class="fx-liv">${ivaTxt(l.iva)}</span></div>`).join('')}
+   <p class="fx-p" style="margin-top:8px">Por ejemplo, para devolver 1 sesión pon <b>-1</b> en unidades.</p></div>
+  <label class="fx-lab"><span>Motivo (sale en la rectificativa)</span><input class="fx-in" data-k="motivo" placeholder="Ej.: Devolución por sesión no realizada"></label>
+  <div class="fx-totm"></div>
+  <div class="hz-bts"><button type="button" class="hz-re">Cancelar</button><button type="button" class="hz-ok">Hacer la rectificativa</button></div>`);
+ mm.querySelector('.hz-card').classList.add('fx-mod');const $m=q=>mm.querySelector(q);
+ const lineas=()=>modo==='total'?F.lineas.map(l=>Object.assign({},l,{uds:-l.uds})):[...mm.querySelectorAll('.fx-parc [data-i]')].map(d=>{const l=F.lineas[+d.dataset.i];return Object.assign({},l,{uds:num(d.querySelector('.fx-lu').value),precio:num(d.querySelector('.fx-lp').value)});}).filter(l=>l.uds);
+ const tot=()=>{const L=lineas();let t=0;L.forEach(l=>{const b=l.uds*l.precio*(1-(l.dto||0)/100);t+=b+b*(l.iva.tipo||0)/100;});$m('.fx-totm').innerHTML=`<b>${t<0?'Se devuelven':'Se suman'} ${fxEur(Math.abs(t))}</b>`;};
+ mm.querySelectorAll('.fx-modos button').forEach(b=>b.onclick=()=>{modo=b.dataset.m;mm.querySelectorAll('.fx-modos button').forEach(x=>x.classList.toggle('on',x===b));$m('.fx-parc').hidden=modo!=='parcial';tot();});
+ mm.querySelectorAll('.fx-parc input').forEach(i=>i.oninput=tot);tot();
+ $m('.hz-x').onclick=$m('.hz-re').onclick=()=>mm.remove();
+ $m('.hz-ok').onclick=async e=>{const b=e.currentTarget,mot=$m('[data-k="motivo"]').value.trim();if(mot.length<3){toast('Escribe el motivo',false);return;}const L=lineas();if(!L.length){toast('Pon lo que cambia',false);return;}
+  if(!await pregunta(`¿Hacer la rectificativa de ${F.codigo}? Una vez hecha no se puede cambiar.`,{si:'Hacerla',no:'Revisar'}))return;
+  b.disabled=true;const r=await agPost('fac-rectificar',{id:F.id,modo,lineas:modo==='total'?undefined:L,motivo:mot,quien:miNombreCorto()}).catch(()=>({}));b.disabled=false;
+  if(!r.ok){toast(r.error||'No se ha podido hacer',false);return;}mm.remove();toast('Rectificativa '+r.codigo+' hecha',true);window.open(fxUrl(r.id,r.k),'_blank','noopener');listo&&listo();};}
 // ── VeriFactu: cada factura deja su registro con la huella encadenada; aquí se ve la cadena y si está bien ──
 async function fxVF(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  const r=await (await fetch('/api/schedule?action=fac-registros&entorno=pruebas&pwd='+encodeURIComponent(apiPwd))).json().catch(()=>({}));
@@ -16618,7 +16660,7 @@ async function fxAjustes(c){
  const ivaSel=(v,k)=>`<select class="fx-in fx-iva" data-k="${escH(k)}">${I.ivas.map(t=>t?`<option value="${t}"${v.tipo===t?' selected':''}>IVA ${t} %</option>`:Object.keys(I.exenciones).map(e=>`<option value="0:${e}"${!v.tipo&&v.exencion===e?' selected':''}>${e==='E1'?'Exenta (sanitaria)':e==='E6'?'Exenta (otra)':'No sujeta'}</option>`).join('')).join('')}</select>`;
  const conceptos=[...new Set([...I.conceptos,...Object.keys(C.iva.conceptos)])];
  c.innerHTML=`<div class="card"><h3 class="fx-h">Series</h3><p class="fx-p">Cada serie lleva su numeración (prefijo + año + número) y su diseño. Los cobros del panel van a la serie marcada con «Cobros».</p>
-   <div class="fx-series">${I.series.map(s=>`<button type="button" class="fx-se${s.activa?'':' off'}" data-id="${s.id}"><span class="fx-sw" style="background:${escH(s.color||'var(--accent,#c2552e)')}"></span><span><b>${escH(s.nombre)}</b><small>${escH(s.prefijo)}${new Date().getFullYear()}-00001 · ${escH(I.tipos[s.tipo])} · ${escH(I.disenos[s.diseno])}${s.usadas?' · '+s.usadas+' hechas':''}</small></span>${s.auto?'<em>Cobros</em>':''}${s.activa?'':'<em class="gr">Desactivada</em>'}</button>`).join('')}</div>
+   <div class="fx-series">${I.series.map(s=>`<button type="button" class="fx-se${s.activa?'':' off'}" data-id="${s.id}"><span class="fx-sw" style="background:${escH(s.color||'var(--accent,#c2552e)')}"></span><span><b>${escH(s.nombre)}</b><small>Próxima ${escH(s.proxima||'')} · ${escH(I.tipos[s.tipo])} · ${escH(I.disenos[s.diseno])}${s.usadas?' · '+s.usadas+' hechas':''}</small></span>${s.auto?'<em>Cobros</em>':''}${s.activa?'':'<em class="gr">Desactivada</em>'}</button>`).join('')}</div>
    <button type="button" class="fx-btn sec fx-sn">＋ Nueva serie</button></div>
   <div class="card"><h3 class="fx-h">IVA de cada concepto</h3><p class="fx-p">Lo que sale solo en los cobros del panel. En una factura hecha a mano eliges el IVA de cada línea.</p>
    <div class="fx-ivas">${conceptos.map(k=>`<label class="fx-ivf"><span>${escH(k)}</span>${ivaSel(C.iva.conceptos[k]||C.iva.def,k)}</label>`).join('')}
@@ -16643,7 +16685,11 @@ function fxSerie(s,I,listo){const nueva=!s;s=s||{nombre:'',prefijo:'',tipo:'comp
   <div class="fx-g2"><label class="fx-lab w2"><span>Nombre</span><input class="fx-in" data-k="nombre" value="${escH(s.nombre)}" placeholder="Ej.: Facturas a clubs"></label>
   <label class="fx-lab"><span>Prefijo</span><input class="fx-in" data-k="prefijo" value="${escH(s.prefijo)}" maxlength="10" placeholder="Ej.: C"${bloq?' disabled':''}></label>
   <label class="fx-lab"><span>Tipo</span><select class="fx-in" data-k="tipo"${bloq?' disabled':''}>${Object.entries(I.tipos).map(([k,t])=>`<option value="${k}"${s.tipo===k?' selected':''}>${t}</option>`).join('')}</select></label></div>
-  ${bloq?'<p class="fx-p">Ya tiene facturas: el prefijo y el tipo no se pueden cambiar.</p>':''}
+  <div class="fx-g2"><label class="fx-lab"><span>Formato del número</span><input class="fx-in" data-k="formato" value="${escH(s.formato||'{P}{AAAA}-{N5}')}"${bloq?' disabled':''}></label>
+  <label class="fx-lab"><span>Sigue por el nº</span><input class="fx-in" data-k="siguiente" inputmode="numeric" value="${s.siguiente||1}"></label></div>
+  <p class="fx-p fx-fmt">{P} prefijo · {AAAA} año · {AA} año corto · {N} número ({N5} = con 5 cifras). Próxima factura: <b class="fx-prox"></b></p>
+  <label class="fx-chk" style="margin-top:0"><input type="checkbox" data-k="anual"${s.anual!==false?' checked':''}${bloq?' disabled':''}> Empieza de nuevo cada año</label>
+  ${bloq?'<p class="fx-p">Ya tiene facturas: el prefijo, el tipo y el formato no se pueden cambiar.</p>':''}
   <div class="fx-lab"><span>Diseño</span><div class="fx-dis">${Object.entries(I.disenos).map(([k,t])=>`<button type="button" data-d="${k}" class="${s.diseno===k?'on':''}"><span class="fx-prev"><iframe src="/api/schedule?action=fac-muestra&pwd=${encodeURIComponent(apiPwd)}&diseno=${k}&tipo=${s.tipo}${s.color?'&color='+encodeURIComponent(s.color):''}" tabindex="-1" loading="lazy"></iframe></span><b>${t}</b></button>`).join('')}</div></div>
   <label class="fx-lab"><span>Color</span><span class="fx-col"><input type="color" data-k="color" value="${escH(s.color||'#c2552e')}"><button type="button" class="fx-btn sec fx-colq">Color de la clínica</button></span></label>
   <label class="fx-chk"><input type="checkbox" data-k="auto"${s.auto?' checked':''}> Los cobros del panel hacen sus facturas en esta serie</label>
@@ -16652,11 +16698,13 @@ function fxSerie(s,I,listo){const nueva=!s;s=s||{nombre:'',prefijo:'',tipo:'comp
  mm.querySelector('.hz-card').classList.add('fx-mod');
  let dis=s.diseno,col=s.color||'';const $m=q=>mm.querySelector(q);
  const recarga=()=>mm.querySelectorAll('.fx-dis iframe').forEach(f=>{const u=new URL(f.src,location.href);u.searchParams.set('tipo',$m('[data-k="tipo"]').value);if(col)u.searchParams.set('color',col);else u.searchParams.delete('color');f.src=u.pathname+u.search;});
+ const prox=()=>{const a=new Date().getFullYear(),n=Math.max(1,parseInt($m('[data-k="siguiente"]').value)||1),p=$m('[data-k="prefijo"]').value.trim().toUpperCase();$m('.fx-prox').textContent=String($m('[data-k="formato"]').value||'').replace(/\{P\}/g,p).replace(/\{AAAA\}/g,a).replace(/\{AA\}/g,String(a).slice(2)).replace(/\{N(\d?)\}/g,(m,d)=>String(n).padStart(+d||1,'0'));};
+ ['formato','siguiente','prefijo'].forEach(k=>$m(`[data-k="${k}"]`).addEventListener('input',prox));prox();
  mm.querySelectorAll('.fx-dis button').forEach(b=>b.onclick=()=>{dis=b.dataset.d;mm.querySelectorAll('.fx-dis button').forEach(x=>x.classList.toggle('on',x===b));});
  $m('[data-k="color"]').onchange=e=>{col=e.target.value;recarga();};$m('.fx-colq').onclick=()=>{col='';recarga();};$m('[data-k="tipo"]').onchange=recarga;
  $m('.hz-x').onclick=$m('.hz-re').onclick=()=>mm.remove();
  $m('.hz-ok').onclick=async e=>{const b=e.currentTarget;b.disabled=true;
-  const x={id:s.id,nombre:$m('[data-k="nombre"]').value,prefijo:$m('[data-k="prefijo"]').value,tipo:$m('[data-k="tipo"]').value,diseno:dis,color:col,auto:$m('[data-k="auto"]').checked,activa:$m('[data-k="activa"]')?$m('[data-k="activa"]').checked:true};
+  const x={id:s.id,nombre:$m('[data-k="nombre"]').value,prefijo:$m('[data-k="prefijo"]').value,tipo:$m('[data-k="tipo"]').value,diseno:dis,color:col,auto:$m('[data-k="auto"]').checked,activa:$m('[data-k="activa"]')?$m('[data-k="activa"]').checked:true,formato:$m('[data-k="formato"]').value,anual:$m('[data-k="anual"]').checked,siguiente:$m('[data-k="siguiente"]').value};
   const r=await agPost('fac-serie',{serie:x}).catch(()=>({}));b.disabled=false;if(!r.ok){toast(r.error||'No se ha podido guardar',false);return;}FX.ini=null;mm.remove();toast('Serie guardada',true);listo&&listo();};}
 // ── Nueva factura a mano: serie, cliente, líneas con su IVA ──
 async function fxNueva(listo){let I;try{I=await fxInicio();}catch(e){toast(e.message,false);return;}
