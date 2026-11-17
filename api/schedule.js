@@ -8115,6 +8115,14 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-comparar-rango') { const hoyA = FACX.isoMad(), desde = /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') ? q.desde : hoyA.slice(0, 8) + '01', hasta = /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '') && q.hasta < hoyA ? q.hasta : hoyA;
         await FACX.quitarRepetidas().catch(() => 0);
         const filasR = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',NOT(IS_BEFORE({FECHA DE COBRO},DATETIME_PARSE('${desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA DE COBRO},DATETIME_PARSE('${hasta}','YYYY-MM-DD'))))`)}`).catch(() => []);
+        // Los que en el panel siguen como «Borrador»: se mira en Holded si ya se aprobaron (a veces se aprueban días después) y se les pone el número y su copia
+        if (HOLDED_KEY) try { const t0 = Date.now(), borr = filasR.filter(r => /^borrador$/i.test(String(r.fields['Nº FACTURA'] || '')) && /^[a-f0-9]{24}$/i.test(String(r.fields['HOLDED ID'] || ''))).slice(0, 40), diasArr = new Set();
+          const docs = await Promise.all(borr.map(r => holded('/sales-receipts/' + r.fields['HOLDED ID']).catch(() => null)));
+          for (const [i, r] of borr.entries()) { const d = docs[i]; if (!d || !d.document_number) continue; r.fields['Nº FACTURA'] = String(d.document_number);
+            await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: String(d.document_number) }, typecast: true }) }).catch(() => {});
+            const D0 = await FACX.db(); await D0.query(`update fac_facturas set codigo=$2, holded_num=$2 where holded=$1 and coalesce(holded_num,'')='' and not exists (select 1 from fac_facturas o where o.codigo=$2)`, [String(d.id), String(d.document_number)]).catch(() => {});
+            diasArr.add(String(r.fields['FECHA DE COBRO'] || '').slice(0, 10)); }
+          for (const d0 of diasArr) { if (Date.now() - t0 > 15000) break; await arreglarDia(d0, filasR.filter(r => String(r.fields['FECHA DE COBRO'] || '').slice(0, 10) === d0), t0 + 15000).catch(() => {}); } } catch (e) { console.log('rango borradores', e.message); }
         const nuestrasR = await FACX.lista({ desde, hasta, limite: 2000 }), porDia = {}, dDe = r => { const v = String(r.fields['FECHA DE COBRO'] || ''); return /T/.test(v) ? FACX.isoMad(new Date(v)) : v.slice(0, 10); };
         filasR.forEach(r => { const d = dDe(r); (porDia[d] = porDia[d] || { f: [], n: [] }).f.push(r); }); nuestrasR.forEach(x => { const d = String(x.fecha).slice(0, 10); (porDia[d] = porDia[d] || { f: [], n: [] }).n.push(x); });
         const dias = Object.keys(porDia).sort().reverse().map(d => { const c = compDia(porDia[d].f, porDia[d].n, null), borr = c.holded.filter(x => x.borrador && !x.propia).length, faltan = c.holded.filter(x => !x.propia && !x.borrador).length, anul = c.holded.filter(x => x.anulado).length;
