@@ -80,7 +80,7 @@ async function traer(h, desde, hasta, mapa, conCompras) {
     const c = lineas(h, d), f = fecha(h, d), imp = c.impuestos.map(i => ({ tipo: i.tipo || 0, base: i.base, cuota: i.cuota }));
     // Pagada salvo que Holded diga claramente que falta por pagar
     const pend = h.aNum(d.payments_pending ?? d.paymentsPending ?? d.pending ?? (d.payments || {}).pending), id = 'gas' + crypto.randomBytes(8).toString('hex'), st = String(d.status || '').toLowerCase(), pagado = !(pend > 0.004) && !/pend|unpaid|overdue|vencid/.test(st);
-    await D.query(`insert into fac_gastos(id,actividad,fecha,proveedor,numero,categoria,concepto,impuestos,base,cuota,total,pago,nota,por,holded) values($1,'principal',$2,$3,$4,'Otros',$5,$6,$7,$8,$9,$10,$11,'Holded (traída)',$12)`,
+    await D.query(`insert into fac_gastos(id,actividad,comun,fecha,proveedor,numero,categoria,concepto,impuestos,base,cuota,total,pago,nota,por,holded) values($1,'principal',true,$2,$3,$4,'Otros',$5,$6,$7,$8,$9,$10,$11,'Holded (traída)',$12)`,
       [id, f, { nombre: txt(d.contact_name || (d.contact || {}).name || 'Proveedor', 160), nif: txt(d.contact_code || (d.contact || {}).code, 30).toUpperCase().replace(/[^A-Z0-9]/g, ''), direccion: '' }, txt(d.document_number, 60) || null, txt((c.lineas[0] || {}).concepto, 300) || null, JSON.stringify(imp), c.base, c.cuota, c.total, pagado ? { estado: 'pagado', fecha: f } : { estado: 'pendiente' }, 'Traída de Holded', hid]);
     ng++; }
   return { ventas: nv, repetidas: rep, compras: ng };

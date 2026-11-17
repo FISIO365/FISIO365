@@ -7724,6 +7724,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      // Las compras de Holded son de la SL (de las dos actividades), no solo de la clínica (una vez)
+      await FACX.unaVez('holded-gastos-comun', async () => { const D0 = await FACX.db(); await D0.query(`update fac_gastos set comun=true where holded is not null and not comun`).catch(() => {}); }).catch(() => {});
       // Las compras traídas de Holded salían «pendientes»: estaban todas pagadas (una vez)
       await FACX.unaVez('holded-gastos-pagados', async () => { const D0 = await FACX.db(); await D0.query(`update fac_gastos set pago=jsonb_build_object('estado','pagado','fecha',fecha::text) where holded is not null and coalesce(pago->>'estado','')='pendiente'`).catch(() => {}); }).catch(() => {});
       if (!MARCA.OTRA_CLINICA) await FACX.unaVez('cerrapoint-contacto', async () => { const C1 = await FACX.config(); const A = C1.actividades.map(a => a.id === 'cerrapoint' ? Object.assign({}, a, { email: a.email || 'cerrapoint@gmail.com', web: a.web || 'cerrajeros-sant-andreu.com' }) : a); await FACX.guardarConfig({ actividades: A }); }).catch(e => console.log('CerraPoint contacto', e.message));
