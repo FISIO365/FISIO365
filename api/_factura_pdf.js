@@ -54,10 +54,10 @@ async function pdfFactura(F, o) {
   if (conQR) {
     // 30 × 30 mm: lo mínimo que pide la norma (Orden HAC/1177/2024, art. 21)
     const QR = require('qrcode').create(o.qr.url, { errorCorrectionLevel: 'M' }), n = QR.modules.size, m = lado / n, qx = X1 - lado, qy = yC - 22;
-    if (!MIN) redondo(qx - 7, qy + 7, lado + 14, lado + 14, 8, { color: BLANCO });
-    txt('QR tributario:', qx + lado / 2, qy + 11, fR, 5.8, GRIS2, 'c');
+    if (!MIN) redondo(qx - 4, qy + 4, lado + 8, lado + 8, 6, { color: BLANCO, borderColor: LINEA, borderWidth: 0.6 });
+    txt('QR tributario:', qx + lado / 2, qy + 9, fR, 5.5, GRIS2, 'c');
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (QR.modules.get(r, c)) pg.drawRectangle({ x: qx + c * m, y: qy - (r + 1) * m, width: m + 0.04, height: m + 0.04, color: rgb(0, 0, 0) });
-    txt('VERI*FACTU' + (o.qr.pruebas ? ' · pruebas AEAT' : ''), qx + lado / 2, qy - lado - 15, fM, 6, GRIS, 'c');
+    txt('VERI*FACTU' + (o.qr.pruebas ? ' · pruebas AEAT' : ''), qx + lado / 2, qy - lado - 13, fM, 5.5, GRIS2, 'c');
   }
   y = yC - hCab - 40;
 
@@ -119,8 +119,8 @@ async function pdfFactura(F, o) {
   caja(xT, y, wT, hT, d === 'moderno' ? { color: CREMA } : null);
   let yt = y - 20; filasT.forEach(([a, b]) => { txt(a, xT + 16, yt, fR, 8.5, GRIS); txt(b, X1 - 16, yt, fR, 8.5, NEGRO, 'd'); yt -= 16; });
   if (MIN) pg.drawLine({ start: { x: xT + 16, y: yt + 4 }, end: { x: X1 - 16, y: yt + 4 }, thickness: 0.6, color: NEGRO });
-  else redondo(xT + 6, yt + 6, wT - 12, 38, 10, { color: ACs });
-  esp('Total', xT + 18, yt - 16, 7.2, MIN ? NEGRO : AC, null, 1.3); txt(eur(F.total), X1 - 18, yt - 19, fB, 17, MIN ? NEGRO : AC, 'd');
+  else pg.drawLine({ start: { x: xT + 16, y: yt + 4 }, end: { x: X1 - 16, y: yt + 4 }, thickness: 0.6, color: LINEA });
+  esp('Total', xT + 16, yt - 15, 7, MIN ? NEGRO : AC, null, 1.3); txt(eur(F.total), X1 - 16, yt - 18, fB, 16, MIN ? NEGRO : AC, 'd');
   y -= Math.max(hT, notaL.length ? 32 + Math.min(14, notaL.length) * 12 : 0) + 20;
 
   // ── Pie: notas, exenciones, protección de datos ──
