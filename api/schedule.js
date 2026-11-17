@@ -7859,6 +7859,25 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-serie') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const id = await FACX.guardarSerie(q.serie || {}); return res.status(200).json({ ok: true, id, series: await FACX.series() }); }
       // Antes de enseñar facturas: las de prueba cuyo ticket de Holded ya tiene número cogen ese mismo número
       if ((action === 'fac-lista' || action === 'fac-comparar') && HOLDED_KEY) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
+      // Un día: cada cobro del panel con su copia (une la que ya haya con su ticket o la hace) y los «Borrador» con el número de Holded
+      const arreglarDia = async (dia, filas) => {
+        if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set((await D0.query(`select cobro from fac_facturas where cobro is not null`)).rows.map(x => x.cobro)); let n = 0, cambio = false;
+          for (const r of filas) { const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue; n++;
+            try { const pacR = String(F['PacienteId'] || '') || null, ya = (await D0.query(`select id from fac_facturas where holded=$1 and cobro is null limit 1`, [hid])).rows[0];
+              const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
+              if (numH && /^borrador$/i.test(String(F['Nº FACTURA'] || ''))) await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: numH }, typecast: true }) }).catch(() => {});
+              if (ya) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [ya.id, r.id, pacR]); cambio = true; continue; }
+              if (!d || (await D0.query(`select 1 from fac_facturas where holded=$1 limit 1`, [hid])).rows.length) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
+              await FACX.desdeCobro({ cobro: r.id, paciente: pacR, fecha: dia, otro: !!String(F['A NOMBRE DE'] || '').trim(), cliente: { nombre: String(d.contact_name || F['A NOMBRE DE'] || ''), nif: String(d.contact_code || '') }, lineas: L.length ? L : [{ concepto: 'Sesión de fisioterapia', uds: 1, precio: Number(F['TOTAL'] || 0) }], holded: hid, holdedNum: numH, por: 'Recuperada al comparar' }); cambio = true; }
+            catch (e) { console.log('comparar arreglo', e.message); } }
+          return cambio; }
+        return false;
+      };
+      // Al ver la lista, los últimos días (hasta 10, sin contar el futuro) se arreglan solos como en «Comparar con Holded» (como mucho cada 10 minutos)
+      if (action === 'fac-lista' && HOLDED_KEY && /^\d{4}-\d{2}-\d{2}$/.test(q.desde || '') && /^\d{4}-\d{2}-\d{2}$/.test(q.hasta || '')) try { const hoyA = FACX.isoMad(), G = global._facArr = global._facArr || {}, t0 = Date.now();
+        let d0 = q.hasta > hoyA ? hoyA : q.hasta; for (let k = 0; k < 10 && d0 >= q.desde && Date.now() - t0 < 20000; k++) {
+          if (!G[d0] || Date.now() - G[d0] > 600e3) { G[d0] = Date.now(); const filasD = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${d0}')`)}`).catch(() => []); await arreglarDia(d0, filasD).catch(() => {}); }
+          const x = new Date(d0 + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - 1); d0 = x.toISOString().slice(0, 10); } } catch (e) { console.log('arreglar lista', e.message); }
       if (action === 'fac-lista') {
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad, clase: q.clase });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
@@ -8063,22 +8082,12 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         const dia = /^\d{4}-\d{2}-\d{2}$/.test(q.dia || '') ? q.dia : FACX.isoMad();
         const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
         let nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        // Arreglos: un ticket de Holded del panel sin su copia → se une a la que ya haya con su mismo ticket (p. ej. traída de Holded) o se hace ahora
         if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set((await D0.query(`select cobro from fac_facturas where cobro is not null`)).rows.map(x => x.cobro)); let n = 0, cambio = false;
-          for (const r of filas) { const F = r.fields, hid = String(F['HOLDED ID'] || ''); if (conCobro.has(r.id) || !/^[a-f0-9]{24}$/i.test(hid) || nmA(F['MODO DE PAGO']) === 'Gratis' || n >= 15) continue; n++;
-            try { const pacR = String(F['PacienteId'] || '') || null, ya = (await D0.query(`select id from fac_facturas where holded=$1 and cobro is null limit 1`, [hid])).rows[0];
-              const d = await holded('/sales-receipts/' + hid).catch(() => null); const numH = d && d.document_number ? String(d.document_number) : '';
-              if (numH && /^borrador$/i.test(String(F['Nº FACTURA'] || ''))) await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: numH }, typecast: true }) }).catch(() => {});
-              if (ya) { await D0.query(`update fac_facturas set cobro=$2, paciente=coalesce(paciente,$3), por=coalesce(nullif(por,'Holded (traída)'),'Cobro del panel') where id=$1`, [ya.id, r.id, pacR]); cambio = true; continue; }
-              if (!d || (await D0.query(`select 1 from fac_facturas where holded=$1 limit 1`, [hid])).rows.length) continue; const L = (d.lines || d.items || d.products || []).map(l => ({ concepto: String(l.name || l.description || 'Sesión').slice(0, 200), uds: aNum(l.units ?? l.quantity) || 1, precio: aNum(l.price ?? l.unit_price ?? l.subtotal) || 0, dto: aNum(l.discount) || 0 })).filter(l => l.precio || l.uds);
-              await FACX.desdeCobro({ cobro: r.id, paciente: pacR, fecha: dia, otro: !!String(F['A NOMBRE DE'] || '').trim(), cliente: { nombre: String(d.contact_name || F['A NOMBRE DE'] || ''), nif: String(d.contact_code || '') }, lineas: L.length ? L : [{ concepto: 'Sesión de fisioterapia', uds: 1, precio: Number(F['TOTAL'] || 0) }], holded: hid, holdedNum: numH, por: 'Recuperada al comparar' }); cambio = true; }
-            catch (e) { console.log('comparar arreglo', e.message); } }
-          if (cambio) nuestras = await FACX.lista({ desde: dia, hasta: dia }); }
+        if (await arreglarDia(dia, filas).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
         const porCobro = {}; nuestras.forEach(x => { if (x.cobro) porCobro[x.cobro] = x; });
         const holdedL = filas.filter(r => nmA(r.fields['MODO DE PAGO']) !== 'Gratis').map(r => { const F = r.fields, x = porCobro[r.id]; return { cobro: r.id, num: (x && x.holded_num) || F['Nº FACTURA'] || '', total: Number(F['TOTAL'] || 0), nombre: F['A NOMBRE DE'] || '', propia: x ? { id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id) } : null }; });
-        const sueltas = nuestras.filter(x => !x.cobro || !holdedL.some(h => h.cobro === x.cobro)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
-        return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(nuestras.reduce((t, x) => t + x.total, 0) * 100) / 100 });
+        const sueltas = nuestras.filter(x => x.estado === 'emitida').filter(x => !x.cobro || !holdedL.some(h => h.cobro === x.cobro)).map(x => ({ id: x.id, codigo: x.codigo, total: x.total, k: FACX.firma(x.id), nombre: (x.cliente || {}).nombre || '' }));
+        return res.status(200).json({ ok: true, dia, holded: holdedL, sueltas, sumaHolded: Math.round(holdedL.reduce((t, x) => t + x.total, 0) * 100) / 100, sumaPropia: Math.round(nuestras.filter(x => x.estado === 'emitida').reduce((t, x) => t + x.total, 0) * 100) / 100 });
       }
       return res.status(400).json({ ok: false, error: 'Acción desconocida' });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
