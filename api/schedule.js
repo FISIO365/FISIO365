@@ -187,7 +187,7 @@ async function contactosDelPaciente(patientId) {
   // Por email o móvil solo los que no tienen DNI o tienen el suyo (una madre y su hijo pueden compartir móvil)
   const dniP = normDni(f['DNI'] || ''), mio = c => !String(c.code || '').trim() || !dniP || normDni(c.code) === dniP;
   if (email) (await buscarContactos('email', email).catch(() => [])).filter(c => String(c.email || '').trim().toLowerCase() === email && mio(c)).forEach(c => ids.add(c.id));
-  if (tel.length === 9) { const vs = [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')];
+  if (!ids.size && tel.length === 9) { const vs = [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')];
     (await Promise.all(vs.flatMap(v => ['mobile', 'phone'].map(campo => buscarContactos(campo, v).catch(() => []))))).flat().filter(mio).forEach(c => ids.add(c.id)); }
   return [...ids];
 }
@@ -3120,10 +3120,13 @@ async function pacDeCliente(cli) { cli = cli || {}; const dni = String(cli.nif |
   if (!c.length) return null; const d = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent('OR(' + c.join(',') + ')')}&fields[]=DNI&maxRecords=2`).catch(() => ({}));
   const L = d.records || []; return L.length === 1 ? L[0].id : null; }
 // Tickets de Holded de los cobros del panel de un paciente (por el HOLDED ID de su fila de FACTURAS), por si su contacto de Holded no coincide
+const _hdCache = new Map(), _hdBorrados = new Set(); // tickets de Holded ya mirados (10 min) y los que Holded dice que no existen (404)
 async function holdedDeFilas(pac, ya, conBorradores) { const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{HOLDED ID}!='')`)}`).catch(() => []), out = [];
-  const falta = filas.map(r => ({ hid: String(r.fields['HOLDED ID'] || ''), f: r.fields })).filter(x => /^[a-f0-9]{24}$/i.test(x.hid) && !ya.has(x.hid))
-    .sort((a, b) => String(b.f['FECHA DE COBRO'] || b.f['FECHA'] || '').localeCompare(String(a.f['FECHA DE COBRO'] || a.f['FECHA'] || ''))).slice(0, 15);
-  await Promise.all(falta.map(async x => { for (const tipoDoc of ['salesreceipt', 'invoice']) { const d = await holded('/' + docTipo(tipoDoc) + '/' + x.hid).catch(() => null); if (!d || !d.id) continue;
+  const falta = [...new Map(filas.map(r => [String(r.fields['HOLDED ID'] || ''), r.fields])).entries()].map(([hid, f]) => ({ hid, f })).filter(x => /^[a-f0-9]{24}$/i.test(x.hid) && !ya.has(x.hid))
+    .sort((a, b) => String(b.f['FECHA DE COBRO'] || b.f['FECHA'] || '').localeCompare(String(a.f['FECHA DE COBRO'] || a.f['FECHA'] || ''))).slice(0, 8);
+  await Promise.all(falta.map(async x => { const c = _hdCache.get(x.hid); if (c && Date.now() - c.t < 600e3) { if (c.v && (c.v.numero || conBorradores)) out.push(c.v); return; }
+    let no404 = 0; for (const tipoDoc of ['salesreceipt', 'invoice']) { const d = await holded('/' + docTipo(tipoDoc) + '/' + x.hid).catch(e => { if (/ 404 /.test(e.message)) no404++; return null; }); if (!d || !d.id) { if (tipoDoc === 'invoice') { _hdCache.set(x.hid, { t: Date.now(), v: null }); if (no404 === 2) _hdBorrados.add(x.hid); } continue; }
+      _hdCache.set(x.hid, { t: Date.now(), v: { id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' } });
     if (d.document_number || conBorradores) out.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' }); break; } }));
   return out; }
 async function propiasDe(pac) { try { const L = await FACX.lista({ paciente: pac }); return L.filter(x => !x.prueba && x.estado === 'emitida').map(x => ({ id: x.id, tipo: 'propia', k: FACX.firma(x.id), numero: x.codigo, borrador: false, fecha: Math.floor(Date.parse(String(x.fecha).slice(0, 10) + 'T12:00:00Z') / 1000), total: Number(x.total), pagada: (x.pagos || {}).estado !== 'pendiente', concepto: '' })); } catch (e) { return []; } }
@@ -8144,7 +8147,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         if (ids.length) try {
           const vivos = new Set(facturas.map(x => x.id));
           const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{HOLDED ID}!='')`)}&returnFieldsByFieldId=true`);
-          const muertas = filas.filter(r => !String(r.fields[FF.aNombre] || '').trim() && Date.now() - Date.parse(r.createdTime) > 120e3 && !vivos.has(String(r.fields[FF.holdedId] || '')));
+          // Solo se anula si Holded dice de verdad que ese ticket no existe (antes bastaba con no verlo en sus contactos, y anulaba cobros buenos)
+          const muertas = filas.filter(r => !String(r.fields[FF.aNombre] || '').trim() && Date.now() - Date.parse(r.createdTime) > 120e3 && !vivos.has(String(r.fields[FF.holdedId] || '')) && _hdBorrados.has(String(r.fields[FF.holdedId] || '')));
           for (let i = 0; i < muertas.length; i += 10) await at(FACTURAS_TABLE, { method: 'PATCH', body: JSON.stringify({ typecast: true, records: muertas.slice(i, i + 10).map(r => ({ id: r.id, fields: { [FF.estado]: 'Anulada' } })) }) });
           if (muertas.length) saldo2 = await saldoPaciente(pac).catch(() => saldo);
         } catch (e) {}
