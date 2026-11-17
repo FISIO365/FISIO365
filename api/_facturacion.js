@@ -3,6 +3,7 @@
 // facturas inmutables una vez emitidas, IVA por línea, series con su diseño. Más adelante: VeriFactu (huella, QR y envío a la AEAT).
 const crypto = require('crypto');
 const PG = require('./_pg');
+const VF = require('./_verifactu');
 
 const SQL = `
 create table if not exists fac_config (k text primary key, v jsonb not null default '{}'::jsonb, modificado timestamptz not null default now());
@@ -14,7 +15,7 @@ alter table fac_facturas add column if not exists prueba boolean not null defaul
 const ini = { p: null };
 async function db() {
   if (!PG.ACTIVO || !PG.db) throw new Error('La facturación necesita la base de datos propia');
-  if (!ini.p) ini.p = (async () => { for (const s of SQL.split(/;\s*\n/).map(x => x.trim()).filter(Boolean)) await PG.db().query(s); await sembrar(); })().catch(e => { ini.p = null; throw e; });
+  if (!ini.p) ini.p = (async () => { for (const s of (SQL + ';\n' + VF.SQL).split(/;\s*\n/).map(x => x.trim()).filter(Boolean)) await PG.db().query(s); await sembrar(); })().catch(e => { ini.p = null; throw e; });
   await ini.p; return PG.db();
 }
 
@@ -25,10 +26,11 @@ const CONF_DEF = {
   emisor: { razon: '', nif: '', direccion: '', cp: '', ciudad: '', provincia: '', pais: 'España', email: '', tel: '', web: '' },
   iva: { def: { tipo: 0, exencion: 'E1' }, conceptos: {} }, // conceptos: { 'Sesión de fisioterapia': { tipo: 0, exencion: 'E1' }, 'Venta de material': { tipo: 21 } }
   pie: '', // texto al pie (protección de datos)
-  pago: '' // texto de forma de pago para completas (IBAN…)
+  pago: '', // texto de forma de pago para completas (IBAN…)
+  vf: { entorno: 'pruebas' } // VERI*FACTU: «pruebas» (AEAT de pruebas) o «real»
 };
 async function config() { const D = await db(); const r = await D.query(`select v from fac_config where k='config'`); const g = (r.rows[0] || {}).v || {};
-  return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '' }; }
+  return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '', vf: { entorno: (g.vf || {}).entorno === 'real' ? 'real' : 'pruebas' } }; }
 async function guardarConfig(c) { const D = await db(); const v = await config();
   if (c.emisor) Object.keys(CONF_DEF.emisor).forEach(k => { if (c.emisor[k] != null) v.emisor[k] = String(c.emisor[k]).trim().slice(0, 200); });
   if (c.iva) { if (c.iva.def) v.iva.def = ivaLimpio(c.iva.def); if (c.iva.conceptos) { v.iva.conceptos = {}; Object.entries(c.iva.conceptos).slice(0, 200).forEach(([k, x]) => { k = String(k).trim().slice(0, 120); if (k) v.iva.conceptos[k] = ivaLimpio(x); }); } }
@@ -95,6 +97,8 @@ async function emitir(o) {
       await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,diseno,por,prueba)
         values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,true)`,
         [id, s.id, anio, n, fijo || ('Borrador-' + id.slice(-6)), s.tipo, fecha, Object.assign({}, C.emisor), cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, s.diseno, String(o.por || '').slice(0, 60) || null]);
+      // Registro VERI*FACTU (siempre en el entorno de pruebas): solo cuando ya tiene su número definitivo
+      if (fijo) await registrarVF(q, 'pruebas', { id, emisor: C.emisor, codigo: fijo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota });
       return { id, codigo: fijo, total: c.total, prueba: true };
     }
     // Las fechas van en orden dentro de la serie: no puede ir antes que la última emitida
@@ -106,8 +110,25 @@ async function emitir(o) {
     await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,rectifica,motivo,diseno,por)
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
       [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null]);
+    let rectSimpl = false; if (o.rectifica) rectSimpl = ((await q.query(`select tipo from fac_facturas where id=$1`, [o.rectifica])).rows[0] || {}).tipo === 'simplificada';
+    await registrarVF(q, C.vf.entorno, { id, emisor, codigo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota, rectSimpl });
     return { id, codigo, total: c.total };
   });
+}
+// Registro VERI*FACTU de una factura (alta o anulación) y su referencia en la factura
+async function registrarVF(q, entorno, F, tipo = 'alta') {
+  const r = await VF.registrar(q, entorno, F, tipo);
+  await q.query(`update fac_facturas set vf = coalesce(vf,'{}'::jsonb) || $2::jsonb where id=$1`, [F.id, JSON.stringify(tipo === 'alta' ? { entorno, alta: r.id, huella: r.huella } : { anulacion: r.id })]);
+  return r;
+}
+// Anular una factura (de momento, las de prueba cuyo ticket se borró en Holded): queda su registro de anulación
+async function anular(id, motivo) {
+  const D = await db();
+  return D.tx(async q => { const F = (await q.query(`select f.*, f.fecha::text fecha from fac_facturas f where id=$1 for update`, [id])).rows[0];
+    if (!F || F.estado === 'anulada') return false;
+    await q.query(`update fac_facturas set estado='anulada', motivo=coalesce($2, motivo) where id=$1`, [id, motivo || null]);
+    if (F.vf && F.vf.alta) await registrarVF(q, F.vf.entorno || 'pruebas', { id, emisor: F.emisor, codigo: F.codigo, fecha: F.fecha, tipo: F.tipo, total: F.total, cuota: F.cuota }, 'anulacion');
+    return true; });
 }
 
 // Desde un cobro del panel (lo que ya va a Holded): misma factura con nuestra numeración. Si ya existe, no repite.
@@ -130,7 +151,7 @@ async function lista(f) {
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0]; return r || null; }
@@ -169,6 +190,7 @@ function html(F, o) {
 table{width:100%;border-collapse:collapse;margin-top:26px}th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#a0948b;font-weight:600;text-align:left;padding:8px 6px}td{padding:11px 6px;border-top:1px solid #efe9e4;vertical-align:top}td small{display:block;color:#7d6f66;font-size:11px}.n{text-align:right;white-space:nowrap}th.n{text-align:right}
 .tot{margin-left:auto;width:260px;margin-top:16px;display:flex;flex-direction:column;gap:4px}.tl{display:flex;justify-content:space-between;color:#6e625a}.tl b{color:#1f1a17;font-weight:500}.tt{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:2px solid #1f1a17;font-size:18px;font-weight:700}
 .pie{margin-top:auto;padding-top:26px;display:flex;flex-direction:column;gap:6px;color:#7d6f66;font-size:10.5px}.pie .rgpd{font-size:9px;color:#a0948b;margin-top:6px}
+.cab-d{display:flex;flex-direction:column;align-items:flex-end;gap:10px;text-align:right}.vfqr{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9.5px;color:#1f1a17}.vfqr svg{width:35mm;height:35mm;display:block}.vfqr b{font-size:11px;letter-spacing:.04em}.vfqr i{font-style:normal;font-size:8.5px;color:#a0948b}.vfqr small{font-size:9.5px;font-weight:600}
 .anul{position:absolute;top:42%;left:0;right:0;text-align:center;font-size:90px;font-weight:800;color:rgba(200,30,30,.12);transform:rotate(-18deg)}
 ` + ({
     clasico: `.cab{display:flex;justify-content:space-between;gap:30px;padding-bottom:22px;border-bottom:3px solid ${col}}.cab2{display:flex;justify-content:space-between;gap:30px;margin-top:22px}.tit{color:${col}}th{border-bottom:1px solid #e6ded7}`,
@@ -178,7 +200,7 @@ table{width:100%;border-collapse:collapse;margin-top:26px}th{font-size:10px;text
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(titulo)} ${esc(F.codigo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>
 ${o.barra === false ? '' : `<div class="bar"><button onclick="print()">Descargar o imprimir</button></div>`}
-<div class="hoja">${anul}<div class="cab">${emisorB}<div style="text-align:right"><div class="tit">${esc(titulo)}</div></div></div>
+<div class="hoja">${anul}<div class="cab">${emisorB}<div class="cab-d"><div class="tit">${esc(titulo)}</div>${o.qr ? `<div class="vfqr"><small>QR tributario:</small>${o.qr}<b>VERI*FACTU</b>${o.vfPruebas ? '<i>Entorno de pruebas de la AEAT</i>' : ''}</div>` : ''}</div></div>
 <div class="cab2">${clienteB || '<div></div>'}${datosB}</div>
 <table><thead><tr><th>Concepto</th><th class="n">Uds.</th><th class="n">Precio</th>${conDto ? '<th class="n">Dto.</th>' : ''}<th class="n">IVA</th><th class="n">Importe</th></tr></thead><tbody>${filas}</tbody></table>
 <div class="tot">${imp}<div class="tt"><span>Total</span><span>${eur(F.total)}</span></div></div>
@@ -199,9 +221,14 @@ async function sincronizaHolded(getDoc, max = 25) {
   const L = (await D.query(`select id, holded from fac_facturas where prueba and holded is not null and coalesce(holded_num,'')='' and estado='emitida' order by emitida limit $1`, [max])).rows;
   let n = 0;
   for (const x of L) { let d; try { d = await getDoc(x.holded); } catch (e) { continue; }
-    if (d === null) { await D.query(`update fac_facturas set estado='anulada' where id=$1`, [x.id]); continue; }
+    if (d === null) { await anular(x.id, 'Ticket borrado en Holded').catch(() => {}); continue; }
     const num = String((d && d.document_number) || '').trim(); if (!num) continue;
-    await D.query(`update fac_facturas set codigo=$2, holded_num=$2 where id=$1`, [x.id, num]).catch(() => {}); n++; }
+    await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2 where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num])).rows[0];
+      if (F && !(F.vf && F.vf.alta)) await registrarVF(q, 'pruebas', { id: F.id, emisor: F.emisor, codigo: num, fecha: F.fecha, tipo: F.tipo, total: F.total, cuota: F.cuota }); }).catch(e => console.log('VF sincroniza', e.message)); n++; }
   return n;
 }
-module.exports = { sincronizaHolded, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+// Registros VERI*FACTU de un entorno, del último al primero, y si la cadena está bien
+async function registros(entorno, limite) { const D = await db(), C = await config(), nif = String(C.emisor.nif || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const L = (await D.query(`select r.id, r.factura, r.tipo, r.num_serie, r.fecha::text fecha, r.tipo_factura, r.importe, r.huella, r.fechahora, r.estado from fac_registros r where entorno=$1 order by id desc limit $2`, [entorno, Math.min(1000, limite || 200)])).rows;
+  return { lista: L, cadena: nif ? await VF.comprobar(D, entorno, nif) : { n: 0, mal: [] } }; }
+module.exports = { sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

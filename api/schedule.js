@@ -7681,8 +7681,10 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || (!okPwd && String(q.k || '') !== FACX.firma(id))) return res.status(404).send('No encontrada');
         const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
         if (F.rectifica) { const R0 = await FACX.una(F.rectifica).catch(() => null); if (R0) F.rectifica_codigo = R0.codigo; }
+        const oh = await opcHtml();
+        if (F.vf && F.vf.alta && F.estado !== 'anulada') { const ent = F.vf.entorno || 'pruebas'; oh.qr = await FACX.VF.qrSvg(FACX.VF.urlQR(ent, F)).catch(() => ''); oh.vfPruebas = ent !== 'real'; }
         res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
-        return res.status(200).send(FACX.html(F, await opcHtml()));
+        return res.status(200).send(FACX.html(F, oh));
       }
       if (action === 'fac-muestra') { // cómo queda un diseño (con datos de ejemplo)
         if (!okPwd) return res.status(401).send('No autorizado');
@@ -7702,6 +7704,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-lista') {
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
+      }
+      if (action === 'fac-registros') { // VERI*FACTU: registros de la cadena y comprobación de las huellas
+        const ent = q.entorno === 'real' ? 'real' : 'pruebas'; return res.status(200).json({ ok: true, entorno: ent, ...(await FACX.registros(ent, 300)) });
       }
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });

@@ -1391,7 +1391,7 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fx-cod{display:flex;flex-direction:column;min-width:130px;text-decoration:none;color:inherit}.fx-cod b{font-size:13.5px;font-variant-numeric:tabular-nums}.fx-cod small,.fx-cli small{font-size:11.5px;color:#9a8d84}
 .fx-cli{flex:1;min-width:0;display:flex;flex-direction:column}.fx-cli b{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fx-tot{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;margin-left:auto;display:flex;flex-direction:column}.fx-dif{color:#b42318;font-weight:500;font-size:11.5px}
-.fx-flecha{color:#c9bdb4}.fx-falta b{color:#b42318}
+.fx-flecha{color:#c9bdb4}.fx-hu{font-family:ui-monospace,Menlo,monospace;font-size:12px!important;color:#7d6a60;font-weight:500!important}.fx-falta b{color:#b42318}
 .fx-cuadra{border-radius:14px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.fx-cuadra span{font-weight:500}.fx-cuadra.ok{background:#ecf7ef;color:#1d7a3e}.fx-cuadra.mal{background:#fdecea;color:#b42318}
 .fx-sub{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:#9a8d84;font-weight:700;margin:16px 0 8px}
 .fx-h{margin:0 0 4px;font-size:16px}.fx-p{margin:0 0 12px;font-size:13px;color:#7d6a60;line-height:1.5}
@@ -16568,11 +16568,11 @@ function renderFacturacion(wrap){
  if(!esDireccion()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
  if(!FX.mes)FX.mes=fxHoy().slice(0,7);
  const m=ce('div','fx');wrap.appendChild(m);
- const pinta=()=>{m.innerHTML=`<div class="fx-top"><div class="fx-tabs">${[['lista','Facturas'],['comp','Comparar con Holded'],['aj','Ajustes']].map(([k,t])=>`<button type="button" data-t="${k}" class="${FX.tab===k?'on':''}">${t}</button>`).join('')}</div><button type="button" class="fx-nueva">＋ Nueva factura</button></div>
+ const pinta=()=>{m.innerHTML=`<div class="fx-top"><div class="fx-tabs">${[['lista','Facturas'],['comp','Comparar con Holded'],['vf','VeriFactu'],['aj','Ajustes']].map(([k,t])=>`<button type="button" data-t="${k}" class="${FX.tab===k?'on':''}">${t}</button>`).join('')}</div><button type="button" class="fx-nueva">＋ Nueva factura</button></div>
   <div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con el mismo número que el ticket de Holded (si Holded lo deja en borrador, coge el número cuando lo aprobáis). Holded sigue siendo la que vale hasta que lo cambiemos.</div><div class="fx-c"></div>`;
   m.querySelectorAll('.fx-tabs button').forEach(b=>b.onclick=()=>{FX.tab=b.dataset.t;pinta();});
   m.querySelector('.fx-nueva').onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
-  const c=m.querySelector('.fx-c');({lista:fxLista,comp:fxComparar,aj:fxAjustes})[FX.tab](c);};
+  const c=m.querySelector('.fx-c');({lista:fxLista,comp:fxComparar,vf:fxVF,aj:fxAjustes})[FX.tab](c);};
  pinta();}
 async function fxLista(c){
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
@@ -16602,6 +16602,14 @@ async function fxComparar(c,dia){
   <div class="card fx-l">${r.holded.length?r.holded.map(x=>`<div class="fx-cp"><span class="fx-cod"><small>Holded</small><b>${escH(x.num)}</b></span><span class="fx-flecha">→</span>${x.propia?`<a class="fx-cod" href="${fxUrl(x.propia.id,x.propia.k)}" target="_blank" rel="noopener"><small>Propia</small><b>${escH(x.propia.codigo)}</b></a>`:'<span class="fx-cod fx-falta"><small>Propia</small><b>Falta</b></span>'}<span class="fx-tot">${fxEur(x.total)}${x.propia&&Math.abs(x.propia.total-x.total)>0.009?`<small class="fx-dif">propia ${fxEur(x.propia.total)}</small>`:''}</span></div>`).join(''):'<div class="fac-vacio">Ese día no hay tickets de Holded hechos desde el panel.</div>'}
   ${r.sueltas.length?`<div class="fx-sub">Solo en las propias (hechas a mano)</div>${r.sueltas.map(x=>`<a class="fx-f" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b></span><span class="fx-cli"><b>${escH(capTit(x.nombre||'—'))}</b></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join('')}`:''}</div>`;
  c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>fxComparar(c,mov(+b.dataset.d)));}
+// ── VeriFactu: cada factura deja su registro con la huella encadenada; aquí se ve la cadena y si está bien ──
+async function fxVF(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
+ const r=await (await fetch('/api/schedule?action=fac-registros&entorno=pruebas&pwd='+encodeURIComponent(apiPwd))).json().catch(()=>({}));
+ if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
+ const bien=!r.cadena.mal.length;
+ c.innerHTML=`<div class="fx-cuadra ${bien?'ok':'mal'}">${bien?`✓ Cadena correcta: ${r.cadena.n} registro${r.cadena.n===1?'':'s'}, cada huella coincide con la anterior.`:`${r.cadena.mal.length} registro(s) con la huella mal.`}<span>Entorno de pruebas · aún sin enviar a Hacienda</span></div>
+  <p class="fx-p">Cada factura deja su <b>registro</b> (alta o anulación) con una <b>huella</b> que incluye la del registro anterior: si alguien cambiara una factura ya hecha, la cadena se rompería. En el PDF sale su <b>QR</b> para que el paciente la pueda comprobar en Hacienda. El envío a Hacienda llega con el certificado.</p>
+  <div class="card fx-l">${r.lista.length?r.lista.map(x=>`<div class="fx-cp"><span class="fx-cod"><small>${x.tipo==='anulacion'?'Anulación':'Alta · '+escH(x.tipo_factura)}</small><b>${escH(x.num_serie)}</b></span><span class="fx-cli"><small>${escH(x.fechahora.replace('T',' ').slice(0,16))} · ${x.estado==='pendiente'?'pendiente de enviar':escH(x.estado)}</small><b class="fx-hu">${escH(x.huella.slice(0,16))}…</b></span><span class="fx-tot">${x.importe!=null?fxEur(x.importe):''}</span></div>`).join(''):'<div class="fac-vacio">Aún no hay registros: salen con la próxima factura que tenga número.</div>'}</div>`;}
 // ── Ajustes: datos de la clínica, IVA de cada concepto, series y su diseño, textos ──
 async function fxAjustes(c){
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
