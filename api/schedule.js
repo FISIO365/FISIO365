@@ -2332,6 +2332,20 @@ const pagoLimTxt = iso => { const d = new Date(iso); return isNaN(d) ? '' : new 
 const pagoAhora = () => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 // VERI*FACTU: después de hacer o anular facturas, se mandan a la AEAT los registros pendientes (si hay certificado; como mucho ~9 s)
 async function vfEnviarSuave() { try { const VFE = require('./_vf_envio'), C = await FACX.config(); for (const e of [...new Set(['pruebas', (C.vf || {}).entorno || 'pruebas'])]) await Promise.race([VFE.enviar(e), new Promise(r => setTimeout(r, 9000))]); } catch (e) { console.log('vf envío', e.message); } }
+// ── Pagar una factura con tarjeta (Stripe): enlace en el email y en el WhatsApp; al pagar, queda «pagada» sola ──
+const facFalta = F => { const P = F.pagos || {}; return Math.round(((Number(F.total) || 0) - (P.estado === 'parcial' ? Number(P.cobrado) || 0 : 0)) * 100) / 100; };
+// ¿Se puede pagar con tarjeta? Factura (no rectificativa) sin anular, pendiente, de una actividad con el pago con tarjeta puesto
+async function facPagable(F) { if (!F || !process.env.STRIPE_SECRET_KEY || F.tipo === 'rectificativa' || F.estado === 'anulada') return false;
+  const P = F.pagos || {}; if (P.estado === 'pagada' || facFalta(F) < 0.5) return false;
+  const C = await FACX.config(); return FACX.actDe(C, F.actividad).tarjeta !== false; }
+const facPagoUrl = (host, id) => `https://${host || 'app.fisioterapia365.com'}/api/schedule?action=fac-pagar&id=${id}&k=${FACX.firma(id)}`;
+// Mira en Stripe si se ha pagado y, si es así, la deja pagada y avisa a dirección
+async function facPagoVerifica(F, sid) { sid = sid || String((F.pagos || {}).sid || ''); if (!/^cs_[A-Za-z0-9_]+$/.test(sid)) return false;
+  const s = await stripeApi('checkout/sessions/' + sid).catch(() => null); if (!s || s.payment_status !== 'paid' || (s.metadata || {}).factura !== F.id) return false;
+  if ((F.pagos || {}).estado === 'pagada') return true;
+  const imp = (s.amount_total || 0) / 100; await FACX.pago(F.id, 'pagada', 'Tarjeta', { sid, ref: String(s.payment_intent || sid), online: true });
+  await pagoAvisar(null, `💳 Factura ${F.codigo} pagada con tarjeta`, `${(F.cliente || {}).nombre || 'El cliente'} ha pagado ${imp.toFixed(2).replace('.', ',')} € con el enlace.`, 'facpago-' + F.id);
+  return true; }
 // Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
 async function pagoAvisar(fisio, title, body, tag, solo) {
   try { const fl = await at(`tbl2mLUrnaKCFTs6g?fields[]=Name&fields[]=${encodeURIComponent('DIRECCIÓN')}&fields[]=${encodeURIComponent('FECHA BAJA')}`); const nom1 = x => String(x.fields.Name || '').trim().split(' ')[0].toLowerCase(), recs = (fl.records || []).filter(x => !x.fields['FECHA BAJA']);
@@ -7738,6 +7752,25 @@ Devuelve solo el texto del mensaje, sin comillas.`;
 <dt>Productor del sistema</dt><dd>${e(S.nombreRazon)} · NIF ${e(S.nif)}</dd><dt>Dirección postal del productor</dt><dd>${e(S.direccion)}</dd></dl>
 <p style="margin-top:22px">${e(S.nombreRazon)}, como productora del sistema informático de facturación indicado, declara bajo su responsabilidad que el sistema, en la versión indicada, cumple lo dispuesto en el artículo 29.2.j) de la Ley 58/2003, de 17 de diciembre, General Tributaria, en el Reglamento que establece los requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación de empresarios y profesionales, aprobado por el Real Decreto 1007/2023, de 5 de diciembre, y en la Orden HAC/1177/2024, de 17 de octubre, y en las especificaciones técnicas, funcionales y de contenido que la desarrollan.</p>
 <p>En Barcelona, a 17 de noviembre de 2026.</p></article></main></body></html>`); }
+      if (action === 'fac-pagar') { // pagar una factura con tarjeta: lleva a Stripe y, al volver, la deja pagada
+        const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || String(q.k || '') !== FACX.firma(id)) return res.status(404).send('No encontrada');
+        const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
+        const C = await FACX.config(), A = FACX.actDe(C, F.actividad), prin = A.id === 'principal', marca = A.nombre || (prin ? CLI.marca : '') || 'FISIO365', col = /^#[0-9a-f]{6}$/i.test(A.color || '') ? A.color : '#c2552e';
+        const ver = `https://${req.headers.host || 'app.fisioterapia365.com'}/api/schedule?action=fac-ver&id=${id}&k=${FACX.firma(id)}`;
+        const pagina = (tit, txt) => { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+          let h = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escHtml(marca)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"></head><body style="margin:0;background:#f5f2ee;font-family:Poppins,Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:440px;margin:0 auto;padding:48px 18px"><div style="background:#fff;border-radius:20px;padding:30px 24px;text-align:center"><div style="font-weight:600;font-size:15px;color:${col};margin-bottom:22px">${escHtml(marca)}</div><h1 style="font-size:21px;margin:0 0 10px">${tit}</h1><p style="font-size:15px;line-height:1.6;color:#5a4f48;margin:0 0 22px">${txt}</p><a href="${ver}" style="display:inline-block;background:${col};color:#fff;text-decoration:none;border-radius:99px;padding:12px 22px;font-weight:600;font-size:14.5px">Ver la factura</a></div></div></body></html>`;
+          if (prin) h = MARCA.marcar(h, CLI); return res.status(200).send(h); };
+        const tot = facFalta(F).toFixed(2).replace('.', ',') + ' €';
+        if ((F.pagos || {}).estado === 'pagada' || (q.sid && await facPagoVerifica(F, String(q.sid)).catch(() => false)) || (!q.sid && (F.pagos || {}).sid && await facPagoVerifica(F).catch(() => false)))
+          return pagina('¡Pagada, gracias!', `La factura ${escHtml(F.codigo)} ya está pagada. Si necesitas el justificante, aquí tienes la factura.`);
+        if (q.sid) return pagina('El pago no se ha completado', `Parece que el pago de la factura ${escHtml(F.codigo)} (${tot}) no ha terminado. Puedes volver a intentarlo desde el enlace que te enviamos.`);
+        if (!(await facPagable(F))) return pagina('No se puede pagar aquí', `La factura ${escHtml(F.codigo)} no se puede pagar con tarjeta desde este enlace. Si tienes cualquier duda, contesta al email o escríbenos.`);
+        const url = facPagoUrl(req.headers.host, id), cl = F.cliente || {}, form = { mode: 'payment', locale: 'es', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(Math.round(facFalta(F) * 100)), 'line_items[0][price_data][product_data][name]': `Factura ${F.codigo} · ${marca}`.slice(0, 200), 'metadata[factura]': id, 'payment_intent_data[metadata][factura]': id, 'payment_intent_data[description]': `${marca} · factura ${F.codigo}`.slice(0, 300), success_url: url + '&sid={CHECKOUT_SESSION_ID}', cancel_url: ver };
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(cl.email || ''))) form.customer_email = cl.email;
+        let ses; try { ses = await stripeApi('checkout/sessions', form); } catch (e) { return pagina('Ahora no se puede pagar', 'No hemos podido abrir el pago con tarjeta. Prueba en un rato o escríbenos.'); }
+        const D0 = await FACX.db(); await D0.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1`, [id, JSON.stringify({ sid: ses.id })]).catch(() => {});
+        res.setHeader('Location', ses.url); return res.status(303).end();
+      }
       if (action === 'fac-ver') { // la factura en PDF (con la firma del enlace o la contraseña del panel)
         const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || (!okPwd && String(q.k || '') !== FACX.firma(id))) return res.status(404).send('No encontrada');
         const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
@@ -7833,7 +7866,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const pila0 = empresa ? '' : nombre.split(/\s+/)[0] || '', pila = pila0 ? pila0.charAt(0).toUpperCase() + pila0.slice(1).toLowerCase() : '';
         const url = `https://${req.headers.host || 'app.fisioterapia365.com'}/api/schedule?action=${X.tipo === 'factura' ? 'fac-ver' : 'fac-pres-ver'}&id=${id}&k=${FACX.firma(id)}`;
         const tot = (Number(D.total) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €', nomDoc = X.tipo === 'factura' ? (D.tipo === 'rectificativa' ? 'factura rectificativa' : 'factura') : 'presupuesto';
-        if (q.op === 'datos') return ({ ok: true, email, tel, pila, url, numero: D.codigo, total: tot, tipo: X.tipo, nomDoc, marca });
+        const pagar = X.tipo === 'factura' && await facPagable(D).catch(() => false) ? facPagoUrl(req.headers.host, id) : '';
+        if (q.op === 'datos') return ({ ok: true, email, tel, pila, url, pagar, numero: D.codigo, total: tot, tipo: X.tipo, nomDoc, marca });
         if (q.op !== 'email') return ({ ok: false });
         if (!process.env.BREVO_API_KEY) return ({ ok: false, error: 'Los emails no están conectados' });
         const to = String(q.to || '').trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return ({ ok: false, error: 'Revisa el email' });
@@ -7846,7 +7880,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
 <p style="font-size:16px;line-height:1.55;margin:0 0 14px">Hola${pila ? ' ' + escHtml(pila) : ''},</p>
 <p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 18px">${yo ? 'Soy ' + yo + ' de ' + escHtml(marca) + '. ' : ''}${texto}</p>
 <div style="background:#faf7f4;border-radius:14px;padding:14px 16px;margin:0 0 18px"><table role="presentation" width="100%" style="border-collapse:collapse"><tr><td style="font-size:14.5px;color:#1a1a1a"><b>${escHtml(nomDoc.charAt(0).toUpperCase() + nomDoc.slice(1))} ${escHtml(D.codigo)}</b><br><span style="font-size:13px;color:#8a7d74">${escHtml(fecha)}</span></td><td align="right" style="font-size:16px;font-weight:bold;color:${col};white-space:nowrap">${escHtml(tot)}</td></tr></table></div>
-<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:0">Si tienes cualquier duda, contesta a este email${telC ? ' o llámanos al <span style="white-space:nowrap">' + escHtml(telC) + '</span>' : ''}.</p>
+${pagar ? `<p style="margin:0 0 20px"><a href="${pagar}" style="display:inline-block;background:${col};color:#fff;text-decoration:none;border-radius:99px;padding:12px 22px;font-weight:bold;font-size:14.5px">Pagar con tarjeta</a></p>` : ''}<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:0">Si tienes cualquier duda, contesta a este email${telC ? ' o llámanos al <span style="white-space:nowrap">' + escHtml(telC) + '</span>' : ''}.</p>
 </div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">${escHtml(C.emisor.razon || marca)}${C.emisor.direccion ? ' · ' + escHtml(C.emisor.direccion) : ''}</p></div></body></html>`;
         if (prin) html = MARCA.marcar(html, CLI);
         const reply = [A.email, prin ? CLI.email : '', C.emisor.email].find(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || ''))) || 'info@fisioterapia365.com';
@@ -7890,6 +7924,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (action === 'fac-gestoria-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const r = await mandaGestoria(q.desde, q.hasta, String(q.periodo || '').slice(0, 40), String(q.to || '').trim()); return res.status(200).json({ ok: true, ...r }); }
       // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
       if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
+        // Pagos con tarjeta que no volvieron a la página (cerraron antes): se miran en Stripe
+        if (process.env.STRIPE_SECRET_KEY) try { const D0 = await FACX.db(); const L = (await D0.query(`select id from fac_facturas where pagos->>'sid' is not null and coalesce(pagos->>'estado','') <> 'pagada' and fecha > now() - interval '120 days' limit 40`)).rows; out.tarjeta = 0; for (const x of L) { const F = await FACX.una(x.id); if (F && await facPagoVerifica(F).catch(() => false)) out.tarjeta++; } } catch (e) { out.tarjetaErr = e.message; }
         try { const VFE = require('./_vf_envio'), C1 = await FACX.config(); out.vf = {}; for (const e of [...new Set(['pruebas', C1.vf.entorno || 'pruebas'])]) out.vf[e] = await VFE.enviar(e, { forzar: true }).catch(x => ({ error: x.message })); } catch (e) { out.vfErr = e.message; }
         // Movimientos de los bancos conectados en Holded (si los hay)
         if (HOLDED_KEY) try { out.bancos = await require('./_holded_import').bancos({ holdedTodos, aNum, importeDoc, fechaMov, textoMov, importeMov }); } catch (e) { out.bancosErr = e.message; }

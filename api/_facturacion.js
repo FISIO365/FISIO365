@@ -42,7 +42,7 @@ const CONF_DEF = {
   actividades: [{ id: 'principal', nombre: '', logo: '', color: '', tel: '', email: '', web: '', direccion: '', iva: null }]
 };
 const actLimpia = a => ({ id: String(a.id || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'principal', nombre: String(a.nombre || '').trim().slice(0, 60), logo: /^data:image\/(png|jpeg);base64,/.test(a.logo || '') && String(a.logo).length < 700000 ? a.logo : '',
-  color: /^#[0-9a-f]{6}$/i.test(a.color || '') ? a.color : '', tel: String(a.tel || '').slice(0, 40), email: String(a.email || '').slice(0, 120), web: String(a.web || '').slice(0, 120), direccion: String(a.direccion || '').slice(0, 200), iva: a.iva ? ivaLimpio(a.iva) : null });
+  color: /^#[0-9a-f]{6}$/i.test(a.color || '') ? a.color : '', tel: String(a.tel || '').slice(0, 40), email: String(a.email || '').slice(0, 120), web: String(a.web || '').slice(0, 120), direccion: String(a.direccion || '').slice(0, 200), iva: a.iva ? ivaLimpio(a.iva) : null, tarjeta: a.tarjeta !== false && a.tarjeta !== 'false' });
 async function config() { const D = await db(); const r = await D.query(`select v from fac_config where k='config'`); const g = (r.rows[0] || {}).v || {};
   return { emisor: Object.assign({}, CONF_DEF.emisor, g.emisor || {}), iva: { def: Object.assign({}, CONF_DEF.iva.def, (g.iva || {}).def || {}), conceptos: Object.assign({}, (g.iva || {}).conceptos || {}) }, pie: g.pie != null ? g.pie : CONF_DEF.pie, pago: g.pago || '', vf: { entorno: (g.vf || {}).entorno === 'real' ? 'real' : 'pruebas' },
     actividades: (Array.isArray(g.actividades) && g.actividades.length ? g.actividades : CONF_DEF.actividades).map(actLimpia).filter((a, i, L) => L.findIndex(x => x.id === a.id) === i) }; }
@@ -317,7 +317,7 @@ async function registros(entorno, limite) { const D = await db(), C = await conf
   const L = (await D.query(`select r.id, r.factura, r.tipo, r.num_serie, r.fecha::text fecha, r.tipo_factura, r.importe, r.huella, r.fechahora, r.estado from fac_registros r where entorno=$1 order by id desc limit $2`, [entorno, Math.min(1000, limite || 200)])).rows;
   return { lista: L, cadena: nif ? await VF.comprobar(D, entorno, nif) : { n: 0, mal: [] } }; }
 // Marcar una factura como pagada (o pendiente). No cambia nada fiscal: solo cómo está el cobro
-async function pago(id, estado, modo) { const D = await db(); const P = { estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() };
+async function pago(id, estado, modo, extra) { const D = await db(); const P = Object.assign({ estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() }, extra || {});
   const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return P; }
 // ── Clientes guardados: los de las facturas hechas a mano (y los de las facturas ya hechas) para no escribirlos cada vez ──
 const cliLimpio = c => { c = c || {}; const o = {}; ['nombre', 'nif', 'direccion', 'cp', 'ciudad', 'provincia', 'pais', 'email', 'tel'].forEach(k => { o[k] = String(c[k] || '').trim().slice(0, k === 'direccion' ? 300 : 200); }); o.nif = o.nif.toUpperCase(); return o; };
