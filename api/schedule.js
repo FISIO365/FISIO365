@@ -7868,7 +7868,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-serie') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const id = await FACX.guardarSerie(q.serie || {}); return res.status(200).json({ ok: true, id, series: await FACX.series() }); }
       // Antes de enseñar facturas: las de prueba cuyo ticket de Holded ya tiene número cogen ese mismo número
       // Como mucho cada 5 minutos (mira en Holded los tickets en borrador: con muchos, tardaba)
-      if ((action === 'fac-comparar' || (action === 'fac-lista' && !(global._facSinc && Date.now() - global._facSinc < 300e3))) && HOLDED_KEY && (global._facSinc = Date.now())) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
+      if ((action === 'fac-comparar' || action === 'fac-lista') && !(global._facSinc && Date.now() - global._facSinc < 300e3) && HOLDED_KEY && (global._facSinc = Date.now())) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
       // Un día: cada cobro del panel con su copia (une la que ya haya con su ticket o la hace) y los «Borrador» con el número de Holded
       const arreglarDia = async (dia, filas, hasta) => {
         if (HOLDED_KEY) { const D0 = await FACX.db(), conCobro = new Set((await D0.query(`select cobro from fac_facturas where cobro is not null`)).rows.map(x => x.cobro)); let n = 0, cambio = false;
@@ -8133,11 +8133,9 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${dia}')`)}`).catch(() => []);
         let nuestras = await FACX.lista({ desde: dia, hasta: dia });
         if (await FACX.quitarRepetidas().catch(() => 0)) nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        if (await arreglarDia(dia, filas).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
-        // Lo que hay de verdad en Holded ese día (también lo hecho allí directamente y con su importe real)
-        let HD = null; if (HOLDED_KEY) try { const q2 = `limit=200&start_date=${dia}&end_date=${dia}`; const [tk, fa] = await Promise.all([holdedTodos('/sales-receipts?' + q2, 5), holdedTodos('/invoices?' + q2, 3).catch(() => [])]);
-          const fMad = d => { const v = d.date; if (typeof v === 'number' || /^\d{9,13}$/.test(String(v || ''))) { const n = Number(v); return FACX.isoMad(new Date(n < 1e12 ? n * 1000 : n)); } return String(v || '').slice(0, 10); };
-          HD = new Map(); [...tk, ...fa].filter(d => d && d.id && fMad(d) === dia).forEach(d => HD.set(String(d.id), d)); if (!HD.size) HD = null; } catch (e) { HD = null; }
+        if (await arreglarDia(dia, filas, Date.now() + 5000).catch(e => { console.log('arreglarDia', e.message); return false; })) nuestras = await FACX.lista({ desde: dia, hasta: dia });
+        // (Ya no se pide a Holded la lista del día: tardaba mucho; lo hecho en Holded está en las copias traídas)
+        const HD = null;
         const c = compDia(filas, nuestras, HD);
         return res.status(200).json(Object.assign({ ok: true, dia }, c));
       }
