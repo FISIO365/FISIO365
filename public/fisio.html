@@ -17352,7 +17352,7 @@ async function fxGestoria(c){const hoy=fxHoy();if(FX.gtodo==null)FX.gtodo=1;
 // ── Traer de Holded lo de antes (ventas, compras y clientes): para que el año salga entero en Gestoría, Resultados y el 347 ──
 function fxHoldedCard(A){const w=ce('div','card fxs-c fxh');const hoy=fxHoy();
  w.innerHTML=`<h3 class="fx-h">Traer lo de Holded</h3><p class="fx-p">Las ventas, las compras y los clientes que tenéis en Holded, para que Gestoría, Resultados y el 347 salgan con el año entero.</p>
-  <div class="fx-g2"><label class="fx-lab"><span>Desde</span><input class="fx-in" type="date" data-k="d" value="2025-01-01" max="${hoy}"></label><label class="fx-lab"><span>Hasta</span><input class="fx-in" type="date" data-k="h" value="${hoy}" max="${hoy}"></label></div>
+  <div class="fx-g2"><label class="fx-lab"><span>Desde</span><input class="fx-in" type="date" data-k="d" value="2026-01-01" max="${hoy}"></label><label class="fx-lab"><span>Hasta</span><input class="fx-in" type="date" data-k="h" value="${hoy}" max="${hoy}"></label></div>
   <div class="fxs-bts" style="margin-top:10px"><button type="button" class="fx-btn fxh-ver">Ver qué hay</button></div><div class="fxh-res"></div>`;
  const res=w.querySelector('.fxh-res'),V=k=>w.querySelector(`[data-k=${k}]`).value;
  w.querySelector('.fxh-ver').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Mirando en Holded…';
