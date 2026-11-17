@@ -235,6 +235,8 @@ async function lista(f) {
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
   (select codigo from fac_facturas o where o.id=f.rectifica) rectifica_codigo,
+  (select tipo from fac_facturas o where o.id=f.rectifica) rectifica_tipo,
+  (select json_build_object('estado',r.estado,'entorno',r.entorno,'csv',r.csv) from fac_registros r where r.factura=f.id and r.tipo='alta' order by r.id desc limit 1) vf_reg,
   (select coalesce(json_agg(json_build_object('id',x.id,'codigo',x.codigo,'total',x.total,'fecha',x.fecha::text,'motivo',x.motivo) order by x.emitida),'[]'::json) from fac_facturas x where x.rectifica=f.id and x.estado='emitida') rects
   from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0];
   if (r) ['base', 'cuota', 'total'].forEach(k => { r[k] = Number(r[k]); }); return r || null; }
