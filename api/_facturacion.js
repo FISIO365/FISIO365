@@ -225,8 +225,12 @@ async function lista(f) {
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
   if (f.actividad) { p.push(f.actividad); w.push(`actividad=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
+  // Como en Holded: «facturas» = completas y sus rectificativas; «tickets» = simplificadas y sus rectificativas
+  const rTipo = `(select o.tipo from fac_facturas o where o.id=fac_facturas.rectifica)`;
+  if (f.clase === 'facturas') w.push(`(tipo='completa' or (tipo='rectificativa' and coalesce(${rTipo},'completa')<>'simplificada'))`);
+  if (f.clase === 'tickets') w.push(`(tipo='simplificada' or (tipo='rectificativa' and ${rTipo}='simplificada'))`);
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf, pagos from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,

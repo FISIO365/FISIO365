@@ -7769,7 +7769,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       // Antes de enseñar facturas: las de prueba cuyo ticket de Holded ya tiene número cogen ese mismo número
       if ((action === 'fac-lista' || action === 'fac-comparar') && HOLDED_KEY) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
       if (action === 'fac-lista') {
-        const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad });
+        const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente, actividad: q.actividad, clase: q.clase });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
       }
       // ── Día del cambio: dejar Holded y facturar solo con el panel ──
