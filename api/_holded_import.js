@@ -60,6 +60,7 @@ async function traer(h, desde, hasta, mapa, conCompras) {
   for (const [t, d] of X.ventas) {
     const hid = String(d.id), num = txt(d.document_number, 60);
     if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; continue; }
+    if ((mapa || {})[prefijo(num)] === '_no') continue; // serie que no es de la empresa (p. ej., de cuando se facturaba como autónoma)
     const act = (mapa || {})[prefijo(num)] || 'principal', tipo = t.startsWith('rect') ? 'rectificativa' : t, c = lineas(h, d);
     if (tipo === 'rectificativa' && c.total > 0) { c.lineas.forEach(l => { l.precio = -l.precio; }); Object.assign(c, FACX.calcular(c.lineas)); }
     const f = fecha(h, d), st = String(d.status || '').toLowerCase(), pagada = /complet|paid|pagad/.test(st) || h.aNum(d.payments_pending) === 0;
