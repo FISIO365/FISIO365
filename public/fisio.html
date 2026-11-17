@@ -1411,8 +1411,11 @@ button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;
 .fx-guardar{display:flex;justify-content:flex-end;margin-bottom:20px}
 .fx-mod{max-width:680px!important}
 .fx-dis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.fx-dis button{font-family:var(--font);border:2px solid #f0ebe6;background:#fff;border-radius:14px;padding:6px 6px 8px;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:center}.fx-dis button.on{border-color:#c2552e}.fx-dis b{font-size:12.5px}
-.fx-prev{display:block;width:100%;aspect-ratio:210/297;overflow:hidden;border-radius:8px;position:relative;background:#fff;pointer-events:none}.fx-prev iframe{position:absolute;left:0;top:0;width:820px;height:1160px;border:0;transform-origin:0 0;transform:scale(.215)}
-@media(max-width:600px){.fx-prev iframe{transform:scale(.13)}}
+.fx-prev{display:block;width:100%;aspect-ratio:210/297;overflow:hidden;border-radius:8px;position:relative;background:#fff;pointer-events:none;border:1px solid #efe8e2}
+.fx-prev i{position:absolute;display:block;border-radius:2px}.fx-prev .a{left:12%;top:8%;width:30%;height:5%;background:var(--pc,#c2552e)}.fx-prev .b{left:12%;top:20%;width:45%;height:4%;background:var(--pc,#c2552e);opacity:.85}.fx-prev .c{left:12%;top:34%;width:76%;height:5%;background:color-mix(in srgb,var(--pc,#c2552e) 14%,#fff)}.fx-prev .d{left:12%;top:43%;width:76%;height:16%;background:repeating-linear-gradient(#fff 0 9px,#eee6df 9px 10px)}.fx-prev .e{right:12%;top:64%;width:36%;height:6%;background:color-mix(in srgb,var(--pc,#c2552e) 14%,#fff)}
+.fx-pv-moderno::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6%;background:var(--pc,#c2552e)}.fx-pv-moderno .b{background:#1a1a1a}.fx-pv-moderno .c{background:#1a1a1a}.fx-pv-moderno .e{background:var(--pc,#c2552e)}
+.fx-pv-minimal .a,.fx-pv-minimal .b{background:#1a1a1a}.fx-pv-minimal .c{background:none;border-bottom:1.5px solid #1a1a1a;border-radius:0}.fx-pv-minimal .e{background:none;border-top:1.5px solid #1a1a1a;border-radius:0}
+.fx-ej{margin-top:10px}
 .fx-col{display:flex;align-items:center;gap:10px}.fx-col input[type=color]{width:46px;height:38px;border:0;background:none;padding:0;cursor:pointer}
 .fx-chk{display:flex;align-items:center;gap:10px;font-size:14px;margin-top:12px;cursor:pointer}
 .fx-lins{display:flex;flex-direction:column;gap:8px}.fx-li{display:grid;grid-template-columns:minmax(0,3fr) 60px 90px 70px 130px 30px;gap:6px;align-items:center}
@@ -13586,6 +13589,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',dir:1,t:'Facturación: las facturas ahora son un PDF de verdad (se ven bien en el móvil y se pueden guardar), con un diseño nuevo.'},
  {f:'2026-11-17',dir:1,t:'Facturación: al tocar una factura puedes rectificarla (devolver todo o una parte, con su motivo), y en cada serie eliges el formato del número y por qué número sigue.'},
  {f:'2026-11-17',dir:1,t:'Facturación (en pruebas): cada cobro del panel hace también su factura propia, con el mismo número que el ticket de Holded. En Más › Facturación ves las facturas, comparas cada día con Holded, haces facturas a mano y eliges series, diseños e IVA.',ver:{sec:'fx',pasos:[{el:'.fx-tabs',txt:'Facturas, comparar con Holded y ajustes.'}]}},
  {f:'2026-11-17',t:'Ficha › Historia › Archivos: ahora se ven en miniatura y puedes ordenarlos en carpetas (p. ej. «Rodilla derecha» y «Rodilla izquierda») con «＋ Carpeta». Con la papelera de cada archivo lo borras.',ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí: «＋ Carpeta» para crear una y el icono de carpeta de cada archivo para moverlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
@@ -16567,7 +16571,7 @@ function rdiaBadge(){try{const b=$('rdiaBadge'),pm=$('pmRdiaN');if(!b)return;let
 // ── Facturación propia (dirección): facturas del panel en paralelo con Holded, series, diseños e IVA ──
 let FX={tab:'lista',mes:null,serie:'',q:'',ini:null};
 const fxEur=n=>(Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
-const fxUrl=(id,k)=>`/api/schedule?action=fac-ver&id=${id}&k=${encodeURIComponent(k)}`;
+const fxUrl=(id,k)=>`/api/schedule?action=fac-ver&id=${id}&k=${encodeURIComponent(k)}&pdf=1`;
 const fxMesTxt=m=>{const [a,b]=m.split('-');return ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+b-1]+' '+a;};
 const fxHoy=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date());
 async function fxInicio(forzar){if(FX.ini&&!forzar)return FX.ini;const r=await (await fetch('/api/schedule?action=fac-inicio&pwd='+encodeURIComponent(apiPwd))).json();if(!r.ok)throw new Error(r.error||'No se ha podido cargar');FX.ini=r;return r;}
@@ -16690,14 +16694,16 @@ function fxSerie(s,I,listo){const nueva=!s;s=s||{nombre:'',prefijo:'',tipo:'comp
   <p class="fx-p fx-fmt">{P} prefijo · {AAAA} año · {AA} año corto · {N} número ({N5} = con 5 cifras). Próxima factura: <b class="fx-prox"></b></p>
   <label class="fx-chk" style="margin-top:0"><input type="checkbox" data-k="anual"${s.anual!==false?' checked':''}${bloq?' disabled':''}> Empieza de nuevo cada año</label>
   ${bloq?'<p class="fx-p">Ya tiene facturas: el prefijo, el tipo y el formato no se pueden cambiar.</p>':''}
-  <div class="fx-lab"><span>Diseño</span><div class="fx-dis">${Object.entries(I.disenos).map(([k,t])=>`<button type="button" data-d="${k}" class="${s.diseno===k?'on':''}"><span class="fx-prev"><iframe src="/api/schedule?action=fac-muestra&pwd=${encodeURIComponent(apiPwd)}&diseno=${k}&tipo=${s.tipo}${s.color?'&color='+encodeURIComponent(s.color):''}" tabindex="-1" loading="lazy"></iframe></span><b>${t}</b></button>`).join('')}</div></div>
+  <div class="fx-lab"><span>Diseño</span><div class="fx-dis">${Object.entries(I.disenos).map(([k,t])=>`<button type="button" data-d="${k}" class="${s.diseno===k?'on':''}"><span class="fx-prev fx-pv-${k}"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i><i class="e"></i></span><b>${t}</b></button>`).join('')}</div></div>
+  <button type="button" class="fx-btn sec fx-ej">Ver un ejemplo en PDF</button>
   <label class="fx-lab"><span>Color</span><span class="fx-col"><input type="color" data-k="color" value="${escH(s.color||'#c2552e')}"><button type="button" class="fx-btn sec fx-colq">Color de la clínica</button></span></label>
   <label class="fx-chk"><input type="checkbox" data-k="auto"${s.auto?' checked':''}> Los cobros del panel hacen sus facturas en esta serie</label>
   ${nueva?'':`<label class="fx-chk"><input type="checkbox" data-k="activa"${s.activa?' checked':''}> Activa</label>`}
   <div class="hz-bts"><button type="button" class="hz-re">Cancelar</button><button type="button" class="hz-ok">Guardar</button></div>`);
  mm.querySelector('.hz-card').classList.add('fx-mod');
  let dis=s.diseno,col=s.color||'';const $m=q=>mm.querySelector(q);
- const recarga=()=>mm.querySelectorAll('.fx-dis iframe').forEach(f=>{const u=new URL(f.src,location.href);u.searchParams.set('tipo',$m('[data-k="tipo"]').value);if(col)u.searchParams.set('color',col);else u.searchParams.delete('color');f.src=u.pathname+u.search;});
+ const recarga=()=>{mm.querySelector('.fx-dis').style.setProperty('--pc',col||'#c2552e');};recarga();
+ $m('.fx-ej').onclick=()=>window.open(`/api/schedule?action=fac-muestra&pwd=${encodeURIComponent(apiPwd)}&diseno=${dis}&tipo=${$m('[data-k="tipo"]').value}${col?'&color='+encodeURIComponent(col):''}&pdf=1`,'_blank','noopener');
  const prox=()=>{const a=new Date().getFullYear(),n=Math.max(1,parseInt($m('[data-k="siguiente"]').value)||1),p=$m('[data-k="prefijo"]').value.trim().toUpperCase();$m('.fx-prox').textContent=String($m('[data-k="formato"]').value||'').replace(/\{P\}/g,p).replace(/\{AAAA\}/g,a).replace(/\{AA\}/g,String(a).slice(2)).replace(/\{N(\d?)\}/g,(m,d)=>String(n).padStart(+d||1,'0'));};
  ['formato','siguiente','prefijo'].forEach(k=>$m(`[data-k="${k}"]`).addEventListener('input',prox));prox();
  mm.querySelectorAll('.fx-dis button').forEach(b=>b.onclick=()=>{dis=b.dataset.d;mm.querySelectorAll('.fx-dis button').forEach(x=>x.classList.toggle('on',x===b));});

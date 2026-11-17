@@ -7677,19 +7677,27 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       const opcHtml = async () => { const CF = await conf().catch(() => CONF_DEF), C = await FACX.config(); return { logo: CLI.logoV ? '/api/schedule?action=clinica-logo&v=' + CLI.logoV : (MARCA.OTRA_CLINICA ? '' : '/informe/logo.png'), marca: CLI.marca, rgpd: C.pie || String(CF.holded.rgpd || TEXTO_RGPD), pago: C.pago, color: CLI.color }; };
-      if (action === 'fac-ver') { // la factura lista para imprimir o guardar en PDF (con la firma del enlace o la contraseña del panel)
+      // Logo de la clínica para el PDF (png o jpg): el subido en Ajustes o el de siempre
+      const logoPdf = async () => { if (global._facLogo && Date.now() - global._facLogo.t < 600e3) return global._facLogo.b; let b = null;
+        try { const L = CLI.logoV ? await ajuste('clinica-logo', null) : null, m = L && String(L.data || '').match(/^data:image\/(png|jpeg);base64,(.+)$/);
+          if (m) b = Buffer.from(m[2], 'base64'); else if (!MARCA.OTRA_CLINICA) { const r = await fetch('https://' + (req.headers.host || 'app.fisioterapia365.com') + '/informe/logo.png'); if (r.ok) b = Buffer.from(await r.arrayBuffer()); } } catch (e) {}
+        global._facLogo = { t: Date.now(), b }; return b; };
+      const opcPdf = async () => { const h = await opcHtml(); return { logo: await logoPdf(), marca: h.marca, rgpd: h.rgpd, pago: h.pago, color: h.color }; };
+      const enviaPdf = (buf, nombre) => { res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', `inline; filename="${String(nombre).replace(/[^\w.-]+/g, '_')}.pdf"`); res.setHeader('Cache-Control', 'private, no-store'); return res.status(200).send(buf); };
+      if (action === 'fac-ver') { // la factura en PDF (con la firma del enlace o la contraseña del panel)
         const id = String(q.id || ''); if (!/^fac[0-9a-f]{16}$/.test(id) || (!okPwd && String(q.k || '') !== FACX.firma(id))) return res.status(404).send('No encontrada');
         const F = await FACX.una(id); if (!F) return res.status(404).send('No encontrada');
-        if (F.rectifica) { const R0 = await FACX.una(F.rectifica).catch(() => null); if (R0) F.rectifica_codigo = R0.codigo; }
-        const oh = await opcHtml();
-        if (F.vf && F.vf.alta && F.estado !== 'anulada') { const ent = F.vf.entorno || 'pruebas'; oh.qr = await FACX.VF.qrSvg(FACX.VF.urlQR(ent, F)).catch(() => ''); oh.vfPruebas = ent !== 'real'; }
-        res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store');
-        return res.status(200).send(FACX.html(F, oh));
+        const o = await opcPdf();
+        if (F.vf && F.vf.alta && F.estado !== 'anulada') { const ent = F.vf.entorno || 'pruebas'; o.qr = { url: FACX.VF.urlQR(ent, F), pruebas: ent !== 'real' }; }
+        return enviaPdf(await require('./_factura_pdf').pdfFactura(F, o), 'Factura_' + F.codigo);
       }
       if (action === 'fac-muestra') { // cómo queda un diseño (con datos de ejemplo)
         if (!okPwd) return res.status(401).send('No autorizado');
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.status(200).send(FACX.muestra(FACX.DISENOS[q.diseno] ? q.diseno : 'clasico', FACX.TIPOS[q.tipo] ? q.tipo : 'simplificada', await FACX.config(), Object.assign(await opcHtml(), q.color && /^#[0-9a-f]{6}$/i.test(q.color) ? { color: q.color } : {}, { barra: false })));
+        const C = await FACX.config(), tipo = FACX.TIPOS[q.tipo] ? q.tipo : 'simplificada', c = FACX.calcular([{ concepto: 'Sesión de fisioterapia', uds: 1, precio: 65, iva: { tipo: 0, exencion: 'E1' } }, { concepto: 'Plus aplicación colágeno', uds: 1, precio: 15, iva: { tipo: 0, exencion: 'E1' } }]);
+        const o = await opcPdf(); if (q.color && /^#[0-9a-f]{6}$/i.test(q.color)) o.color = q.color;
+        o.qr = { url: 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=' + encodeURIComponent(C.emisor.nif || '') + '&numserie=T2026-00001&fecha=01-01-2026&importe=80.00', pruebas: true };
+        const F = { emisor: C.emisor, cliente: { nombre: 'Laura Martínez Soler', nif: '12345678Z', direccion: tipo === 'simplificada' ? '' : 'C/ Ejemplo, 12', cp: tipo === 'simplificada' ? '' : '08030', ciudad: tipo === 'simplificada' ? '' : 'Barcelona' }, lineas: c.lineas, impuestos: c.impuestos, base: c.base, cuota: c.cuota, total: c.total, codigo: 'T2026-00001', fecha: FACX.isoMad(), tipo, diseno: FACX.DISENOS[q.diseno] ? q.diseno : 'clasico', fisio: 'Atendido por: tu fisio · Nº col. 00000' };
+        return enviaPdf(await require('./_factura_pdf').pdfFactura(F, o), 'Ejemplo');
       }
       if (!okPwd) return res.status(401).json({ ok: false, error: 'No autorizado' });
       if (action === 'fac-inicio') { // lo que necesita la sección: ajustes, series y conceptos del panel
