@@ -7724,6 +7724,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       const C0 = await FACX.config();
       if (!C0.emisor.razon && !C0.emisor.nif) await FACX.guardarConfig({ emisor: { razon: CLI.razon || '', nif: CLI.nif || '', direccion: CLI.direccion || '', tel: CLI.tel || '', email: CLI.email || '', web: CLI.web || '' } });
       // FISIO365: la cerrajería de la misma empresa (CerraPoint) factura aquí también, con su marca y sus series
+      // Ventas traídas de Holded: repartir una a una entre clínica y CerraPoint (las series estaban mezcladas) (una vez)
+      await FACX.unaVez('holded-reparte', () => require('./_holded_import').reparte()).catch(e => console.log('reparte', e.message));
       // La gestoría lleva el IVA con prorrata general (una vez; se cambia en Gestoría)
       await FACX.unaVez('iva-prorrata-general', async () => { const GXr = require('./_gastos'), R0 = await GXr.ivaReg(); await GXr.guardarIvaReg({ modo: 'general', pct: R0.pct }); }).catch(() => {});
       // Las compras de Holded son de la SL (de las dos actividades), no solo de la clínica (una vez)

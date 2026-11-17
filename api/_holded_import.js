@@ -27,7 +27,11 @@ function lineas(h, d) {
     .filter(l => l.concepto && l.uds);
   const tot = h.importeDoc(d); let c = FACX.calcular(L);
   // Si no cuadra con el total de Holded (redondeos, descuentos globales), una sola línea con el total
-  if (!L.length || (tot > 0 && Math.abs(Math.abs(c.total) - tot) > 0.05)) c = FACX.calcular([{ concepto: L[0] ? L[0].concepto : 'Venta', uds: 1, precio: tot, iva: { tipo: 0, exencion: 'E1' } }]);
+  if (!L.length || (tot > 0 && Math.abs(Math.abs(c.total) - tot) > 0.05)) {
+    // Una sola línea con el total; si Holded dice que lleva IVA, la base sale del total (sin perder el IVA)
+    const tax = h.aNum(d.tax ?? d.total_tax ?? d.taxes_total), sub = h.aNum(d.subtotal ?? d.total_before_tax);
+    const t = tax > 0 ? (sub > 0 ? [4, 10, 21].reduce((a, b) => Math.abs(b - tax / sub * 100) < Math.abs(a - tax / sub * 100) ? b : a, 21) : 21) : 0;
+    c = FACX.calcular([{ concepto: L[0] ? L[0].concepto : 'Venta', uds: 1, precio: t ? Math.round(tot / (1 + t / 100) * 100) / 100 : tot, iva: t ? { tipo: t } : { tipo: 0, exencion: 'E1' } }]); }
   return c;
 }
 
@@ -42,12 +46,17 @@ async function leer(h, desde, hasta) {
     .filter(([, d]) => d && d.id && d.document_number && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })());
   return { ventas, compras: co.filter(d => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })()) };
 }
+// De qué actividad es cada venta, una a una (las series de Holded están mezcladas): CerraPoint solo factura a Vilfer y es la única que lleva IVA
+const conIva = (h, d) => (d.lines || d.items || d.products || []).some(l => tipoIva(h, l, d) > 0) || h.aNum(d.tax ?? d.total_tax) > 0;
+const actDoc = (h, d, hayCP) => hayCP && (/vilfer/i.test(String(d.contact_name || (d.contact || {}).name || '')) || conIva(h, d)) ? 'cerrapoint' : 'principal';
 async function previa(h, desde, hasta) {
+  const hayCP = (await FACX.config()).actividades.some(a => a.id === 'cerrapoint');
   const D = await GX.db(), X = await leer(h, desde, hasta);
   const ya = new Set((await D.query(`select holded from fac_facturas where holded is not null`)).rows.map(r => r.holded));
   const G = {}; X.ventas.forEach(([t, d]) => { const k = prefijo(d.document_number), g = G[k] = G[k] || { prefijo: k, n: 0, nuevas: 0, total: 0, conIva: 0, ejemplo: d.document_number, tipos: {} };
     g.n++; g.total = r2(g.total + (t.startsWith('rect') ? -1 : 1) * h.importeDoc(d)); g.tipos[t] = (g.tipos[t] || 0) + 1; if (!ya.has(String(d.id))) g.nuevas++;
-    if ((d.lines || []).some(l => tipoIva(h, l, d) > 0)) g.conIva++; });
+    if (conIva(h, d)) g.conIva++;
+    const a = actDoc(h, d, hayCP), x = (g.act = g.act || {})[a] = g.act[a] || { n: 0, t: 0 }; x.n++; x.t = r2(x.t + (t.startsWith('rect') ? -1 : 1) * h.importeDoc(d)); });
   const gya = new Set((await D.query(`select holded from fac_gastos where holded is not null`).catch(() => ({ rows: [] }))).rows.map(r => r.holded));
   return { series: Object.values(G).sort((a, b) => b.n - a.n), compras: { n: X.compras.length, nuevas: X.compras.filter(d => !gya.has(String(d.id))).length, total: r2(X.compras.reduce((t, d) => t + h.importeDoc(d), 0)) } };
 }
@@ -56,12 +65,12 @@ async function traer(h, desde, hasta, mapa, conCompras) {
   const D = await GX.db(); await D.query(`alter table fac_gastos add column if not exists holded text`);
   const X = await leer(h, desde, hasta), C = await FACX.config(), S = (await D.query(`select id, tipo, actividad from fac_series where activa order by auto desc, orden`)).rows;
   const serie = (act, tipo) => (S.find(s => (s.actividad || 'principal') === act && s.tipo === tipo) || S.find(s => s.tipo === tipo) || S[0] || {}).id;
-  let nv = 0, rep = 0, ng = 0; const vistos = new Set();
+  let nv = 0, rep = 0, ng = 0; const vistos = new Set(), hayCP = C.actividades.some(a => a.id === 'cerrapoint');
   for (const [t, d] of X.ventas) {
     const hid = String(d.id), num = txt(d.document_number, 60);
     if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; continue; }
     if ((mapa || {})[prefijo(num)] === '_no') continue; // serie que no es de la empresa (p. ej., de cuando se facturaba como autónoma)
-    const act = (mapa || {})[prefijo(num)] || 'principal', tipo = t.startsWith('rect') ? 'rectificativa' : t, c = lineas(h, d);
+    const act = actDoc(h, d, hayCP), tipo = t.startsWith('rect') ? 'rectificativa' : t, c = lineas(h, d);
     if (tipo === 'rectificativa' && c.total > 0) { c.lineas.forEach(l => { l.precio = -l.precio; }); Object.assign(c, FACX.calcular(c.lineas)); }
     const f = fecha(h, d), st = String(d.status || '').toLowerCase(), pagada = /complet|paid|pagad/.test(st) || h.aNum(d.payments_pending) === 0;
     const id = 'fac' + crypto.randomBytes(8).toString('hex'), n = -Math.floor(Math.random() * 1e12) - 1;
@@ -141,4 +150,11 @@ async function archivos(h, max) { const D = await GX.db(), t0 = Date.now(); awai
     catch (e) { err = err || e.message.slice(0, 200); if (!ok) break; } }
   const quedan = +(await D.query(`select count(*) n from fac_gastos where holded is not null and archivo is null and not holded_sin`)).rows[0].n;
   return { traidos: ok, sinArchivo: sin, raros, quedan, error: err, diag: ok ? null : diag }; }
-module.exports = { previa, traer, clientes, bancos, prefijo, archivos };
+// Las ventas ya traídas con el reparto por series: se vuelven a repartir una a una (IVA o Vilfer → CerraPoint)
+async function reparte() { const D = await GX.db(), C = await FACX.config(); if (!C.actividades.some(a => a.id === 'cerrapoint')) return 0;
+  const S = (await D.query(`select id, tipo, actividad from fac_series where activa order by auto desc, orden`)).rows, serie = (act, tipo) => (S.find(x => (x.actividad || 'principal') === act && x.tipo === tipo) || S.find(x => x.tipo === tipo) || {}).id;
+  const L = (await D.query(`select id, tipo, actividad, cuota::float cuota, cliente from fac_facturas where por='Holded (traída)'`)).rows; let n = 0;
+  for (const f of L) { const a = Math.abs(f.cuota) > 0.004 || /vilfer/i.test(String((f.cliente || {}).nombre || '')) ? 'cerrapoint' : 'principal';
+    if (a !== (f.actividad || 'principal')) { await D.query(`update fac_facturas set actividad=$2, serie=coalesce($3, serie) where id=$1`, [f.id, a, serie(a, f.tipo)]); n++; } }
+  return n; }
+module.exports = { reparte, previa, traer, clientes, bancos, prefijo, archivos };
