@@ -165,7 +165,7 @@ const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
 async function buscarContactos(campo, valor) {
   if (!valor) return [];
-  return holdedTodos('/contacts?limit=100&' + campo + '=' + encodeURIComponent(valor), 3).catch(e => { if (/ 40[13] /.test(e.message)) throw e; return []; });
+  return holdedTodos('/contacts?limit=100&' + campo + '=' + encodeURIComponent(valor), 3).catch(e => { console.log('holded contactos', campo, String(e.message).slice(0, 200)); if (/ 40[13] | 429 |rate|too many/i.test(e.message)) throw e; return []; });
 }
 async function contactoPorDni(dni) {
   const n = normDni(dni); if (n.length < 8) return [];
@@ -183,10 +183,10 @@ async function contactosDelPaciente(patientId) {
   const tel = soloDigitos(f['WHATSAPP'] || f['TELF']);
   const ids = new Set();
   // Se juntan todos: por DNI, por email y por móvil (en Holded a veces hay el mismo paciente dos veces, uno sin DNI)
-  (await contactoPorDni(f['DNI']).catch(() => [])).forEach(c => ids.add(c.id));
+  (await contactoPorDni(f['DNI'])).forEach(c => ids.add(c.id));
   // Por email o móvil solo los que no tienen DNI o tienen el suyo (una madre y su hijo pueden compartir móvil)
   const dniP = normDni(f['DNI'] || ''), mio = c => !String(c.code || '').trim() || !dniP || normDni(c.code) === dniP;
-  if (email) (await buscarContactos('email', email).catch(() => [])).filter(c => String(c.email || '').trim().toLowerCase() === email && mio(c)).forEach(c => ids.add(c.id));
+  if (email) (await buscarContactos('email', email)).filter(c => String(c.email || '').trim().toLowerCase() === email && mio(c)).forEach(c => ids.add(c.id));
   if (!ids.size && tel.length === 9) { const vs = [tel, '+34' + tel, '+34 ' + tel, tel.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4'), tel.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')];
     (await Promise.all(vs.flatMap(v => ['mobile', 'phone'].map(campo => buscarContactos(campo, v).catch(() => []))))).flat().filter(mio).forEach(c => ids.add(c.id)); }
   return [...ids];
