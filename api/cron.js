@@ -285,6 +285,8 @@ module.exports = async function handler(req, res) {
     if (esPanel && horaMadrid() < 8) return res.status(200).json({ ok: true, saltado: 'Aún es pronto' });
     // Vales regalo que hoy hay que mandar a quien los recibe (cada vale se manda una sola vez)
     try { const nv = SCH.valesDelDia ? await SCH.valesDelDia() : 0; if (nv) console.log('vales regalo enviados', nv); } catch (e) { console.log('vales regalo', e.message); }
+    // Facturación: facturas que se repiten, avisos del IVA y resumen a la gestoría (una vez al día; cada cosa se protege sola de repetirse)
+    try { const r = await fetch(`https://${req.headers.host || 'app.fisioterapia365.com'}/api/schedule?action=fac-diario&pwd=${encodeURIComponent(process.env.FISIO_PASSWORD || '')}`).then(x => x.json()); console.log('fac-diario', JSON.stringify(r).slice(0, 300)); } catch (e) { console.log('fac-diario', e.message); }
     // «Acuérdate de reservar» que el fisio programó para hoy
     try { const na = SCH.avisosReservarDelDia ? await SCH.avisosReservarDelDia() : 0; if (na) console.log('avisos reservar', na); } catch (e) { console.log('avisos reservar', e.message); }
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('resumen_enviado', '').catch(() => '')) === ayer.fecha) return res.status(200).json({ ok: true, ya: true });

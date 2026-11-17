@@ -7747,8 +7747,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-pres-estado') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); await FACX.estadoPresupuesto(String(q.id || ''), q.estado); return res.status(200).json({ ok: true }); }
       // ── Enviar una factura o un presupuesto: por email (con el PDF) o los datos para WhatsApp (con el enlace firmado) ──
-      if (action === 'fac-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const id = String(q.id || ''), X = await docDe(id); if (!X) return res.status(404).json({ ok: false, error: 'No encontrado' });
+      // Enviar (o preparar el envío de) una factura o un presupuesto: q = { id, op: 'datos' | 'email', to, yo, recordar }
+      const envioDoc = async q => {
+        const id = String(q.id || ''), X = await docDe(id); if (!X) return ({ ok: false, error: 'No encontrado' });
         const D = X.doc, C = await FACX.config(), A = FACX.actDe(C, D.actividad), prin = A.id === 'principal', marca = prin ? (A.nombre || CLI.marca || 'FISIO365') : (A.nombre || 'FISIO365');
         const cl = D.cliente || {}; let email = String(cl.email || '').trim(), tel = String(cl.tel || '').replace(/\D/g, ''), nombre = String(cl.nombre || '').trim();
         if (D.paciente && /^rec[A-Za-z0-9]{14}$/.test(D.paciente) && (!email || !tel)) { const P = ((await at(`${PACIENTES}/${D.paciente}`).catch(() => ({}))).fields) || {};
@@ -7758,10 +7759,10 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const pila0 = empresa ? '' : nombre.split(/\s+/)[0] || '', pila = pila0 ? pila0.charAt(0).toUpperCase() + pila0.slice(1).toLowerCase() : '';
         const url = `https://${req.headers.host || 'app.fisioterapia365.com'}/api/schedule?action=${X.tipo === 'factura' ? 'fac-ver' : 'fac-pres-ver'}&id=${id}&k=${FACX.firma(id)}`;
         const tot = (Number(D.total) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €', nomDoc = X.tipo === 'factura' ? (D.tipo === 'rectificativa' ? 'factura rectificativa' : 'factura') : 'presupuesto';
-        if (q.op === 'datos') return res.status(200).json({ ok: true, email, tel, pila, url, numero: D.codigo, total: tot, tipo: X.tipo, nomDoc, marca });
-        if (q.op !== 'email') return res.status(400).json({ ok: false });
-        if (!process.env.BREVO_API_KEY) return res.status(200).json({ ok: false, error: 'Los emails no están conectados' });
-        const to = String(q.to || '').trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(200).json({ ok: false, error: 'Revisa el email' });
+        if (q.op === 'datos') return ({ ok: true, email, tel, pila, url, numero: D.codigo, total: tot, tipo: X.tipo, nomDoc, marca });
+        if (q.op !== 'email') return ({ ok: false });
+        if (!process.env.BREVO_API_KEY) return ({ ok: false, error: 'Los emails no están conectados' });
+        const to = String(q.to || '').trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return ({ ok: false, error: 'Revisa el email' });
         const buf = await pdfDe(X), yo = escHtml(String(q.yo || '').split(' ')[0]), col = /^#[0-9a-f]{6}$/i.test(A.color || '') ? A.color : '#c2552e';
         const pagoTxt = String(C.pago || '').trim();
         const texto = q.recordar && X.tipo === 'factura' ? `Te escribimos para recordarte que la ${nomDoc} ${escHtml(D.codigo)} está pendiente de pago. Te la adjuntamos de nuevo.${pagoTxt ? '<br><br>' + escHtml(pagoTxt).replace(/\n/g, '<br>') : ''}<br><br>Si ya la has pagado, no hagas caso de este email. ¡Gracias!` : X.tipo === 'factura' ? `Te adjuntamos tu ${nomDoc} en PDF para que la tengas a mano${prin ? ' o la envíes a tu seguro' : ''}.` : 'Te adjuntamos el presupuesto que te hemos preparado. Si te parece bien, contesta a este email y nos ponemos en marcha.';
@@ -7777,13 +7778,59 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         const reply = [A.email, prin ? CLI.email : '', C.emisor.email].find(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || ''))) || 'info@fisioterapia365.com';
         const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: { name: marca, email: 'info@fisioterapia365.com' }, replyTo: { email: reply, name: marca }, to: [{ email: to }], subject: q.recordar ? `Recordatorio: factura ${D.codigo} pendiente de pago · ${marca}` : `${X.tipo === 'factura' ? 'Tu ' + nomDoc : 'Presupuesto'} ${D.codigo} · ${marca}`, htmlContent: html, attachment: [{ content: Buffer.from(buf).toString('base64'), name: `${X.tipo === 'factura' ? 'Factura' : 'Presupuesto'}_${String(D.codigo).replace(/[^\w-]/g, '_')}.pdf` }], tags: ['factura-propia'] }) });
-        if (!b.ok) { console.error('fac-enviar brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
+        if (!b.ok) { console.error('fac-enviar brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return ({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
         if (X.tipo === 'factura') await FACX.marcaEnviada(id, { a: (q.recordar ? 'recordatorio · ' : '') + to, por: String(q.yo || '').slice(0, 40) }).catch(() => {});
-        return res.status(200).json({ ok: true }); }
+        return ({ ok: true });
+      };
+      if (action === 'fac-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const x = await envioDoc(q); return res.status(x.ok === false && /No encontrado/.test(x.error || '') ? 404 : 200).json(x); }
+      // ── Facturas que se repiten ──
+      if (/^fac-rec-/.test(action)) { const RC = require('./_recurrentes');
+        if (action === 'fac-rec-lista') return res.status(200).json({ ok: true, recurrentes: await RC.lista(String(q.actividad || 'principal')) });
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (action === 'fac-rec-guardar') return res.status(200).json({ ok: true, ...(await RC.guardar(Object.assign({}, q, { por: q.quien }))) });
+        if (action === 'fac-rec-borrar') { await RC.borrar(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        return res.status(400).json({ ok: false }); }
+      // Resumen del trimestre por email a la gestoría: el PDF y las facturas de los gastos (si caben)
+      const mandaGestoria = async (desde, hasta, periodo, to) => { if (!process.env.BREVO_API_KEY) throw new Error('Los emails no están conectados');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(to || ''))) throw new Error('Pon el email de la gestoría');
+        const GS = require('./_gestoria'), X = await GS.datos({ desde, hasta }), C = await FACX.config(), R = X.resumen;
+        const att = [{ content: (await GS.pdf(X, { empresa: C.emisor.razon, nif: C.emisor.nif, periodo, color: '#c2552e' })).toString('base64'), name: `Resumen_${periodo.replace(/\s+/g, '_')}.pdf` }];
+        let peso = 0, fuera = 0;
+        for (const g of X.gastos.filter(g => g.archivo)) { const m = String(g.archivo.url).match(/id=(att[A-Za-z0-9]{14})&k=([0-9a-f]{32})/); if (!m) continue;
+          try { const a = await require('./_pg').archivo(m[1], m[2]); let buf = a && a.datos; if (a && a.redirigir) { const r = await fetch(a.redirigir); buf = r.ok ? Buffer.from(await r.arrayBuffer()) : null; } if (!buf) continue;
+            if (peso + buf.length > 7e6) { fuera++; continue; } peso += buf.length;
+            att.push({ content: buf.toString('base64'), name: `${g.fecha} ${String(g.proveedor.nombre).replace(/[^\w .-]+/g, '')} ${String(g.numero || '').replace(/[^\w.-]+/g, '-')}`.trim().slice(0, 90) + (/pdf/.test(a.tipo || '') ? '.pdf' : '.jpg') }); } catch (e) {} }
+        const eu = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        const html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:560px;margin:0 auto;padding:28px 18px"><div style="background:#fff;border-radius:18px;padding:26px 24px">
+<p style="font-size:16px;margin:0 0 14px">Hola,</p><p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 18px">Os mandamos lo del <b>${escHtml(periodo)}</b> de ${escHtml(C.emisor.razon || '')} (NIF ${escHtml(C.emisor.nif || '')}): el resumen en PDF con el IVA, las retenciones y los libros de facturas emitidas y recibidas${att.length > 1 ? `, y las ${att.length - 1} facturas de gastos` : ''}.</p>
+<table role="presentation" width="100%" style="border-collapse:collapse;font-size:14px;margin:0 0 18px"><tr><td style="padding:6px 0;color:#7d6a60">Facturas emitidas</td><td align="right">${R.emitidas.n} · ${eu(R.emitidas.total)}</td></tr><tr><td style="padding:6px 0;color:#7d6a60">Gastos</td><td align="right">${R.recibidas.n} · ${eu(R.recibidas.total)}</td></tr><tr><td style="padding:6px 0;color:#7d6a60">IVA devengado</td><td align="right">${eu(R.devengado)}</td></tr><tr><td style="padding:6px 0;color:#7d6a60">IVA deducible (según nuestro cálculo)</td><td align="right">${eu(R.recibidas.deducible)}</td></tr></table>
+${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos no caben en el email: si las necesitáis, decídnoslo.</p>` : ''}${X.avisos.falta ? `<p style="font-size:13px;color:#9a3d1d">Faltan ${X.avisos.falta} facturas de gastos que aún no tenemos.</p>` : ''}
+<p style="font-size:13px;color:#9a8f87;margin:0">Cualquier duda, contestad a este email. ¡Gracias!</p></div></div></body></html>`;
+        const reply = [C.emisor.email, CLI.email].find(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || ''))) || 'info@fisioterapia365.com';
+        const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: { name: C.emisor.razon || CLI.marca || 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: reply }, to: [{ email: to }], cc: reply !== 'info@fisioterapia365.com' ? [{ email: reply }] : undefined, subject: `${periodo} · ${C.emisor.razon || ''} · resumen para la gestoría`, htmlContent: html, attachment: att, tags: ['gestoria'] }) });
+        if (!b.ok) { console.error('gestoria brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); throw new Error('No se ha podido enviar (' + b.status + ')'); }
+        return { adjuntos: att.length, fuera }; };
+      const gesConf = async () => { const D = await FACX.db(); return ((await D.query(`select v from fac_config where k='gestoria'`)).rows[0] || {}).v || {}; };
+      if (action === 'fac-gestoria-conf') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const D = await FACX.db(), v = { email: String(q.email || '').trim().slice(0, 120), auto: !!q.auto };
+        await D.query(`insert into fac_config(k,v) values('gestoria',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return res.status(200).json({ ok: true, conf: v }); }
+      if (action === 'fac-gestoria-enviar') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const r = await mandaGestoria(q.desde, q.hasta, String(q.periodo || '').slice(0, 40), String(q.to || '').trim()); return res.status(200).json({ ok: true, ...r }); }
+      // Cada mañana (cron): facturas que se repiten, avisos del IVA y, si está puesto, el resumen del trimestre a la gestoría
+      if (action === 'fac-diario') { const hoy = FACX.isoMad(), out = {};
+        try { out.recurrentes = await require('./_recurrentes').correr(hoy, (id, to) => envioDoc({ id, op: 'email', to, yo: '' })); if (out.recurrentes.length) await pagoAvisar(null, 'Facturas que se repiten', out.recurrentes.map(x => x.codigo ? x.codigo + (x.enviada ? ' (enviada)' : '') : 'Error: ' + x.error).join(' · '), 'fac-rec'); } catch (e) { out.recErr = e.message; }
+        const [a, m, d] = hoy.split('-').map(Number);
+        for (const f of [`${a}-01-30`, `${a}-04-20`, `${a}-07-20`, `${a}-10-20`]) { const dif = Math.round((Date.parse(f) - Date.parse(hoy)) / 864e5);
+          if (dif === 10 || dif === 3) { await pagoAvisar(null, 'IVA del trimestre', `El ${+f.slice(8)}/${+f.slice(5, 7)} acaba el plazo del IVA (modelo 303). En Facturación › Gestoría tienes todo para mandárselo a la gestoría.`, 'fac-iva'); out.avisoIva = f; } }
+        try { const G = await gesConf(); if (G.auto && G.email && [1, 4, 7, 10].includes(m) && d >= 3 && d <= 12) { const tq = m === 1 ? 4 : (m - 1) / 3, an = m === 1 ? a - 1 : a, periodo = `${tq}º trimestre ${an}`;
+            let toca = false; await FACX.unaVez('gestoria:' + an + '-' + tq, async () => { toca = true; });
+            if (toca) { const desde = `${an}-${String((tq - 1) * 3 + 1).padStart(2, '0')}-01`, hasta = new Date(Date.UTC(an, tq * 3, 0)).toISOString().slice(0, 10);
+              try { out.gestoria = await mandaGestoria(desde, hasta, periodo, G.email); await pagoAvisar(null, 'Gestoría', `Enviado a la gestoría el resumen del ${periodo}.`, 'fac-ges'); }
+              catch (e) { out.gesErr = e.message; await (await FACX.db()).query(`delete from fac_config where k=$1`, ['hecho:gestoria:' + an + '-' + tq]); } } } } catch (e) { out.gesErr = e.message; }
+        return res.status(200).json({ ok: true, ...out }); }
       // ── Para la gestoría: resumen del trimestre (IVA, retenciones y libros) en datos o en PDF ──
+      if (action === 'fac-anual') return res.status(200).json({ ok: true, ...(await require('./_gestoria').anual(q.anio || FACX.isoMad().slice(0, 4))) });
       if (action === 'fac-gestoria' || action === 'fac-gestoria-pdf') { const GS = require('./_gestoria'), act = String(q.actividad || '');
         const X = await GS.datos({ desde: q.desde, hasta: q.hasta, actividad: act });
-        if (action === 'fac-gestoria') return res.status(200).json({ ok: true, ...X, gastos: X.gastos.map(g => Object.assign(g, { falta: !g.archivo && !require('./_gastos').SIN_DOC.has(g.categoria) })) });
+        if (action === 'fac-gestoria') return res.status(200).json({ ok: true, conf: await gesConf(), ...X, gastos: X.gastos.map(g => Object.assign(g, { falta: !g.archivo && !require('./_gastos').SIN_DOC.has(g.categoria) })) });
         const C = await FACX.config(), A = act ? FACX.actDe(C, act) : null;
         return enviaPdf(await GS.pdf(X, { empresa: C.emisor.razon, nif: C.emisor.nif, periodo: String(q.periodo || '').slice(0, 40), actNom: A ? (A.id === 'principal' ? (A.nombre || CLI.marca) : A.nombre) : '', color: (A && A.color) || '#c2552e' }), 'Gestoria_' + String(q.periodo || q.desde).replace(/\s+/g, '_')); }
       // ── Cobros pendientes: facturas emitidas que aún no están pagadas (las más antiguas primero) ──
@@ -7792,8 +7839,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
       // ── Gastos y banco (api/_gastos.js) ──
       if (/^fac-(gas|banco|cuentas|ivareg)/.test(action)) { const GX = require('./_gastos'), post = req.method === 'POST';
-        if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas() });
+        if (action === 'fac-gas-lista') return res.status(200).json({ ok: true, gastos: await GX.gastos({ actividad: q.actividad, desde: q.desde, hasta: q.hasta, categoria: q.categoria, q: q.q, filtro: q.filtro, prov: q.prov }), categorias: GX.CATEGORIAS, cuentas: await GX.cuentas(), esperados: await GX.esperados(String(q.actividad || 'principal')).catch(() => []) });
         if (action === 'fac-gas-uno') { const g = await GX.gasto(String(q.id || '')); if (!g) return res.status(404).json({ ok: false, error: 'No encontrado' }); return res.status(200).json({ ok: true, gasto: g }); }
+        if (action === 'fac-gas-provs') return res.status(200).json({ ok: true, proveedores: await GX.listaProveedores(String(q.actividad || 'principal'), q.anio || FACX.isoMad().slice(0, 4)) });
         if (action === 'fac-gas-prov') return res.status(200).json({ ok: true, proveedores: await GX.proveedores(String(q.actividad || 'principal'), q.q) });
         if (!post) return res.status(405).json({ ok: false });
         if (action === 'fac-gas-leer') { // sube el archivo y la IA lo lee (si falla la lectura, el archivo queda subido igual)
@@ -7803,6 +7851,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
           return res.status(200).json({ ok: true, archivo, datos, error, duplicado: dup }); }
         if (action === 'fac-gas-guardar') { const dup = q.forzar ? null : await GX.duplicado(q).catch(() => null); if (dup) return res.status(200).json({ ok: false, duplicado: dup, error: 'Ya hay un gasto con ese número de factura de este proveedor' });
           const r = await GX.guardarGasto(Object.assign({}, q, { por: q.quien })); return res.status(200).json({ ok: true, ...r }); }
+        if (action === 'fac-gas-provcambia') return res.status(200).json({ ok: true, n: await GX.cambiarProveedor(q.de, q.a) });
+        if (action === 'fac-gas-norepite') { await GX.noRepite(String(q.id || '')); return res.status(200).json({ ok: true }); }
         if (action === 'fac-gas-borrar') { await GX.borrarGasto(String(q.id || '')); return res.status(200).json({ ok: true }); }
         if (action === 'fac-ivareg') return res.status(200).json({ ok: true, regimen: await GX.guardarIvaReg(q) });
         if (action === 'fac-cuentas') return res.status(200).json({ ok: true, cuentas: await GX.guardarCuentas(q.cuentas) });
@@ -7823,7 +7873,7 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
-        const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos });
+        const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos, sustituye: Array.isArray(q.sustituye) ? q.sustituye.map(String) : null });
         await FACX.guardarCliente(r.actividad, q.cliente).catch(() => {});
         if (/^pre[0-9a-f]{16}$/.test(q.presupuesto || '')) await FACX.estadoPresupuesto(q.presupuesto, 'facturado', r.id).catch(() => {});
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) });

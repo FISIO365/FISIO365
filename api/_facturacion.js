@@ -16,6 +16,8 @@ alter table fac_series add column if not exists anual boolean not null default t
 alter table fac_series add column if not exists actividad text not null default 'principal';
 alter table fac_facturas add column if not exists actividad text not null default 'principal';
 alter table fac_facturas add column if not exists enviada jsonb not null default '[]'::jsonb;
+alter table fac_facturas add column if not exists sustituye jsonb;
+alter table fac_facturas add column if not exists sustituida_por text;
 create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
 create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
 `;
@@ -132,6 +134,15 @@ async function emitir(o) {
     if (!o.prueba && s.tipo === 'completa' && (!cli.nombre || !cli.nif || !cli.direccion)) throw new Error('La factura completa necesita nombre, NIF y dirección de quien la recibe');
     if (!o.prueba && s.tipo === 'rectificativa' && !o.rectifica) throw new Error('Una rectificativa tiene que decir qué factura corrige');
     if (!o.prueba && s.tipo === 'simplificada' && c.total > 3000) throw new Error('Una factura simplificada no puede pasar de 3.000 €: usa una serie de facturas completas');
+    // Factura completa que sustituye a una o varias simplificadas (el paciente pide después la factura con sus datos): mismo importe, tipo F3
+    let sust = null;
+    if (!o.prueba && Array.isArray(o.sustituye) && o.sustituye.length) {
+      if (s.tipo !== 'completa') throw new Error('Para sustituir una simplificada, elige una serie de facturas completas');
+      const X = (await q.query(`select id, codigo, fecha::text fecha, total::float total, tipo, estado, prueba, sustituida_por, actividad from fac_facturas where id = any($1) for update`, [o.sustituye.slice(0, 50)])).rows;
+      if (X.length !== o.sustituye.length) throw new Error('No encuentro alguna de las facturas a sustituir');
+      for (const x of X) { if (x.tipo !== 'simplificada' || x.estado !== 'emitida') throw new Error(`${x.codigo} no es una factura simplificada emitida`); if (x.prueba) throw new Error(`${x.codigo} es una copia de Holded: se cambia en Holded`); if (x.sustituida_por) throw new Error(`${x.codigo} ya está sustituida`); if ((x.actividad || 'principal') !== (s.actividad || 'principal')) throw new Error('La serie tiene que ser de la misma actividad'); }
+      const tot = Math.round(X.reduce((t, x) => t + x.total, 0) * 100) / 100; if (Math.abs(tot - c.total) > 0.005) throw new Error(`El total tiene que ser el mismo que el de ${X.length > 1 ? 'las simplificadas' : 'la simplificada'} (${tot.toFixed(2).replace('.', ',')} €)`);
+      sust = X.map(x => ({ id: x.id, codigo: x.codigo, fecha: x.fecha })); }
     const anio = +fecha.slice(0, 4);
     if (o.prueba) {
       const id = 'fac' + crypto.randomBytes(8).toString('hex'), n = -Math.floor(Math.random() * 1e12) - 1;
@@ -153,7 +164,8 @@ async function emitir(o) {
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)`,
       [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null, s.actividad || 'principal']);
     let rectSimpl = false; if (o.rectifica) rectSimpl = ((await q.query(`select tipo from fac_facturas where id=$1`, [o.rectifica])).rows[0] || {}).tipo === 'simplificada';
-    await registrarVF(q, C.vf.entorno, { id, emisor, codigo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota, rectSimpl });
+    if (sust) { await q.query(`update fac_facturas set sustituye=$2 where id=$1`, [id, JSON.stringify(sust)]); await q.query(`update fac_facturas set sustituida_por=$2 where id = any($1)`, [sust.map(x => x.id), codigo]); }
+    await registrarVF(q, C.vf.entorno, { id, emisor, codigo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota, rectSimpl, f3: !!sust });
     return { id, codigo, total: c.total, actividad: s.actividad || 'principal' };
   });
 }

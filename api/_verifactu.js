@@ -39,7 +39,7 @@ async function registrar(q, entorno, F, tipo) {
   await q.query(`select pg_advisory_xact_lock(hashtext($1))`, ['vf:' + entorno + ':' + nif]);
   const prev = ((await q.query(`select huella from fac_registros where entorno=$1 and nif=$2 order by id desc limit 1`, [entorno, nif])).rows[0] || {}).huella || '';
   const fechahora = ahoraHuso();
-  const x = { nif, numSerie: F.codigo, fecha: F.fecha, tipoFactura: tipoFactura(F.tipo, F.rectSimpl), cuota: F.cuota, importe: F.total, prev, fechahora };
+  const x = { nif, numSerie: F.codigo, fecha: F.fecha, tipoFactura: F.f3 ? 'F3' : tipoFactura(F.tipo, F.rectSimpl), cuota: F.cuota, importe: F.total, prev, fechahora };
   const huella = tipo === 'anulacion' ? huellaAnulacion(x) : huellaAlta(x);
   const r = await q.query(`insert into fac_registros(entorno,nif,factura,tipo,num_serie,fecha,tipo_factura,cuota,importe,huella,huella_prev,fechahora) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning id`,
     [entorno, nif, F.id, tipo, x.numSerie, F.fecha, tipo === 'anulacion' ? null : x.tipoFactura, tipo === 'anulacion' ? null : importe(F.cuota), tipo === 'anulacion' ? null : importe(F.total), huella, prev || null, fechahora]);

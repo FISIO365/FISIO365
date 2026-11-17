@@ -80,4 +80,19 @@ async function pdf(X, o) {
   sitio(30); txt('Importes en euros. El resultado del IVA es orientativo: lo calcula y lo presenta la gestoría.', M, fR, 7.5, GR);
   return Buffer.from(await doc.save());
 }
-module.exports = { datos, pdf };
+// ── El año: resultados por mes y actividad, modelo 347 y retenciones del año ──
+async function anual(anio) { anio = +anio; const X = await datos({ desde: `${anio}-01-01`, hasta: `${anio}-12-31` }), C = await FACX.config();
+  const acts = C.actividades.map(a => a.id), M = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, ingresos: {}, gastos: {} }));
+  X.facturas.forEach(f => { const m = M[+f.fecha.slice(5, 7) - 1], k = f.actividad || 'principal'; m.ingresos[k] = r2((m.ingresos[k] || 0) + f.base); });
+  // Gasto real: base + el IVA que no se deduce − (nada de la retención: se paga a Hacienda igual)
+  X.gastos.forEach(g => { const m = M[+g.fecha.slice(5, 7) - 1], k = g.comun ? 'comun' : (g.actividad || 'principal'); m.gastos[k] = r2((m.gastos[k] || 0) + g.base + g.no_deducible); });
+  // 347: más de 3.005,06 € al año con el mismo NIF español (sin lo que lleva retención ni lo de proveedores de fuera)
+  const T = {}; const suma = (tipo, nif, nombre, f, imp) => { nif = String(nif || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!nif) return; const k = tipo + nif, t = T[k] = T[k] || { tipo, nif, nombre, total: 0, tri: [0, 0, 0, 0] }; const q = Math.ceil(+f.slice(5, 7) / 3) - 1; t.total = r2(t.total + imp); t.tri[q] = r2(t.tri[q] + imp); };
+  X.facturas.forEach(f => suma('cliente', (f.cliente || {}).nif, (f.cliente || {}).nombre, f.fecha, f.total));
+  X.gastos.filter(g => !g.isp && !g.irpf && !GX.SIN_DOC.has(g.categoria)).forEach(g => suma('proveedor', g.proveedor.nif, g.proveedor.nombre, g.fecha, g.total + g.irpf));
+  const m347 = Object.values(T).filter(t => Math.abs(t.total) > 3005.06).sort((a, b) => b.total - a.total);
+  // Retenciones del año por perceptor (190 profesionales, 180 alquiler)
+  const R = {}; X.gastos.filter(g => g.irpf).forEach(g => { const k = (g.categoria === 'Alquiler' ? '180' : '190') + (g.proveedor.nif || g.proveedor.nombre); const x = R[k] = R[k] || { modelo: g.categoria === 'Alquiler' ? '180' : '190', nif: g.proveedor.nif, nombre: g.proveedor.nombre, base: 0, irpf: 0 }; x.base = r2(x.base + g.base); x.irpf = r2(x.irpf + g.irpf); });
+  return { anio, actividades: acts, meses: M, m347, retenciones: Object.values(R), resumen: X.resumen, iva: X.iva, avisos: X.avisos };
+}
+module.exports = { datos, pdf, anual };

@@ -81,6 +81,7 @@ async function gastos(f) { const D = await db(); const p = [f.actividad || 'prin
   if (f.categoria) { p.push(f.categoria); w.push(`categoria=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(proveedor->>'nombre') like $${p.length} or lower(coalesce(numero,'')) like $${p.length} or lower(coalesce(concepto,'')) like $${p.length} or lower(coalesce(proveedor->>'nif','')) like $${p.length})`); }
   let L = (await D.query(`select *, fecha::text fecha from fac_gastos where ${w.join(' and ')} order by fac_gastos.fecha desc, creado desc limit 2000`, p)).rows.map(gastoFila);
+  if (f.prov) L = L.filter(g => g.proveedor.nombre === f.prov);
   if (f.filtro === 'falta') L = L.filter(g => g.falta); else if (f.filtro === 'pendiente') L = L.filter(g => (g.pago || {}).estado === 'pendiente');
   return L; }
 async function gasto(id) { const D = await db(); const g = (await D.query(`select *, fecha::text fecha from fac_gastos where id=$1`, [id])).rows[0]; return g ? gastoFila(g) : null; }
@@ -93,6 +94,18 @@ async function proveedores(actividad, q) { const D = await db(), t = '%' + Strin
 async function duplicado(o) { const D = await db(); const nif = provLimpio(o.proveedor).nif, num = txt(o.numero, 60); if (!num) return null;
   return (await D.query(`select id, fecha::text fecha, total::float total from fac_gastos where lower(coalesce(numero,''))=lower($1) and (($2<>'' and proveedor->>'nif'=$2) or lower(proveedor->>'nombre')=lower($3)) and id<>coalesce($4,'') limit 1`, [num, nif, provLimpio(o.proveedor).nombre, o.id || ''])).rows[0] || null; }
 
+// Gastos que se repiten y aún no han llegado: el último de cada proveedor con «se repite» y fecha + periodo ya pasada (con 7 días de margen)
+async function esperados(actividad, hoy) { const D = await db(); hoy = hoy || isoMad();
+  const L = (await D.query(`select distinct on (lower(proveedor->>'nombre')) id, fecha::text fecha, proveedor, categoria, concepto, total::float total, cada, cuenta, actividad, comun, isp, moneda, irpf_tipo::float irpf_tipo, (select coalesce(max((x->>'tipo')::numeric),0) from jsonb_array_elements(impuestos) x)::float iva from fac_gastos where (actividad=$1 or comun) order by lower(proveedor->>'nombre'), fecha desc`, [actividad || 'principal'])).rows;
+  return L.filter(g => g.cada > 0).map(g => { const [a, m, d] = g.fecha.split('-').map(Number), t = new Date(Date.UTC(a, m - 1 + g.cada, Math.min(d, 28))); return Object.assign(g, { toca: t.toISOString().slice(0, 10) }); })
+    .filter(g => { const lim = new Date(Date.parse(g.toca) + 7 * 864e5).toISOString().slice(0, 10); return lim <= hoy; }).sort((a, b) => a.toca.localeCompare(b.toca)); }
+// Proveedores: resumen por proveedor (del año) y cambiar el nombre o el NIF en todos sus gastos
+async function listaProveedores(actividad, anio) { const D = await db();
+  return (await D.query(`select proveedor->>'nombre' nombre, max(proveedor->>'nif') nif, count(*)::int n, sum(total)::float total, max(fecha)::text ultima, (array_agg(categoria order by fecha desc))[1] categoria, bool_or(cada>0) repite, bool_or(isp<>'') extranjero
+    from fac_gastos where (actividad=$1 or comun) and extract(year from fecha)=$2 group by proveedor->>'nombre' order by sum(total) desc`, [actividad || 'principal', +anio])).rows; }
+async function cambiarProveedor(de, a) { const D = await db(), P = provLimpio(a); if (!P.nombre) throw new Error('Pon el nombre');
+  const r = await D.query(`update fac_gastos set proveedor = proveedor || $2::jsonb where proveedor->>'nombre'=$1`, [String(de || ''), JSON.stringify({ nombre: P.nombre, nif: P.nif })]); return r.rowCount; }
+async function noRepite(id) { const D = await db(); await D.query(`update fac_gastos set cada=0 where id=$1`, [id]); }
 // Guarda el archivo de la factura en el almacén (como los adjuntos de las fichas)
 async function subirArchivo(b64, nombre, tipo) { const D = await db(); const buf = Buffer.from(String(b64 || ''), 'base64');
   if (!buf.length || buf.length > 4.2e6) throw new Error('El archivo es demasiado grande (máx. 4 MB)');
@@ -234,4 +247,4 @@ async function buscar(tipo, q, importe) { const D = await db(), t = '%' + String
   return (await D.query(`select id, codigo, fecha::text fecha, (total - case when pagos->>'estado'='parcial' then coalesce((pagos->>'cobrado')::numeric,0) else 0 end)::float total, cliente, pagos->>'estado' estado from fac_facturas where estado='emitida' and tipo<>'rectificativa' and (coalesce(pagos->>'mov','')='' or pagos->>'estado'='parcial') and ($1='%%' or lower(codigo) like $1 or lower(cliente->>'nombre') like $1 or total::text like $1) order by abs(total-$2), fecha desc limit 20`, [t, imp])).rows.map(f => ({ id: f.id, parcial: f.estado === 'parcial', txt: `Factura ${f.codigo} · ${(f.cliente || {}).nombre || ''}${f.estado === 'parcial' ? ' (lo que falta)' : ''}`, fecha: f.fecha, total: f.total })); }
 async function borrarMovs(cuenta, ids) { const D = await db(); for (const id of ids || []) { await desconciliar(id); await D.query(`delete from fac_movimientos where id=$1 and cuenta=$2`, [id, cuenta]); } }
 
-module.exports = { ivaReg, guardarIvaReg, CATEGORIAS, SIN_DOC, db, cuentas, guardarCuentas, calcGasto, guardarGasto, gastos, gasto, borrarGasto, proveedores, duplicado, subirArchivo, leerFactura, importar, movimientos, resumenBanco, sugerencias, mejores, conciliar, desconciliar, detalleEnlaces, buscar, borrarMovs };
+module.exports = { listaProveedores, cambiarProveedor, esperados, noRepite, ivaReg, guardarIvaReg, CATEGORIAS, SIN_DOC, db, cuentas, guardarCuentas, calcGasto, guardarGasto, gastos, gasto, borrarGasto, proveedores, duplicado, subirArchivo, leerFactura, importar, movimientos, resumenBanco, sugerencias, mejores, conciliar, desconciliar, detalleEnlaces, buscar, borrarMovs };
