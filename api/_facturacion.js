@@ -188,6 +188,9 @@ async function registrarVF(q, entorno, F, tipo = 'alta') {
 // (si no llegaron a registrarse en VeriFactu se borran; si sí, se anulan para que la cadena quede bien)
 async function quitarRepetidas() { const D = await db();
   const L = (await D.query(`select id, vf, row_number() over (partition by k order by emitida, id) n from (select id, vf, emitida, coalesce(cobro, holded) k from fac_facturas where prueba and estado='emitida' and coalesce(cobro, holded) is not null) x`)).rows.filter(r => +r.n > 1);
+  // Las traídas de Holded que repiten un ticket que ya tenía su copia del cobro (mismo ticket o mismo número de Holded)
+  const T = (await D.query(`select a.id, a.vf from fac_facturas a where a.prueba and a.estado='emitida' and a.por='Holded (traída)' and exists (select 1 from fac_facturas b where b.id<>a.id and b.estado='emitida' and coalesce(b.por,'')<>'Holded (traída)' and ((a.holded is not null and b.holded=a.holded) or (coalesce(a.holded_num,'')<>'' and b.holded_num=a.holded_num)))`)).rows;
+  L.push(...T.filter(x => !L.some(y => y.id === x.id)));
   // Y las que se hicieron al comparar si ya había otra del mismo paciente, día e importe
   const R = (await D.query(`select a.id, a.vf from fac_facturas a where a.prueba and a.estado='emitida' and a.por='Recuperada al comparar' and exists (select 1 from fac_facturas b where b.id<>a.id and b.estado='emitida' and b.paciente=a.paciente and b.fecha=a.fecha and b.total=a.total and coalesce(b.por,'')<>'Recuperada al comparar')`)).rows;
   let n = 0; for (const r of [...L, ...R.filter(x => !L.some(y => y.id === x.id))]) { if (r.vf && r.vf.alta) await anular(r.id, 'Copia repetida'); else await D.query(`delete from fac_facturas where id=$1 and prueba`, [r.id]); n++; }
