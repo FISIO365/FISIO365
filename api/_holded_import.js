@@ -104,26 +104,40 @@ async function bancos(h) {
 // Va por tandas (cada llamada hace unas cuantas) y dice cuántas quedan. Si una compra no tiene adjunto, se marca para no volver a mirarla.
 const TIPOS = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/;
 const tipoNom = n => /\.pdf$/i.test(n) ? 'application/pdf' : /\.jpe?g$/i.test(n) ? 'image/jpeg' : /\.png$/i.test(n) ? 'image/png' : /\.webp$/i.test(n) ? 'image/webp' : '';
-async function adjuntoDe(h, pid) {
-  const L0 = await h.holdedRaw(`/purchases/${pid}/attachments`), j = L0.json;
-  const L = Array.isArray(j) ? j : (j && (j.items || j.data || j.attachments)) || [];
-  for (const a of L) { const nom = String((typeof a === 'string' ? a : a.name || a.filename || a.fileName || a.file_name) || 'factura'), aid = typeof a === 'string' ? a : a.id || a._id || a.attachment_id || nom;
-    let tipo = String((a && (a.content_type || a.contentType || a.mime_type || a.type)) || '').toLowerCase(); if (!TIPOS.test(tipo)) tipo = tipoNom(nom); if (!tipo) continue;
-    const r = await h.holdedRaw(`/purchases/${pid}/attachments/${encodeURIComponent(aid)}`);
+// Qué es el archivo por sus primeros bytes (Holded no siempre dice el tipo)
+const tipoBytes = b => b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 ? 'application/pdf' : b[0] === 0xFF && b[1] === 0xD8 ? 'image/jpeg' : b[0] === 0x89 && b[1] === 0x50 ? 'image/png' : b.slice(8, 12).toString() === 'WEBP' ? 'image/webp' : '';
+const lista = j => { if (Array.isArray(j)) return j; if (!j || typeof j !== 'object') return []; for (const k of ['items', 'data', 'attachments', 'files', 'results']) { const v = j[k]; if (Array.isArray(v)) return v; if (v && typeof v === 'object') { const w = lista(v); if (w.length) return w; } } return []; };
+async function adjuntoDe(h, pid, diag) {
+  const L0 = await h.holdedRaw(`/purchases/${pid}/attachments`), L = lista(L0.json);
+  if (diag) diag.lista = (L0.tipo + ' ' + (L0.json ? JSON.stringify(L0.json) : L0.buf.slice(0, 200).toString('latin1'))).slice(0, 600);
+  // A veces la lista ya es el archivo
+  if (!L0.json && L0.buf.length > 200 && tipoBytes(L0.buf)) return { buf: L0.buf, tipo: tipoBytes(L0.buf), nom: 'factura' };
+  for (const a of L) { const nom = String((typeof a === 'string' ? a : a.name || a.filename || a.fileName || a.file_name || a.originalName) || 'factura');
+    const aid = typeof a === 'string' ? a : a.id || a._id || a.attachmentId || a.attachment_id || a.uuid || a.key || nom;
     let buf = null;
-    if (r.json) { const x = r.json.data || r.json; const b = x.content || x.base64 || x.file || x.data; if (typeof b === 'string' && b.length > 100) buf = Buffer.from(b.replace(/^data:[^,]+,/, ''), 'base64');
-      else if (typeof (x.url || x.download_url) === 'string') { const d = await fetch(x.url || x.download_url); if (d.ok) buf = Buffer.from(await d.arrayBuffer()); } }
-    else if (r.buf.length) { buf = r.buf; if (TIPOS.test(r.tipo)) tipo = r.tipo; }
-    if (buf && buf.length > 200) return { buf, tipo, nom }; }
-  return null; }
+    const directa = typeof a === 'object' && (a.url || a.download_url || a.downloadUrl || a.link);
+    if (directa) { const d = await fetch(directa).catch(() => null); if (d && d.ok) buf = Buffer.from(await d.arrayBuffer()); }
+    if (!buf) { const r = await h.holdedRaw(`/purchases/${pid}/attachments/${encodeURIComponent(aid)}`);
+      if (diag && !diag.uno) diag.uno = (r.tipo + ' ' + (r.json ? JSON.stringify(r.json).slice(0, 300) : r.buf.length + ' bytes')).slice(0, 400);
+      if (r.json) { const x = r.json.data || r.json, b = x.content || x.base64 || x.file || x.data || x.fileContent;
+        if (typeof b === 'string' && b.length > 100) buf = Buffer.from(b.replace(/^data:[^,]+,/, ''), 'base64');
+        else { const u = x.url || x.download_url || x.downloadUrl || x.link; if (typeof u === 'string') { const d = await fetch(u).catch(() => null); if (d && d.ok) buf = Buffer.from(await d.arrayBuffer()); } } }
+      else buf = r.buf; }
+    if (!buf || buf.length < 200) continue;
+    const tipo = tipoBytes(buf) || tipoNom(nom); if (!tipo) continue;
+    return { buf, tipo, nom: /\.[a-z]{3,4}$/i.test(nom) ? nom : nom + (tipo === 'application/pdf' ? '.pdf' : '.jpg') }; }
+  return L.length ? false : null; } // null = no tiene adjuntos · false = tiene pero no se han podido leer
 async function archivos(h, max) { const D = await GX.db(), t0 = Date.now(); await D.query(`alter table fac_gastos add column if not exists holded_sin boolean not null default false`);
+  // Una vez: lo que la primera versión marcó como «sin archivo» se vuelve a mirar
+  await FACX.unaVez('holded-archivos-v2', () => D.query(`update fac_gastos set holded_sin=false where holded_sin`)).catch(() => {});
   const L = (await D.query(`select id, holded from fac_gastos where holded is not null and archivo is null and not holded_sin order by fecha desc limit $1`, [max || 20])).rows;
-  let ok = 0, sin = 0, err = null;
+  let ok = 0, sin = 0, err = null, diag = {}, raros = 0;
   for (const g of L) { if (Date.now() - t0 > 45000) break;
-    try { const a = await adjuntoDe(h, g.holded);
-      if (!a || a.buf.length > 4.2e6) { await D.query(`update fac_gastos set holded_sin=true where id=$1`, [g.id]); sin++; continue; }
+    try { const a = await adjuntoDe(h, g.holded, ok || diag.lista ? null : diag);
+      if (a === null) { await D.query(`update fac_gastos set holded_sin=true where id=$1`, [g.id]); sin++; continue; }
+      if (a === false || a.buf.length > 4.2e6) { raros++; continue; }
       const arch = await GX.subirArchivo(a.buf.toString('base64'), a.nom, a.tipo); await D.query(`update fac_gastos set archivo=$2 where id=$1`, [g.id, arch]); ok++; }
-    catch (e) { err = err || e.message.slice(0, 160); if (/40[134]/.test(e.message) && !ok) break; } }
+    catch (e) { err = err || e.message.slice(0, 200); if (!ok) break; } }
   const quedan = +(await D.query(`select count(*) n from fac_gastos where holded is not null and archivo is null and not holded_sin`)).rows[0].n;
-  return { traidos: ok, sinArchivo: sin, quedan, error: err }; }
+  return { traidos: ok, sinArchivo: sin, raros, quedan, error: err, diag: ok ? null : diag }; }
 module.exports = { previa, traer, clientes, bancos, prefijo, archivos };
