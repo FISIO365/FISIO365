@@ -3102,6 +3102,13 @@ async function pacDeCliente(cli) { cli = cli || {}; const dni = String(cli.nif |
   const c = []; if (dni.length >= 6) c.push(`SUBSTITUTE(SUBSTITUTE(LOWER(TRIM({DNI})),' ',''),'-','')='${cEsc(dni)}'`); if (/@/.test(em)) c.push(`LOWER(TRIM({EMAIL}))='${cEsc(em)}'`); if (tel.length === 9) c.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${tel}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${tel}'`);
   if (!c.length) return null; const d = await at(`${PACIENTES}?filterByFormula=${encodeURIComponent('OR(' + c.join(',') + ')')}&fields[]=DNI&maxRecords=2`).catch(() => ({}));
   const L = d.records || []; return L.length === 1 ? L[0].id : null; }
+// Tickets de Holded de los cobros del panel de un paciente (por el HOLDED ID de su fila de FACTURAS), por si su contacto de Holded no coincide
+async function holdedDeFilas(pac, ya, conBorradores) { const filas = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}',{HOLDED ID}!='')`)}`).catch(() => []), out = [];
+  const falta = filas.map(r => ({ hid: String(r.fields['HOLDED ID'] || ''), f: r.fields })).filter(x => /^[a-f0-9]{24}$/i.test(x.hid) && !ya.has(x.hid))
+    .sort((a, b) => String(b.f['FECHA DE COBRO'] || b.f['FECHA'] || '').localeCompare(String(a.f['FECHA DE COBRO'] || a.f['FECHA'] || ''))).slice(0, 15);
+  await Promise.all(falta.map(async x => { for (const tipoDoc of ['salesreceipt', 'invoice']) { const d = await holded('/' + docTipo(tipoDoc) + '/' + x.hid).catch(() => null); if (!d || !d.id) continue;
+    if (d.document_number || conBorradores) out.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' }); break; } }));
+  return out; }
 async function propiasDe(pac) { try { const L = await FACX.lista({ paciente: pac }); return L.filter(x => !x.prueba && x.estado === 'emitida').map(x => ({ id: x.id, tipo: 'propia', k: FACX.firma(x.id), numero: x.codigo, borrador: false, fecha: Math.floor(Date.parse(String(x.fecha).slice(0, 10) + 'T12:00:00Z') / 1000), total: Number(x.total), pagada: (x.pagos || {}).estado !== 'pendiente', concepto: '' })); } catch (e) { return []; } }
 async function listarFacturas(ids, conBorradores) {
   let facturas = [];
@@ -8082,6 +8089,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (!HOLDED_KEY) return res.status(200).json({ ok: true, holded: false, dni, precioEsp: precioEspDe(pr.fields), saldo, antes, cuentaDesde: cuentaD, bonoPrevio, tarjetas, gratis, porSesion, aMedias, sueltos: sueltos.slice(0, 8), facPanel, facturas: propiasF });
       try {
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true);
+        // Los cobros del panel de este paciente cuyo ticket no ha salido por su contacto de Holded (otro DNI/email, a nombre de otro…)
+        facturas.push(...await holdedDeFilas(pac, new Set(facturas.map(x => x.id)), true).catch(() => []));
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
         let saldo2 = saldo;
         if (ids.length) try {
@@ -8435,12 +8444,13 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         if (!/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ ok: false, error: 'Factura no válida' });
         const tipoDoc = docTipo(req.query.tipo);
         const doc = await holded('/' + tipoDoc + '/' + id);
-        if (!doc || !ids.includes(doc.contact_id)) return res.status(403).json({ ok: false, error: 'No autorizado' });
+        if (!doc || (!ids.includes(doc.contact_id) && !(await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${patientId}',{HOLDED ID}='${id}')`)}`).catch(() => [])).length)) return res.status(403).json({ ok: false, error: 'No autorizado' });
         const pdf = await holdedPdf('/' + tipoDoc + '/' + id + '/pdf');
         if (!pdf) return res.status(502).json({ ok: false, error: 'PDF no disponible' });
         return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.document_number || id).replace(/[^\w-]/g, '_') + '.pdf', pdf });
       }
-      const facturas = (await listarFacturas(ids)).concat(propias).sort((a, b) => b.fecha - a.fecha);
+      const h0 = await listarFacturas(ids); h0.push(...await holdedDeFilas(patientId, new Set(h0.map(x => x.id)), false).catch(() => []));
+      const facturas = h0.concat(propias).sort((a, b) => b.fecha - a.fecha);
       return res.status(200).json({ ok: true, facturas });
     } catch (e) {
       return res.status(500).json({ ok: false, error: 'No se han podido cargar las facturas' });
