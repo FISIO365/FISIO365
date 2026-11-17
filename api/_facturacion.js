@@ -8,7 +8,8 @@ const SQL = `
 create table if not exists fac_config (k text primary key, v jsonb not null default '{}'::jsonb, modificado timestamptz not null default now());
 create table if not exists fac_series (id text primary key, nombre text not null, prefijo text not null unique, tipo text not null default 'simplificada', diseno text not null default 'clasico', color text, activa boolean not null default true, auto boolean not null default false, nota text, orden int not null default 0, creado timestamptz not null default now());
 create table if not exists fac_contadores (serie text not null, anio int not null, n bigint not null default 0, primary key (serie, anio));
-create table if not exists fac_facturas (id text primary key, serie text not null, anio int not null, numero bigint not null, codigo text not null unique, tipo text not null, fecha date not null, emitida timestamptz not null default now(), emisor jsonb not null, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, paciente text, fisio text, cobro text, holded text, holded_num text, pagos jsonb, nota text, rectifica text, motivo text, estado text not null default 'emitida', diseno text, por text, vf jsonb, unique (serie, anio, numero))
+create table if not exists fac_facturas (id text primary key, serie text not null, anio int not null, numero bigint not null, codigo text not null unique, tipo text not null, fecha date not null, emitida timestamptz not null default now(), emisor jsonb not null, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, paciente text, fisio text, cobro text, holded text, holded_num text, pagos jsonb, nota text, rectifica text, motivo text, estado text not null default 'emitida', diseno text, por text, vf jsonb, unique (serie, anio, numero));
+alter table fac_facturas add column if not exists prueba boolean not null default false
 `;
 const ini = { p: null };
 async function db() {
@@ -79,14 +80,23 @@ async function emitir(o) {
   const hoy = isoMad(), fecha = /^\d{4}-\d{2}-\d{2}$/.test(o.fecha || '') ? o.fecha : hoy;
   if (fecha > hoy) throw new Error('La fecha no puede ser futura');
   const cli = { nombre: String((o.cliente || {}).nombre || '').trim().slice(0, 200), nif: String((o.cliente || {}).nif || '').trim().toUpperCase().slice(0, 30), direccion: String((o.cliente || {}).direccion || '').trim().slice(0, 300), cp: String((o.cliente || {}).cp || '').trim().slice(0, 10), ciudad: String((o.cliente || {}).ciudad || '').trim().slice(0, 80), provincia: String((o.cliente || {}).provincia || '').trim().slice(0, 80), pais: String((o.cliente || {}).pais || '').trim().slice(0, 60), email: String((o.cliente || {}).email || '').trim().slice(0, 120) };
+  // En pruebas (en paralelo con Holded) la factura lleva el mismo número que el ticket de Holded y no gasta numeración propia
+  const fijo = o.prueba ? String(o.codigoFijo || '').trim().slice(0, 60) : '';
   return D.tx(async q => {
     const s = (await q.query(`select * from fac_series where id=$1 for update`, [o.serie])).rows[0];
     if (!s) throw new Error('Elige una serie');
     if (!s.activa) throw new Error('Esa serie está desactivada');
-    if (s.tipo === 'completa' && (!cli.nombre || !cli.nif || !cli.direccion)) throw new Error('La factura completa necesita nombre, NIF y dirección de quien la recibe');
-    if (s.tipo === 'rectificativa' && !o.rectifica) throw new Error('Una rectificativa tiene que decir qué factura corrige');
-    if (s.tipo === 'simplificada' && c.total > 3000) throw new Error('Una factura simplificada no puede pasar de 3.000 €: usa una serie de facturas completas');
+    if (!o.prueba && s.tipo === 'completa' && (!cli.nombre || !cli.nif || !cli.direccion)) throw new Error('La factura completa necesita nombre, NIF y dirección de quien la recibe');
+    if (!o.prueba && s.tipo === 'rectificativa' && !o.rectifica) throw new Error('Una rectificativa tiene que decir qué factura corrige');
+    if (!o.prueba && s.tipo === 'simplificada' && c.total > 3000) throw new Error('Una factura simplificada no puede pasar de 3.000 €: usa una serie de facturas completas');
     const anio = +fecha.slice(0, 4);
+    if (o.prueba) {
+      const id = 'fac' + crypto.randomBytes(8).toString('hex'), n = -Math.floor(Math.random() * 1e12) - 1;
+      await q.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,paciente,fisio,cobro,holded,holded_num,pagos,nota,diseno,por,prueba)
+        values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,true)`,
+        [id, s.id, anio, n, fijo || ('Borrador-' + id.slice(-6)), s.tipo, fecha, Object.assign({}, C.emisor), cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, s.diseno, String(o.por || '').slice(0, 60) || null]);
+      return { id, codigo: fijo, total: c.total, prueba: true };
+    }
     // Las fechas van en orden dentro de la serie: no puede ir antes que la última emitida
     const ult = (await q.query(`select max(fecha)::text f from fac_facturas where serie=$1 and anio=$2`, [s.id, anio])).rows[0].f;
     if (ult && fecha < ult) throw new Error(`La fecha es anterior a la última factura de la serie (${ult.split('-').reverse().join('/')})`);
@@ -110,7 +120,7 @@ async function desdeCobro(o) {
   const s = completa ? (S.find(x => x.tipo === 'completa') || S[0]) : (S.find(x => x.tipo === 'simplificada') || S[0]);
   if (!s) throw new Error('No hay series');
   const lineas = o.lineas.map(l => Object.assign({ iva: ivaDe(C, l.ivaDe || l.concepto) }, l));
-  return emitir(Object.assign({}, o, { serie: s.id, lineas }));
+  return emitir(Object.assign({}, o, { serie: s.id, lineas, prueba: true, codigoFijo: o.holdedNum || '' }));
 }
 
 async function lista(f) {
@@ -120,7 +130,7 @@ async function lista(f) {
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded_num, estado, emitida, impuestos, prueba from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0]; return r || null; }
@@ -147,7 +157,7 @@ function html(F, o) {
   const clienteB = Cl.nombre ? `<div class="cli"><small>${F.tipo === 'simplificada' ? 'Cliente' : 'Facturar a'}</small><b>${esc(Cl.nombre)}</b>${Cl.nif ? `<span>NIF/DNI ${esc(Cl.nif)}</span>` : ''}${dirC ? `<span>${esc(dirC)}</span>` : ''}${Cl.email ? `<span>${esc(Cl.email)}</span>` : ''}</div>` : '';
   const datosB = `<div class="dat"><div><small>Nº</small><b>${esc(F.codigo)}</b></div><div><small>Fecha</small><b>${fechaL(F.fecha)}</b></div>${F.rectifica_codigo ? `<div><small>Rectifica a</small><b>${esc(F.rectifica_codigo)}</b></div>` : ''}</div>`;
   const pie = [F.fisio ? esc(F.fisio) : '', F.nota ? esc(F.nota).replace(/\n/g, '<br>') : '', F.motivo ? 'Motivo de la rectificación: ' + esc(F.motivo) : '', ...exentas.map(esc), F.tipo === 'completa' && o.pago ? esc(o.pago) : ''].filter(Boolean).map(x => `<p>${x}</p>`).join('');
-  const anul = F.estado === 'anulada' ? '<div class="anul">ANULADA</div>' : '';
+  const anul = F.estado === 'anulada' ? '<div class="anul">ANULADA</div>' : F.prueba ? '<div class="anul" style="color:rgba(120,110,100,.10)">PRUEBA</div>' : '';
   const css = `@page{size:A4;margin:0}*{box-sizing:border-box;margin:0}body{font-family:Poppins,Helvetica,Arial,sans-serif;color:#1f1a17;font-size:12.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#e9e5e1}
 .hoja{width:210mm;min-height:297mm;margin:20px auto;background:#fff;padding:18mm 17mm 16mm;position:relative;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.08)}
 @media print{body{background:#fff}.hoja{margin:0;box-shadow:none}.bar{display:none}}
@@ -180,4 +190,18 @@ function muestra(diseno, tipo, C, o) {
   return html({ emisor: C.emisor, cliente: { nombre: 'Laura Martínez Soler', nif: '12345678Z', direccion: tipo === 'simplificada' ? '' : 'C/ Ejemplo, 12', cp: tipo === 'simplificada' ? '' : '08030', ciudad: tipo === 'simplificada' ? '' : 'Barcelona' }, lineas: c.lineas, impuestos: c.impuestos, base: c.base, cuota: c.cuota, total: c.total, codigo: 'T2026-00001', fecha: isoMad(), tipo, diseno, fisio: 'Atendido por: tu fisio · Nº col. 00000' }, o);
 }
 
-module.exports = { db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+// Tickets que se hicieron en borrador en Holded: cuando Holded les da número, la factura de prueba coge el mismo.
+// getDoc(holdedId) → el ticket de Holded ({ document_number }) o null si ya no existe.
+async function sincronizaHolded(getDoc, max = 25) {
+  const D = await db();
+  // Las primeras que se hicieron con numeración propia pasan a ser de prueba con el número de Holded
+  await D.query(`update fac_facturas set prueba=true, codigo=coalesce(nullif(holded_num,''), 'Borrador-'||right(id,6)) where cobro is not null and not prueba`).catch(() => {});
+  const L = (await D.query(`select id, holded from fac_facturas where prueba and holded is not null and coalesce(holded_num,'')='' and estado='emitida' order by emitida limit $1`, [max])).rows;
+  let n = 0;
+  for (const x of L) { let d; try { d = await getDoc(x.holded); } catch (e) { continue; }
+    if (d === null) { await D.query(`update fac_facturas set estado='anulada' where id=$1`, [x.id]); continue; }
+    const num = String((d && d.document_number) || '').trim(); if (!num) continue;
+    await D.query(`update fac_facturas set codigo=$2, holded_num=$2 where id=$1`, [x.id, num]).catch(() => {}); n++; }
+  return n;
+}
+module.exports = { sincronizaHolded, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

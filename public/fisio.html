@@ -13580,7 +13580,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-17',dir:1,t:'Facturación (en pruebas): cada cobro del panel hace también su factura propia, con nuestra numeración, a la vez que el ticket de Holded. En Más › Facturación ves las facturas, comparas cada día con Holded, haces facturas a mano y eliges series, diseños e IVA.',ver:{sec:'fx',pasos:[{el:'.fx-tabs',txt:'Facturas, comparar con Holded y ajustes.'}]}},
+ {f:'2026-11-17',dir:1,t:'Facturación (en pruebas): cada cobro del panel hace también su factura propia, con el mismo número que el ticket de Holded. En Más › Facturación ves las facturas, comparas cada día con Holded, haces facturas a mano y eliges series, diseños e IVA.',ver:{sec:'fx',pasos:[{el:'.fx-tabs',txt:'Facturas, comparar con Holded y ajustes.'}]}},
  {f:'2026-11-17',t:'Ficha › Historia › Archivos: ahora se ven en miniatura y puedes ordenarlos en carpetas (p. ej. «Rodilla derecha» y «Rodilla izquierda») con «＋ Carpeta». Con la papelera de cada archivo lo borras.',ver:{sec:'pac',pasos:[{el:'.fp-archb',txt:'Aquí: «＋ Carpeta» para crear una y el icono de carpeta de cada archivo para moverlo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="historia"]']}]}},
 {f:'2026-11-16',t:'Buzón: las solicitudes de vacaciones y horas libres ya se pueden contestar («Responder a…»), también después de aprobarlas. Lo ve quien la pidió y el resto de dirección.'},
 {f:'2026-11-16',t:'Tarjeta regalo por recomendar: con «Cambiar» eliges a quién va (por si le recomendaron dos personas). La tarjeta ya sale siempre con el nombre de esa persona.'},
@@ -16569,7 +16569,7 @@ function renderFacturacion(wrap){
  if(!FX.mes)FX.mes=fxHoy().slice(0,7);
  const m=ce('div','fx');wrap.appendChild(m);
  const pinta=()=>{m.innerHTML=`<div class="fx-top"><div class="fx-tabs">${[['lista','Facturas'],['comp','Comparar con Holded'],['aj','Ajustes']].map(([k,t])=>`<button type="button" data-t="${k}" class="${FX.tab===k?'on':''}">${t}</button>`).join('')}</div><button type="button" class="fx-nueva">＋ Nueva factura</button></div>
-  <div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con nuestra numeración, a la vez que el ticket de Holded. Holded sigue siendo la que vale hasta que lo cambiemos.</div><div class="fx-c"></div>`;
+  <div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con el mismo número que el ticket de Holded (si Holded lo deja en borrador, coge el número cuando lo aprobáis). Holded sigue siendo la que vale hasta que lo cambiemos.</div><div class="fx-c"></div>`;
   m.querySelectorAll('.fx-tabs button').forEach(b=>b.onclick=()=>{FX.tab=b.dataset.t;pinta();});
   m.querySelector('.fx-nueva').onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
   const c=m.querySelector('.fx-c');({lista:fxLista,comp:fxComparar,aj:fxAjustes})[FX.tab](c);};
@@ -16587,7 +16587,7 @@ async function fxLista(c){
   <input class="fx-in fx-bus" type="search" placeholder="Buscar por nº, nombre o NIF" value="${escH(FX.q)}"></div>
   <div class="fx-res"><div><small>Facturas</small><b>${L.length}</b></div><div><small>Base</small><b>${fxEur(sum('base'))}</b></div><div><small>IVA</small><b>${fxEur(sum('cuota'))}</b></div><div><small>Total</small><b>${fxEur(sum('total'))}</b></div></div>
   <div class="card fx-l">${L.length?L.map(x=>`<a class="fx-f${x.estado==='anulada'?' anul':''}" href="${fxUrl(x.id,x.k)}" target="_blank" rel="noopener"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)} · ${escH((S[x.serie]||{}).nombre||'')}</small></span>
-   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.holded_num?` · Holded ${escH(x.holded_num)}`:''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join(''):'<div class="fac-vacio">No hay facturas este mes'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
+   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></a>`).join(''):'<div class="fac-vacio">No hay facturas este mes'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
  c.querySelectorAll('.fx-mes [data-d]').forEach(b=>b.onclick=()=>{FX.mes=mesMov(+b.dataset.d);fxLista(c);});
  c.querySelectorAll('.fx-chips [data-s]').forEach(b=>b.onclick=()=>{FX.serie=b.dataset.s;fxLista(c);});
  const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}

@@ -7697,6 +7697,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       }
       if (action === 'fac-config') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, config: await FACX.guardarConfig(q.config || {}) }); }
       if (action === 'fac-serie') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const id = await FACX.guardarSerie(q.serie || {}); return res.status(200).json({ ok: true, id, series: await FACX.series() }); }
+      // Antes de enseñar facturas: las de prueba cuyo ticket de Holded ya tiene número cogen ese mismo número
+      if ((action === 'fac-lista' || action === 'fac-comparar') && HOLDED_KEY) await FACX.sincronizaHolded(async hid => { try { return await holded('/sales-receipts/' + hid); } catch (e) { if (/ 404 /.test(e.message)) return null; throw e; } }).catch(() => {});
       if (action === 'fac-lista') {
         const L = await FACX.lista({ desde: q.desde, hasta: q.hasta, serie: q.serie, q: q.q, paciente: q.paciente });
         return res.status(200).json({ ok: true, facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) });
