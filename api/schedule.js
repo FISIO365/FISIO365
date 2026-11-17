@@ -7696,6 +7696,12 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         if (F.vf && F.vf.alta && F.estado !== 'anulada') { const ent = F.vf.entorno || 'pruebas'; o.qr = { url: FACX.VF.urlQR(ent, F), pruebas: ent !== 'real' }; }
         return enviaPdf(await require('./_factura_pdf').pdfFactura(F, o), 'Factura_' + F.codigo);
       }
+      if (action === 'fac-pres-ver') { // el presupuesto en PDF
+        const id = String(q.id || ''); if (!/^pre[0-9a-f]{16}$/.test(id) || (!okPwd && String(q.k || '') !== FACX.firma(id))) return res.status(404).send('No encontrado');
+        const P = await FACX.presupuesto(id); if (!P) return res.status(404).send('No encontrado');
+        const C = await FACX.config(), A = FACX.actDe(C, P.actividad), E = Object.assign({}, C.emisor, ...['tel', 'email', 'web', 'direccion'].filter(k => A[k]).map(k => ({ [k]: A[k] })));
+        return enviaPdf(await require('./_factura_pdf').pdfFactura(Object.assign({}, P, { tipo: 'presupuesto', emisor: E, diseno: 'clasico' }), await opcPdf(P.actividad)), 'Presupuesto_' + P.codigo);
+      }
       if (action === 'fac-muestra') { // cómo queda un diseño (con datos de ejemplo)
         if (!okPwd) return res.status(401).send('No autorizado');
         const C = await FACX.config(), tipo = FACX.TIPOS[q.tipo] ? q.tipo : 'simplificada', c = FACX.calcular([{ concepto: 'Sesión de fisioterapia', uds: 1, precio: 65, iva: { tipo: 0, exencion: 'E1' } }, { concepto: 'Plus aplicación colágeno', uds: 1, precio: 15, iva: { tipo: 0, exencion: 'E1' } }]);
@@ -7721,6 +7727,18 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-registros') { // VERI*FACTU: registros de la cadena y comprobación de las huellas
         const ent = q.entorno === 'real' ? 'real' : 'pruebas'; return res.status(200).json({ ok: true, entorno: ent, ...(await FACX.registros(ent, 300)) });
       }
+      // ── Clientes guardados ──
+      if (action === 'fac-clientes') return res.status(200).json({ ok: true, clientes: q.todos ? await FACX.listaClientes(String(q.actividad || 'principal')) : await FACX.buscarClientes(String(q.actividad || 'principal'), q.q) });
+      if (action === 'fac-cliente') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        if (q.borrar) { await FACX.borrarCliente(String(q.id || '')); return res.status(200).json({ ok: true }); }
+        return res.status(200).json({ ok: true, id: await FACX.guardarCliente(String(q.actividad || 'principal'), q.cliente) }); }
+      // ── Presupuestos ──
+      if (action === 'fac-pres-lista') { const L = await FACX.presupuestos({ actividad: q.actividad, estado: q.estado, q: q.q }); return res.status(200).json({ ok: true, presupuestos: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
+      if (action === 'fac-pres-uno') { const P = await FACX.presupuesto(String(q.id || '')); if (!P) return res.status(404).json({ ok: false, error: 'No encontrado' }); return res.status(200).json({ ok: true, presupuesto: Object.assign(P, { k: FACX.firma(P.id) }) }); }
+      if (action === 'fac-pres-guardar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const r = await FACX.guardarPresupuesto({ id: q.id, actividad: q.actividad, fecha: q.fecha, validez: q.validez, cliente: q.cliente, lineas: q.lineas, nota: q.nota, por: q.quien });
+        return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
+      if (action === 'fac-pres-estado') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); await FACX.estadoPresupuesto(String(q.id || ''), q.estado); return res.status(200).json({ ok: true }); }
       if (action === 'fac-una') { const F = await FACX.una(String(q.id || '')); if (!F) return res.status(404).json({ ok: false, error: 'No encontrada' });
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
       if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await FACX.pago(String(q.id || ''), q.estado, q.modo) }); }
@@ -7730,6 +7748,8 @@ Devuelve solo el texto del mensaje, sin comillas.`;
       if (action === 'fac-crear') { // factura hecha a mano (completa, a una empresa, con el IVA que se elija…)
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const r = await FACX.emitir({ serie: q.serie, fecha: q.fecha, cliente: q.cliente, lineas: q.lineas, nota: q.nota, paciente: /^rec[A-Za-z0-9]{14}$/.test(q.paciente || '') ? q.paciente : null, fisio: q.fisio, por: q.quien, pagos: q.pagos });
+        await FACX.guardarCliente(r.actividad, q.cliente).catch(() => {});
+        if (/^pre[0-9a-f]{16}$/.test(q.presupuesto || '')) await FACX.estadoPresupuesto(q.presupuesto, 'facturado', r.id).catch(() => {});
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) });
       }
       if (action === 'fac-comparar') { // un día: lo que hay en Holded (cobros del panel) frente a nuestras facturas

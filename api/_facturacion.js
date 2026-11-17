@@ -14,7 +14,9 @@ alter table fac_facturas add column if not exists prueba boolean not null defaul
 alter table fac_series add column if not exists formato text not null default '{P}{AAAA}-{N5}';
 alter table fac_series add column if not exists anual boolean not null default true;
 alter table fac_series add column if not exists actividad text not null default 'principal';
-alter table fac_facturas add column if not exists actividad text not null default 'principal'
+alter table fac_facturas add column if not exists actividad text not null default 'principal';
+create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
+create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
 `;
 const ini = { p: null };
 async function db() {
@@ -151,7 +153,7 @@ async function emitir(o) {
       [id, s.id, anio, n, codigo, s.tipo, fecha, emisor, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, o.paciente || null, String(o.fisio || '').slice(0, 200) || null, o.cobro || null, o.holded || null, o.holdedNum || null, o.pagos ? JSON.stringify(o.pagos) : null, String(o.nota || '').slice(0, 2000) || null, o.rectifica || null, o.motivo || null, s.diseno, String(o.por || '').slice(0, 60) || null, s.actividad || 'principal']);
     let rectSimpl = false; if (o.rectifica) rectSimpl = ((await q.query(`select tipo from fac_facturas where id=$1`, [o.rectifica])).rows[0] || {}).tipo === 'simplificada';
     await registrarVF(q, C.vf.entorno, { id, emisor, codigo, fecha, tipo: s.tipo, total: c.total, cuota: c.cuota, rectSimpl });
-    return { id, codigo, total: c.total };
+    return { id, codigo, total: c.total, actividad: s.actividad || 'principal' };
   });
 }
 // Registro VERI*FACTU de una factura (alta o anulación) y su referencia en la factura
@@ -296,6 +298,49 @@ async function registros(entorno, limite) { const D = await db(), C = await conf
 // Marcar una factura como pagada (o pendiente). No cambia nada fiscal: solo cómo está el cobro
 async function pago(id, estado, modo) { const D = await db(); const P = { estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() };
   const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return P; }
+// ── Clientes guardados: los de las facturas hechas a mano (y los de las facturas ya hechas) para no escribirlos cada vez ──
+const cliLimpio = c => { c = c || {}; const o = {}; ['nombre', 'nif', 'direccion', 'cp', 'ciudad', 'provincia', 'pais', 'email', 'tel'].forEach(k => { o[k] = String(c[k] || '').trim().slice(0, k === 'direccion' ? 300 : 200); }); o.nif = o.nif.toUpperCase(); return o; };
+async function guardarCliente(actividad, c) { const D = await db(), x = cliLimpio(c); if (!x.nombre) return null;
+  const ya = (await D.query(`select id from fac_clientes where actividad=$1 and (($2<>'' and upper(coalesce(nif,''))=$2) or ($2='' and lower(nombre)=lower($3))) limit 1`, [actividad, x.nif, x.nombre])).rows[0];
+  if (ya) { await D.query(`update fac_clientes set nombre=$2, nif=$3, direccion=coalesce(nullif($4,''),direccion), cp=coalesce(nullif($5,''),cp), ciudad=coalesce(nullif($6,''),ciudad), provincia=coalesce(nullif($7,''),provincia), pais=coalesce(nullif($8,''),pais), email=coalesce(nullif($9,''),email), tel=coalesce(nullif($10,''),tel), usado=now() where id=$1`, [ya.id, x.nombre, x.nif, x.direccion, x.cp, x.ciudad, x.provincia, x.pais, x.email, x.tel]); return ya.id; }
+  const id = 'cli' + crypto.randomBytes(6).toString('hex');
+  await D.query(`insert into fac_clientes(id,actividad,nombre,nif,direccion,cp,ciudad,provincia,pais,email,tel) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [id, actividad, x.nombre, x.nif, x.direccion, x.cp, x.ciudad, x.provincia, x.pais, x.email, x.tel]); return id; }
+async function buscarClientes(actividad, q) { const D = await db(), t = '%' + String(q || '').trim().toLowerCase() + '%';
+  const a = (await D.query(`select id, nombre, nif, direccion, cp, ciudad, provincia, pais, email, tel from fac_clientes where actividad=$1 and (lower(nombre) like $2 or lower(coalesce(nif,'')) like $2) order by usado desc limit 12`, [actividad, t])).rows;
+  // También quien ya tiene facturas (p. ej. pacientes de la clínica)
+  const b = (await D.query(`select distinct on (upper(coalesce(cliente->>'nif','')), lower(cliente->>'nombre')) cliente from fac_facturas where actividad=$1 and coalesce(cliente->>'nombre','')<>'' and (lower(cliente->>'nombre') like $2 or lower(coalesce(cliente->>'nif','')) like $2) limit 20`, [actividad, t])).rows.map(r => r.cliente);
+  const vistos = new Set(a.map(x => (x.nif || '').toUpperCase() || x.nombre.toLowerCase()));
+  b.forEach(c => { const k = (c.nif || '').toUpperCase() || String(c.nombre).toLowerCase(); if (!vistos.has(k)) { vistos.add(k); a.push(c); } });
+  return a.slice(0, 12); }
+async function listaClientes(actividad) { const D = await db(); return (await D.query(`select * from fac_clientes where actividad=$1 order by lower(nombre) limit 2000`, [actividad])).rows; }
+async function borrarCliente(id) { const D = await db(); await D.query(`delete from fac_clientes where id=$1`, [id]); }
+
+// ── Presupuestos: como una factura pero sin valor fiscal; se pueden cambiar mientras estén pendientes y se convierten en factura ──
+const prefijoPres = (C, act) => act === 'principal' ? 'P' : ((actDe(C, act).nombre || act).replace(/[^A-Za-z]/g, '').slice(0, 1).toUpperCase() || 'X') + 'P';
+async function guardarPresupuesto(o) {
+  const D = await db(), C = await config(), act = String(o.actividad || 'principal'), c = calcular(o.lineas);
+  if (!c.lineas.length) throw new Error('El presupuesto necesita al menos una línea');
+  const cli = cliLimpio(o.cliente); if (!cli.nombre) throw new Error('Pon a quién va el presupuesto');
+  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(o.fecha || '') ? o.fecha : isoMad(), validez = /^\d{4}-\d{2}-\d{2}$/.test(o.validez || '') ? o.validez : null;
+  if (o.id) { const ya = (await D.query(`select estado from fac_presupuestos where id=$1`, [o.id])).rows[0]; if (!ya) throw new Error('No encuentro ese presupuesto');
+    if (ya.estado === 'facturado') throw new Error('Ya está facturado: no se puede cambiar');
+    await D.query(`update fac_presupuestos set fecha=$2, validez=$3, cliente=$4, lineas=$5, impuestos=$6, base=$7, cuota=$8, total=$9, nota=$10, modificado=now() where id=$1`, [o.id, fecha, validez, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, String(o.nota || '').slice(0, 2000) || null]);
+    await guardarCliente(act, cli).catch(() => {}); return { id: o.id }; }
+  const anio = +fecha.slice(0, 4), id = 'pre' + crypto.randomBytes(8).toString('hex');
+  const r = await D.tx(async q => { const n = (await q.query(`insert into fac_contadores(serie,anio,n) values($1,$2,1) on conflict (serie,anio) do update set n=fac_contadores.n+1 returning n`, ['pres:' + act, anio])).rows[0].n;
+    const codigo = `${prefijoPres(C, act)}${anio}-${String(n).padStart(4, '0')}`;
+    await q.query(`insert into fac_presupuestos(id,actividad,anio,numero,codigo,fecha,validez,cliente,lineas,impuestos,base,cuota,total,nota,por) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      [id, act, anio, n, codigo, fecha, validez, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, String(o.nota || '').slice(0, 2000) || null, String(o.por || '').slice(0, 60) || null]); return { id, codigo }; });
+  await guardarCliente(act, cli).catch(() => {}); return r; }
+async function presupuestos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ['actividad=$1'];
+  if (f.estado) { p.push(f.estado); w.push(`estado=$${p.length}`); }
+  if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length})`); }
+  return (await D.query(`select id, codigo, fecha::text fecha, validez::text validez, cliente, total::float total, estado, factura, nota from fac_presupuestos where ${w.join(' and ')} order by fecha desc, creado desc limit 500`, p)).rows; }
+async function presupuesto(id) { const D = await db(); const r = (await D.query(`select p.*, p.fecha::text fecha, p.validez::text validez, (select codigo from fac_facturas f where f.id=p.factura) factura_codigo from fac_presupuestos p where id=$1`, [id])).rows[0];
+  if (r) ['base', 'cuota', 'total'].forEach(k => { r[k] = Number(r[k]); }); return r || null; }
+async function estadoPresupuesto(id, estado, factura) { const D = await db(); if (!['pendiente', 'aceptado', 'rechazado', 'facturado'].includes(estado)) throw new Error('Estado no válido');
+  await D.query(`update fac_presupuestos set estado=$2, factura=coalesce($3, factura), modificado=now() where id=$1 and (estado<>'facturado' or $2='facturado')`, [id, estado, factura || null]); }
+
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };

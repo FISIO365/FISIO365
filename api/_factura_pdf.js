@@ -8,7 +8,7 @@ const mezcla = (h, f) => { const m = String(h || '#c2552e').replace('#', ''); co
 const eur = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 const num = n => (Number(n) || 0).toLocaleString('es-ES', { maximumFractionDigits: 4 });
 const fechaL = f => { const [a, m, d] = String(f).slice(0, 10).split('-'); return `${+d}/${+m}/${a}`; };
-const TITULOS = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' };
+const TITULOS = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa', presupuesto: 'Presupuesto' };
 const EXENC = { E1: 'Operación exenta de IVA (art. 20.Uno.3º de la Ley 37/1992 del IVA: asistencia sanitaria)', E6: 'Operación exenta de IVA', NS: 'Operación no sujeta a IVA' };
 // pdf-lib con fuentes TTF: quitar caracteres que la fuente no tenga (emojis…)
 const limpio = s => String(s == null ? '' : s).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}️]/gu, '').replace(/\s+/g, ' ').trim();
@@ -67,8 +67,9 @@ async function pdfFactura(F, o) {
   txt('Nº ' + F.codigo, X0, y - 17, fR, 9.5, GRIS);
   const fw = txt(fechaL(F.fecha), X1, y, fM, 11, NEGRO, 'd'); esp('Fecha', X1, y + 15, 6.2, GRIS2, 'd');
   if (F.rectifica_codigo) { txt(F.rectifica_codigo, X1 - fw - 36, y, fM, 11, NEGRO, 'd'); esp('Rectifica a', X1 - fw - 36, y + 15, 6.2, GRIS2, 'd'); }
+  if (F.tipo === 'presupuesto' && F.validez) { txt(fechaL(F.validez), X1 - fw - 36, y, fM, 11, NEGRO, 'd'); esp('Válido hasta', X1 - fw - 36, y + 15, 6.2, GRIS2, 'd'); }
   const P = F.pagos || {}, pend = P.estado === 'pendiente';
-  if (F.tipo !== 'rectificativa' && (pend || P.estado === 'pagada' || P.modo)) {
+  if (F.tipo !== 'rectificativa' && F.tipo !== 'presupuesto' && (pend || P.estado === 'pagada' || P.modo)) {
     const t = pend ? 'Pendiente de pago' : 'Pagada' + (P.modo && P.modo !== 'Varias' ? ' · ' + P.modo : ''), s2 = 7.2, w = ancho(t, fM, s2) + 26, hP = 16, xP = X1 - w, yP = y - 11;
     const cP = pend ? hex('#c2552e') : rgb(0.16, 0.47, 0.28), fP = pend ? mezcla('#c2552e', 0.9) : rgb(0.91, 0.96, 0.92);
     redondo(xP, yP, w, hP, 8, { color: fP });
@@ -86,7 +87,7 @@ async function pdfFactura(F, o) {
   const at = fis ? bloque([[m2 ? m2[1] : fis, fB, 10, NEGRO], [m2 && m2[2] ? m2[2].replace(/^n[ºo°]?\.?\s*(de\s*)?col(egiad[oa])?\.?\s*/i, 'Nº de colegiado ') : '', fR, 8.5, GRIS]], wB - 28) : null;
   const hB = Math.max(cli.length, at ? at.length : 0) * 12.5 + 40;
   const pintaB = (x, lab, L, w) => { caja(x, y, w, hB); esp(lab, x + 14, y - 18, 6.5, GRIS2); let yy = y - 34; L.forEach(([p, f, s, c]) => { txt(p, x + 14, yy, f, s, c); yy -= 12.5; }); };
-  pintaB(X0, F.tipo === 'simplificada' ? 'Cliente' : 'Facturar a', cli, at ? wB : AN);
+  pintaB(X0, F.tipo === 'simplificada' ? 'Cliente' : F.tipo === 'presupuesto' ? 'Para' : 'Facturar a', cli, at ? wB : AN);
   if (at) pintaB(X0 + wB + 14, 'Atendido por', at, wB);
   y -= hB + 30;
 

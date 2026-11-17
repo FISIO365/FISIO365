@@ -1392,6 +1392,9 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fx-cli{flex:1;min-width:0;display:flex;flex-direction:column}.fx-cli b{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fx-tot{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;margin-left:auto;display:flex;flex-direction:column}.fx-dif{color:#b42318;font-weight:500;font-size:11.5px}
 .fx-flecha{color:#c9bdb4}
+.fx-clw{position:relative}.fx-clsug{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1.5px solid #ece6e0;border-radius:14px;box-shadow:0 12px 30px rgba(40,25,15,.12);z-index:5;overflow:hidden;max-height:260px;overflow-y:auto}
+.fx-clsug button{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;background:#fff;font-family:var(--font);padding:9px 14px;cursor:pointer;text-align:left;border-bottom:1px solid #f5f0eb}.fx-clsug button:hover{background:#fbf6f2}.fx-clsug b{font-size:13.5px}.fx-clsug small{font-size:11.5px;color:#9a8d84}
+.fx-est{font-style:normal;font-weight:600}.fx-est.pend{color:#b7791f}.fx-est.ok{color:#1d7a3e}.fx-est.no{color:#b42318}.fx-est.fac{color:#7d6a60}
 .fx-acts{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.fx-acts button{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--font);border:1.5px solid #ece6e0;background:#fff;color:#5f554e;border-radius:14px;padding:9px 16px;cursor:pointer}.fx-acts button.on{border-color:#c2552e;color:#c2552e;background:#fdf6f2}.fx-acts img{height:18px;max-width:80px;object-fit:contain}
 .fx-logo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.fx-lprev{display:flex;align-items:center;justify-content:center;min-width:140px;height:56px;border:1.5px dashed #e8dfd7;border-radius:12px;padding:6px 12px;background:#fff}.fx-lprev img{max-height:40px;max-width:180px;object-fit:contain}.fx-lprev em{font-style:normal;font-size:12.5px;color:#9a8d84}.fx-logo label{cursor:pointer}.fx-pend{font-style:normal;color:#c2552e;font-weight:600}
 .fx-pagst{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 14px;margin-bottom:10px;font-size:13.5px;font-weight:600}.fx-pagst.ok{background:#ecf7ef;color:#1d7a3e}.fx-pagst.pend{background:#fbeee7;color:#c2552e}
@@ -13599,6 +13602,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-17',dir:1,t:'Facturación: presupuestos y clientes guardados. En «Presupuestos» haces uno, lo marcas aceptado o rechazado y con «Hacer la factura» se convierte en factura con todo relleno. Al escribir el nombre en una factura nueva salen los clientes ya usados y se rellenan sus datos.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: ahora hay actividades. Arriba eliges FISIO365 o CerraPoint; cada una tiene sus series, su logo, su color y su IVA (CerraPoint, 21 %). Mismo NIF y misma cadena VeriFactu.'},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas dicen si están pagadas (y cómo) o pendientes de pago, y llevan notas. Al hacer una a mano eliges si ya está pagada, y desde la factura la marcas como pagada.'},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas ahora son un PDF de verdad (se ven bien en el móvil y se pueden guardar), con un diseño nuevo.'},
@@ -16596,14 +16600,14 @@ async function renderFacturacion(wrap){
  const m=ce('div','fx');wrap.appendChild(m);
  let I=null;try{I=await fxInicio();}catch(e){}
  const pinta=()=>{const A=(I&&I.config.actividades)||[{id:'principal'}];if(!A.some(a=>a.id===FX.act))FX.act='principal';const prin=FX.act==='principal';
-  const tabs=[['lista','Facturas'],prin?['comp','Comparar con Holded']:null,['vf','VeriFactu'],['aj','Ajustes']].filter(Boolean);if(!tabs.some(t=>t[0]===FX.tab))FX.tab='lista';
+  const tabs=[['lista','Facturas'],['pres','Presupuestos'],['cli','Clientes'],prin?['comp','Comparar con Holded']:null,['vf','VeriFactu'],['aj','Ajustes']].filter(Boolean);if(!tabs.some(t=>t[0]===FX.tab))FX.tab='lista';
   m.innerHTML=`${A.length>1?`<div class="fx-acts">${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.act===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
   <div class="fx-top"><div class="fx-tabs">${tabs.map(([k,t])=>`<button type="button" data-t="${k}" class="${FX.tab===k?'on':''}">${t}</button>`).join('')}</div><button type="button" class="fx-nueva">＋ Nueva factura</button></div>
-  ${prin?'<div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con el mismo número que el ticket de Holded (si Holded lo deja en borrador, coge el número cuando lo aprobáis). Holded sigue siendo la que vale hasta que lo cambiemos.</div>':''}<div class="fx-c"></div>`;
+  ${prin&&FX.tab==='lista'?'<div class="fx-aviso">En pruebas: cada cobro del panel hace también aquí su factura, con el mismo número que el ticket de Holded (si Holded lo deja en borrador, coge el número cuando lo aprobáis). Holded sigue siendo la que vale hasta que lo cambiemos.</div>':''}<div class="fx-c"></div>`;
   m.querySelectorAll('.fx-acts button').forEach(b=>b.onclick=()=>{FX.act=b.dataset.a;FX.serie='';try{sessionStorage.setItem('f365_fx_act',FX.act);}catch(e){}pinta();});
   m.querySelectorAll('.fx-tabs button').forEach(b=>b.onclick=()=>{FX.tab=b.dataset.t;pinta();});
-  m.querySelector('.fx-nueva').onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
-  const c=m.querySelector('.fx-c');({lista:fxLista,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();})})[FX.tab](c);};
+  const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxNueva(()=>pinta(),{modo:'pres'});}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxCliente(null,()=>pinta());}else bn.onclick=()=>fxNueva(()=>{FX.tab='lista';pinta();});
+  const c=m.querySelector('.fx-c');({lista:fxLista,pres:fxPres,cli:fxClientes,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();})})[FX.tab](c);};
  pinta();}
 async function fxLista(c){
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
@@ -16752,23 +16756,33 @@ function fxSerie(s,I,listo){const nueva=!s;s=s||{nombre:'',prefijo:'',tipo:'comp
   const x={id:s.id,actividad:s.actividad||FX.act,nombre:$m('[data-k="nombre"]').value,prefijo:$m('[data-k="prefijo"]').value,tipo:$m('[data-k="tipo"]').value,diseno:dis,color:col,auto:$m('[data-k="auto"]').checked,activa:$m('[data-k="activa"]')?$m('[data-k="activa"]').checked:true,formato:$m('[data-k="formato"]').value,anual:$m('[data-k="anual"]').checked,siguiente:$m('[data-k="siguiente"]').value};
   const r=await agPost('fac-serie',{serie:x}).catch(()=>({}));b.disabled=false;if(!r.ok){toast(r.error||'No se ha podido guardar',false);return;}FX.ini=null;mm.remove();toast('Serie guardada',true);listo&&listo();};}
 // ── Nueva factura a mano: serie, cliente, líneas con su IVA ──
-async function fxNueva(listo){let I;try{I=await fxInicio();}catch(e){toast(e.message,false);return;}
- const S=fxSeries(I).filter(s=>s.activa&&s.tipo!=='rectificativa');if(!S.length){toast('No hay ninguna serie activa',false);return;}
+async function fxNueva(listo,op){op=op||{};const PRES=op.modo==='pres',DAT=op.datos||{};let I;try{I=await fxInicio();}catch(e){toast(e.message,false);return;}
+ const S=fxSeries(I).filter(s=>s.activa&&s.tipo!=='rectificativa');if(!PRES&&!S.length){toast('No hay ninguna serie activa',false);return;}
  const ACT=(I.config.actividades||[]).find(a=>a.id===FX.act)||{id:'principal'};const IVA0=ACT.iva||I.config.iva.def;
  const ivaOpts=v=>I.ivas.map(t=>t?`<option value="${t}"${v.tipo===t?' selected':''}>${t} %</option>`:`<option value="0:E1"${!v.tipo&&v.exencion!=='NS'&&v.exencion!=='E6'?' selected':''}>Exenta (sanitaria)</option><option value="0:E6"${!v.tipo&&v.exencion==='E6'?' selected':''}>Exenta (otra)</option><option value="0:NS"${!v.tipo&&v.exencion==='NS'?' selected':''}>No sujeta</option>`).join('');
  const ivaDe=k=>(FX.act==='principal'&&I.config.iva.conceptos[k])||IVA0;
- const mm=hzModal(`<div class="hz-top"><div><small>${escH(fxActNom(ACT))}</small><b>Nueva factura</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <div class="fx-g2"><label class="fx-lab"><span>Serie</span><select class="fx-in" data-k="serie">${S.map(s=>`<option value="${s.id}"${s.tipo==='completa'?' selected':''}>${escH(s.nombre)}</option>`).join('')}</select></label>
-  <label class="fx-lab"><span>Fecha</span><input class="fx-in" type="date" data-k="fecha" value="${fxHoy()}" max="${fxHoy()}"></label></div>
+ const val30=(()=>{const d=new Date();d.setDate(d.getDate()+30);return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(d);})();
+ const mm=hzModal(`<div class="hz-top"><div><small>${escH(fxActNom(ACT))}</small><b>${PRES?(op.editId?'Cambiar presupuesto':'Nuevo presupuesto'):op.presId?'Factura del presupuesto':'Nueva factura'}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="fx-g2">${PRES?`<label class="fx-lab"><span>Fecha</span><input class="fx-in" type="date" data-k="fecha" value="${DAT.fecha||fxHoy()}"></label><label class="fx-lab"><span>Válido hasta</span><input class="fx-in" type="date" data-k="validez" value="${DAT.validez||val30}"></label>`
+   :`<label class="fx-lab"><span>Serie</span><select class="fx-in" data-k="serie">${S.map(s=>`<option value="${s.id}"${s.tipo==='completa'?' selected':''}>${escH(s.nombre)}</option>`).join('')}</select></label>
+  <label class="fx-lab"><span>Fecha</span><input class="fx-in" type="date" data-k="fecha" value="${fxHoy()}" max="${fxHoy()}"></label>`}</div>
   <div class="fx-sub">Para quién</div><div class="fx-g2">
-  ${[['nombre','Nombre o razón social','w2'],['nif','NIF / DNI',''],['email','Email (opcional)',''],['direccion','Dirección','w2'],['cp','Código postal',''],['ciudad','Ciudad','']].map(([k,t,w])=>`<label class="fx-lab ${w}"><span>${t}</span><input class="fx-in" data-c="${k}"></label>`).join('')}</div>
+  ${[['nombre','Nombre o razón social','w2'],['nif','NIF / DNI',''],['email','Email (opcional)',''],['direccion','Dirección','w2'],['cp','Código postal',''],['ciudad','Ciudad','']].map(([k,t,w])=>`<label class="fx-lab ${w}${k==='nombre'?' fx-clw':''}"><span>${t}</span><input class="fx-in" data-c="${k}" autocomplete="off"${k==='nombre'?' placeholder="Escribe para buscar un cliente guardado"':''}>${k==='nombre'?'<div class="fx-clsug" hidden></div>':''}</label>`).join('')}</div>
   <div class="fx-sub">Líneas</div><div class="fx-li fx-lh"><span>Concepto</span><span>Uds.</span><span>Precio</span><span>Dto. %</span><span>IVA</span><span></span></div><div class="fx-lins"></div><button type="button" class="fx-btn sec fx-masl">＋ Añadir línea</button>
-  <label class="fx-lab" style="margin-top:12px"><span>Notas (salen en la factura)</span><textarea class="fx-in" data-k="nota" rows="2" placeholder="Ej.: Trabajo del 12/11 · presupuesto aceptado"></textarea></label>
-  <div class="fx-sub">Pago</div><div class="fx-chips fx-pagos">${['Pendiente de pago','Tarjeta','Efectivo','Bizum','Transferencia'].map((t,i)=>`<button type="button" data-p="${i?t:''}" class="${i?'':'on'}">${i?'Pagada · '+t:t}</button>`).join('')}</div>
+  <label class="fx-lab" style="margin-top:12px"><span>Notas (salen en ${PRES?'el presupuesto':'la factura'})</span><textarea class="fx-in" data-k="nota" rows="2" placeholder="${PRES?'Ej.: Incluye material y mano de obra':'Ej.: Trabajo del 12/11 · presupuesto aceptado'}">${escH(DAT.nota||'')}</textarea></label>
+  ${PRES?'':`<div class="fx-sub">Pago</div>`}${PRES?'':`<div class="fx-chips fx-pagos">${['Pendiente de pago','Tarjeta','Efectivo','Bizum','Transferencia'].map((t,i)=>`<button type="button" data-p="${i?t:''}" class="${i?'':'on'}">${i?'Pagada · '+t:t}</button>`).join('')}</div>`}
   <div class="fx-totm"></div>
   <datalist id="fxConc">${I.conceptos.map(x=>`<option value="${escH(x)}">`).join('')}</datalist>
-  <div class="hz-bts"><button type="button" class="hz-re">Cancelar</button><button type="button" class="hz-ok">Emitir factura</button></div>`);
+  <div class="hz-bts"><button type="button" class="hz-re">Cancelar</button><button type="button" class="hz-ok">${PRES?'Guardar presupuesto':'Emitir factura'}</button></div>`);
  mm.querySelector('.hz-card').classList.add('fx-mod');const $m=q=>mm.querySelector(q),lins=$m('.fx-lins');
+ // Cliente: rellenar con lo que venga y buscar entre los guardados mientras se escribe
+ const ponCli=c=>mm.querySelectorAll('[data-c]').forEach(i=>{if(c[i.dataset.c]!=null)i.value=c[i.dataset.c]||'';});
+ if(DAT.cliente)ponCli(DAT.cliente);
+ {const inp=$m('[data-c="nombre"]'),box=$m('.fx-clsug');let t,ult=[];
+  const cierra=()=>{box.hidden=true;};inp.addEventListener('blur',()=>setTimeout(cierra,200));
+  inp.addEventListener('input',()=>{clearTimeout(t);const v=inp.value.trim();if(v.length<2){cierra();return;}t=setTimeout(async()=>{const r=await (await fetch(`/api/schedule?action=fac-clientes&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}&q=${encodeURIComponent(v)}`)).json().catch(()=>({}));ult=r.clientes||[];
+   if(!ult.length||document.activeElement!==inp){cierra();return;}box.innerHTML=ult.map((c,i)=>`<button type="button" data-i="${i}"><b>${escH(capTit(c.nombre))}</b><small>${escH([c.nif,c.ciudad].filter(Boolean).join(' · '))}</small></button>`).join('');box.hidden=false;
+   box.querySelectorAll('button').forEach(b=>b.onmousedown=e=>{e.preventDefault();ponCli(ult[+b.dataset.i]);cierra();});},250);});}
  const leerIva=v=>String(v).startsWith('0:')?{tipo:0,exencion:String(v).slice(2)}:{tipo:+v};
  const linea=()=>{const d=ce('div','fx-li');d.innerHTML=`<input class="fx-in fx-lc" list="fxConc" placeholder="Concepto"><input class="fx-in fx-lu" inputmode="decimal" value="1" aria-label="Unidades"><input class="fx-in fx-lp" inputmode="decimal" placeholder="Precio" aria-label="Precio"><input class="fx-in fx-ld" inputmode="decimal" placeholder="Dto %" aria-label="Descuento"><select class="fx-in fx-lv" aria-label="IVA">${ivaOpts(IVA0)}</select><button type="button" class="fx-lx" aria-label="Quitar línea">✕</button>`;
   lins.appendChild(d);d.querySelector('.fx-lc').onchange=e=>{const v=ivaDe(e.target.value.trim()),s=d.querySelector('.fx-lv');s.value=v.tipo?String(v.tipo):'0:'+(v.exencion||'E1');tot();};
@@ -16777,16 +16791,59 @@ async function fxNueva(listo){let I;try{I=await fxInicio();}catch(e){toast(e.mes
  const datos=()=>[...lins.children].map(d=>({concepto:d.querySelector('.fx-lc').value.trim(),uds:num(d.querySelector('.fx-lu').value),precio:num(d.querySelector('.fx-lp').value),dto:num(d.querySelector('.fx-ld').value),iva:leerIva(d.querySelector('.fx-lv').value)})).filter(l=>l.concepto&&l.uds);
  const tot=()=>{const L=datos(),G={};let base=0;L.forEach(l=>{const b=Math.round(l.uds*l.precio*(1-l.dto/100)*100)/100;base+=b;const k=l.iva.tipo;G[k]=(G[k]||0)+b;});const cuota=Object.entries(G).reduce((t,[k,b])=>t+Math.round(b*k)/100,0);
   $m('.fx-totm').innerHTML=`<span>Base ${fxEur(base)}</span>${cuota?`<span>IVA ${fxEur(cuota)}</span>`:''}<b>Total ${fxEur(base+cuota)}</b>`;};
- linea();tot();$m('.fx-masl').onclick=()=>{linea();lins.lastChild.querySelector('.fx-lc').focus();};
- let pagoN='';mm.querySelectorAll('.fx-pagos button').forEach(b=>b.onclick=()=>{pagoN=b.dataset.p;mm.querySelectorAll('.fx-pagos button').forEach(x=>x.classList.toggle('on',x===b));});
+ if(DAT.lineas&&DAT.lineas.length){DAT.lineas.forEach(l=>{linea();const d=lins.lastChild;d.querySelector('.fx-lc').value=l.concepto||'';d.querySelector('.fx-lu').value=l.uds;d.querySelector('.fx-lp').value=l.precio;d.querySelector('.fx-ld').value=l.dto||'';d.querySelector('.fx-lv').value=l.iva&&l.iva.tipo?String(l.iva.tipo):'0:'+((l.iva||{}).exencion||'E1');});}else linea();
+ tot();$m('.fx-masl').onclick=()=>{linea();lins.lastChild.querySelector('.fx-lc').focus();};
+ let pagoN='';if(!PRES)mm.querySelectorAll('.fx-pagos button').forEach(b=>b.onclick=()=>{pagoN=b.dataset.p;mm.querySelectorAll('.fx-pagos button').forEach(x=>x.classList.toggle('on',x===b));});
  $m('.hz-x').onclick=$m('.hz-re').onclick=()=>mm.remove();
  $m('.hz-ok').onclick=async e=>{const b=e.currentTarget,L=datos();if(!L.length){toast('Pon al menos una línea con concepto',false);return;}
   const cli={};mm.querySelectorAll('[data-c]').forEach(i=>cli[i.dataset.c]=i.value.trim());
+  if(PRES){if(!cli.nombre){toast('Pon a quién va el presupuesto',false);return;}b.disabled=true;
+   const r=await agPost('fac-pres-guardar',{id:op.editId||'',actividad:FX.act,fecha:$m('[data-k="fecha"]').value,validez:$m('[data-k="validez"]').value,cliente:cli,lineas:L,nota:$m('[data-k="nota"]').value,quien:miNombreCorto()}).catch(()=>({}));b.disabled=false;
+   if(!r.ok){toast(r.error||'No se ha podido guardar',false);return;}mm.remove();toast(op.editId?'Presupuesto guardado':'Presupuesto '+r.codigo+' hecho',true);if(!op.editId)window.open(`/api/schedule?action=fac-pres-ver&id=${r.id}&k=${encodeURIComponent(r.k)}&pdf=1`,'_blank','noopener');listo&&listo();return;}
   const s=S.find(x=>x.id===$m('[data-k="serie"]').value);
   if(s.tipo==='completa'&&(!cli.nombre||!cli.nif||!cli.direccion)){toast('La factura completa necesita nombre, NIF y dirección',false);return;}
   if(!await pregunta(`¿Emitir la factura en «${s.nombre}»? Una vez emitida no se puede cambiar (se corrige con una rectificativa).`,{si:'Emitir',no:'Revisar'}))return;
-  b.disabled=true;const r=await agPost('fac-crear',{serie:s.id,fecha:$m('[data-k="fecha"]').value,cliente:cli,lineas:L,nota:$m('[data-k="nota"]').value,quien:miNombreCorto(),pagos:pagoN?{estado:'pagada',modo:pagoN}:{estado:'pendiente'}}).catch(()=>({}));b.disabled=false;
+  b.disabled=true;const r=await agPost('fac-crear',{serie:s.id,fecha:$m('[data-k="fecha"]').value,cliente:cli,lineas:L,nota:$m('[data-k="nota"]').value,quien:miNombreCorto(),presupuesto:op.presId||'',pagos:pagoN?{estado:'pagada',modo:pagoN}:{estado:'pendiente'}}).catch(()=>({}));b.disabled=false;
   if(!r.ok){toast(r.error||'No se ha podido emitir',false);return;}mm.remove();toast('Factura '+r.codigo+' emitida',true);window.open(fxUrl(r.id,r.k),'_blank','noopener');listo&&listo();};}
+// ── Presupuestos ──
+const FX_EST={pendiente:['Pendiente','pend'],aceptado:['Aceptado','ok'],rechazado:['Rechazado','no'],facturado:['Facturado','fac']};
+const fxPresUrl=(id,k)=>`/api/schedule?action=fac-pres-ver&id=${id}&k=${encodeURIComponent(k)}&pdf=1`;
+async function fxPres(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
+ const r=await (await fetch(`/api/schedule?action=fac-pres-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}${FX.pest?'&estado='+FX.pest:''}`)).json().catch(()=>({}));
+ if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
+ const L=r.presupuestos,hoy=fxHoy();
+ c.innerHTML=`<div class="fx-fil"><div class="fx-chips">${[['','Todos'],['pendiente','Pendientes'],['aceptado','Aceptados'],['rechazado','Rechazados'],['facturado','Facturados']].map(([k,t])=>`<button type="button" data-e="${k}" class="${(FX.pest||'')===k?'on':''}">${t}</button>`).join('')}</div></div>
+  <div class="card fx-l">${L.length?L.map(x=>{const cad=x.estado==='pendiente'&&x.validez&&x.validez<hoy;return `<button type="button" class="fx-f" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}</small></span><span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small><em class="fx-est ${cad?'no':FX_EST[x.estado][1]}">${cad?'Caducado':FX_EST[x.estado][0]}</em></small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`;}).join(''):'<div class="fac-vacio">No hay presupuestos'+(FX.pest?' así':'')+'. Con «＋ Nuevo presupuesto» haces el primero.</div>'}</div>`;
+ c.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{FX.pest=b.dataset.e;fxPres(c);});
+ c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxPresDet(b.dataset.id,()=>fxPres(c)));}
+async function fxPresDet(id,listo){const r=await (await fetch(`/api/schedule?action=fac-pres-uno&id=${id}&pwd=${encodeURIComponent(apiPwd)}`)).json().catch(()=>({}));if(!r.ok){toast(r.error||'No se ha podido abrir',false);return;}
+ const P=r.presupuesto,Cl=P.cliente||{},fac=P.estado==='facturado',ff=f=>f?`${+f.slice(8)}/${+f.slice(5,7)}/${f.slice(0,4)}`:'—';
+ const mm=hzModal(`<div class="hz-top"><div><small>Presupuesto</small><b>${escH(P.codigo)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="fx-det"><div><small>Para</small><b>${escH(capTit(Cl.nombre||'—'))}</b>${Cl.nif?`<span>${escH(Cl.nif)}</span>`:''}</div><div><small>Válido hasta</small><b>${ff(P.validez)}</b></div><div><small>Total</small><b>${fxEur(P.total)}</b></div></div>
+  ${fac?`<div class="fx-pagst ok">Facturado${P.factura_codigo?' · '+escH(P.factura_codigo):''}</div>`:`<div class="fx-sub">Estado</div><div class="fx-chips fx-pest">${['pendiente','aceptado','rechazado'].map(k=>`<button type="button" data-e="${k}" class="${P.estado===k?'on':''}">${FX_EST[k][0]}</button>`).join('')}</div>`}
+  <div class="hz-bts"><a class="hz-re fx-ver" href="${fxPresUrl(P.id,P.k)}" target="_blank" rel="noopener">Ver o descargar</a>${fac?'':'<button type="button" class="hz-re fx-ped">Cambiar</button><button type="button" class="hz-ok fx-pfac">Hacer la factura</button>'}</div>`);
+ mm.querySelector('.hz-x').onclick=()=>mm.remove();
+ mm.querySelectorAll('.fx-pest [data-e]').forEach(b=>b.onclick=async()=>{const r2=await agPost('fac-pres-estado',{id:P.id,estado:b.dataset.e}).catch(()=>({}));if(!r2.ok){toast('No se ha podido',false);return;}mm.querySelectorAll('.fx-pest button').forEach(x=>x.classList.toggle('on',x===b));toast('Marcado como '+FX_EST[b.dataset.e][0].toLowerCase(),true);listo&&listo();});
+ const ed=mm.querySelector('.fx-ped');if(ed)ed.onclick=()=>{mm.remove();fxNueva(listo,{modo:'pres',editId:P.id,datos:P});};
+ const fa=mm.querySelector('.fx-pfac');if(fa)fa.onclick=()=>{mm.remove();fxNueva(listo,{presId:P.id,datos:{cliente:Cl,lineas:P.lineas,nota:P.nota?P.nota+'\nPresupuesto '+P.codigo:'Presupuesto '+P.codigo}});};}
+// ── Clientes guardados ──
+async function fxClientes(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
+ const r=await (await fetch(`/api/schedule?action=fac-clientes&todos=1&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}`)).json().catch(()=>({}));
+ if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
+ const L=r.clientes;
+ c.innerHTML=`<div class="fx-fil"><input class="fx-in fx-bus" type="search" placeholder="Buscar cliente"></div><p class="fx-p">Se guardan solos al hacer una factura o un presupuesto a mano. Al escribir el nombre en una factura nueva, se rellenan sus datos.</p>
+  <div class="card fx-l">${L.length?L.map(x=>`<button type="button" class="fx-f" data-id="${x.id}" data-b="${escH((x.nombre+' '+(x.nif||'')).toLowerCase())}"><span class="fx-cli"><b>${escH(capTit(x.nombre))}</b><small>${escH([x.nif,x.direccion,x.ciudad].filter(Boolean).join(' · '))}</small></span><span class="fx-tot"><small>${escH(x.tel||x.email||'')}</small></span></button>`).join(''):'<div class="fac-vacio">Aún no hay clientes guardados.</div>'}</div>`;
+ const bi=c.querySelector('.fx-bus');bi.oninput=()=>{const v=bi.value.trim().toLowerCase();c.querySelectorAll('.fx-f[data-b]').forEach(b=>{b.hidden=!!v&&!b.dataset.b.includes(v);});};
+ c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxCliente(L.find(x=>x.id===b.dataset.id),()=>fxClientes(c)));}
+function fxCliente(x,listo){const nuevo=!x;x=x||{};
+ const mm=hzModal(`<div class="hz-top"><div><small>Cliente</small><b>${nuevo?'Nuevo cliente':escH(capTit(x.nombre))}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="fx-g2">${[['nombre','Nombre o razón social','w2'],['nif','NIF / DNI',''],['tel','Teléfono',''],['email','Email','w2'],['direccion','Dirección','w2'],['cp','Código postal',''],['ciudad','Ciudad','']].map(([k,t,w])=>`<label class="fx-lab ${w}"><span>${t}</span><input class="fx-in" data-c="${k}" value="${escH(x[k]||'')}"></label>`).join('')}</div>
+  <div class="hz-bts">${nuevo?'<button type="button" class="hz-re">Cancelar</button>':'<button type="button" class="hz-re fx-cdel">Borrar</button>'}<button type="button" class="hz-ok">Guardar</button></div>`);
+ mm.querySelector('.hz-card').classList.add('fx-mod');mm.querySelector('.hz-x').onclick=()=>mm.remove();{const cc=mm.querySelector('.hz-re:not(.fx-cdel)');if(cc)cc.onclick=()=>mm.remove();}
+ const del=mm.querySelector('.fx-cdel');if(del)del.onclick=async()=>{if(!await pregunta(`¿Borrar a ${capTit(x.nombre)} de los clientes guardados? Sus facturas no cambian.`,{si:'Borrar',no:'Cancelar'}))return;const r=await agPost('fac-cliente',{id:x.id,borrar:1}).catch(()=>({}));if(!r.ok){toast('No se ha podido',false);return;}mm.remove();toast('Borrado',true);listo&&listo();};
+ mm.querySelector('.hz-ok').onclick=async()=>{const c={};mm.querySelectorAll('[data-c]').forEach(i=>c[i.dataset.c]=i.value.trim());if(!c.nombre){toast('Pon el nombre',false);return;}
+  if(!nuevo&&x.nif&&c.nif!==x.nif)await agPost('fac-cliente',{id:x.id,borrar:1}).catch(()=>{});
+  const r=await agPost('fac-cliente',{actividad:FX.act,cliente:c}).catch(()=>({}));if(!r.ok){toast(r.error||'No se ha podido guardar',false);return;}mm.remove();toast('Cliente guardado',true);listo&&listo();};}
 // ── Últimos cambios (dirección): qué se ha tocado en las últimas 48 h, con «Deshacer» ──
 let CAMB_TODO=false;
 function renderCambios(wrap){
