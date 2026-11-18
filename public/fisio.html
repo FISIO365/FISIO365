@@ -2150,13 +2150,21 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .enc-tabs{margin:0 0 12px}@media(max-width:520px){.enc-tabs{gap:3px;padding:4px}.enc-tabs button{flex-direction:column;gap:4px;padding:9px 2px;font-size:11.5px;min-width:0}}
 .ej-tabs svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ej-tabs i{font-style:normal;font-size:11px;font-weight:700;background:#c2552e;color:#fff;border-radius:99px;padding:1px 7px}.ej-tabs button.on i{background:#fff;color:#c2552e}.ej-tabs i:empty{display:none}
-.ejp-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.ejp-top p{flex:1;min-width:220px;margin:0;font-size:13px;color:#7d6a60}
-.ejp-h{font-size:12.5px;font-weight:600;color:#8a7d74;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em}
-.ejp-c{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #efe6de;border-radius:14px;padding:12px 14px;margin-bottom:8px}.ejp-c.grabando{border-color:#f1d9cc;background:#fdf6f2}.ejp-c.grabado,.ejp-c.nohace{opacity:.75}
-.ejp-tx{flex:1;min-width:0}.ejp-tx b{font-size:14.5px;color:#2b2420}.ejp-z{margin-left:8px;font-size:11.5px;background:#f6f1eb;color:#7d6a60;border-radius:99px;padding:2px 8px}.ejp-sv{margin-left:8px;font-size:11.5px;font-weight:600;background:#fbe9e2;color:#c2552e;border-radius:99px;padding:2px 8px}.ejp-tx p{margin:4px 0 0;font-size:13px;color:#5c4f47}.ejp-tx small{display:block;margin-top:4px;font-size:12px;color:#a3968c}
-.ejp-b{display:flex;gap:6px;align-items:center;flex:none}.ejp-b button{border:none;border-radius:10px;padding:8px 12px;font:600 12.5px var(--font);cursor:pointer}.ejp-yo,.ejp-ok{background:#c2552e;color:#fff}.ejp-sol{background:#f6f1eb;color:#7d6a60}.ejp-del{background:none;color:#a3968c;padding:6px 8px!important}.ejp-del.arm{background:#fde8e8;color:#b42318}
-.ejp-hechos{margin-top:16px}.ejp-hechos summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#8a7d74;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
-@media(max-width:600px){.ejp-c{flex-wrap:wrap}.ejp-b{width:100%;justify-content:flex-end}}
+.ejp-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 10px}.ejp-hd .ejp-h{margin:0}
+.ejp-nuevo{border:1px solid #c2552e;background:#fff;color:#c2552e;border-radius:99px;padding:7px 14px;font:600 13px var(--font);cursor:pointer;flex:none}.ejp-nuevo:hover{background:#fdf6f2}
+.ejp-h{font-size:12.5px;font-weight:600;color:#8a7d74;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.ejp-c{background:#fff;border:1px solid #efe6de;border-radius:14px;padding:13px 14px 12px 16px;margin-bottom:8px;transition:border-color .2s}.ejp-c.grabando{border-color:#ecc9b8;box-shadow:inset 3px 0 0 #c2552e}.ejp-c.grabado,.ejp-c.nohace{opacity:.75}
+.ejp-r1{display:flex;gap:8px;align-items:flex-start}.ejp-tx{flex:1;min-width:0}.ejp-tx b{display:block;font-size:15px;font-weight:600;color:#2b2420;line-height:1.35}
+.ejp-m{display:block;margin-top:2px;font-size:12.5px;color:#8a7d74}.ejp-tx p{margin:6px 0 0;font-size:13px;color:#5c4f47}
+.ejp-mn{flex:none;width:32px;height:32px;margin:-4px -6px 0 0;border:none;background:none;border-radius:10px;color:#8a7d74;cursor:pointer;display:flex;align-items:center;justify-content:center}.ejp-mn:hover{background:#f6f1eb}.ejp-mn svg{width:20px;height:20px;fill:currentColor}
+.ejp-r2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}.ejp-r2 small{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;color:#a3968c}
+.ejp-c.grabando .ejp-r2 small{color:#c2552e;font-weight:500}.ejp-r2 small i{width:7px;height:7px;border-radius:50%;background:#c2552e;flex:none;animation:ejpPul 1.6s ease-in-out infinite}@keyframes ejpPul{50%{opacity:.35}}
+.ejp-bt{flex:none;border:1px solid #c2552e;background:#c2552e;color:#fff;border-radius:99px;padding:7px 15px;font:600 13px var(--font);cursor:pointer;transition:background .2s}.ejp-bt.sec{background:#fff;color:#c2552e}.ejp-bt.sec:hover{background:#fdf6f2}.ejp-bt:disabled{opacity:.6}
+.ejp-hechos{margin-top:18px}.ejp-hechos summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#8a7d74;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.ejp-ya:empty{display:none}.ejp-ya{margin-top:8px;display:flex;flex-direction:column;gap:6px}.ejp-yai{font-size:12.5px;color:#7d6a60;background:#fbf4ef;border:1px solid #f1ddd2;border-radius:10px;padding:7px 10px}.ejp-yai b{color:#c2552e;font-weight:600}.ejp-yai span{color:#a3968c}
+.ejb-ex{margin:0 0 10px;font-size:13px;color:#7d6a60}.ejb-l{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto}.ejb-h{font-size:11.5px;font-weight:600;color:#a3968c;text-transform:uppercase;letter-spacing:.04em;margin:2px 0}
+.ejb-it{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid #efe6de;background:#fff;border-radius:12px;padding:8px 10px;cursor:pointer;font:inherit}.ejb-it:hover{border-color:#e3c9bb;background:#fdf9f6}
+.ejb-th{width:44px;height:32px;border-radius:8px;background:#f6f1eb center/cover;flex:none}.ejb-it b{display:block;font-size:13.5px;font-weight:600;color:#2b2420}.ejb-it small{font-size:12px;color:#a3968c}
 .tj-wa{background:#efe7dd;border-radius:14px;padding:14px}.tj-bub{background:#d9fdd3;border-radius:12px;padding:5px;max-width:330px;margin-left:auto;box-shadow:0 1px 1px rgba(0,0,0,.08)}
 .tj-og{background:#fff;border-radius:9px 9px 0 0;aspect-ratio:1.6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}.tj-og svg{width:54px;height:54px;fill:none;stroke:#c2552e;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}.tj-og b{font-size:17px;color:#c2552e;font-weight:700}.tj-og span{font-size:13px;font-weight:700;color:#2b2420}.tj-og small{font-size:11px;color:#8a7d74}
 .tj-ogt{background:#f0f2f5;border-radius:0 0 9px 9px;padding:8px 10px;margin-bottom:6px}.tj-ogt b{display:block;font-size:13px;color:#111}.tj-ogt small{display:block;font-size:11.5px;color:#555;line-height:1.35}.tj-ogt i{display:block;font-style:normal;font-size:11px;color:#777;margin-top:2px}
@@ -9784,7 +9792,7 @@ async function ejApi(body){const r=await fetch('/api/ejercicios',{method:'POST',
 // Pestañas de Ejercicios: la biblioteca y los pendientes de grabar (se recuerda la última)
 let EJ_TAB=(()=>{try{return sessionStorage.getItem('f365_ej_tab')||'bib';}catch(e){return 'bib';}})(),EJP=null;
 async function renderEjercicios(wrap){
- const tabs=ce('div','ej-tabs');tabs.innerHTML=`<button type="button" data-t="bib"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 5 2.5-5 2.5z"/></svg>Biblioteca</button><button type="button" data-t="pend"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m16 10.5 5-3v9l-5-3"/></svg>Pendientes de grabar<i class="ej-pn"></i></button>`;wrap.appendChild(tabs);
+ const tabs=ce('div','ej-tabs');tabs.innerHTML=`<button type="button" data-t="bib"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 5 2.5-5 2.5z"/></svg>Biblioteca</button><button type="button" data-t="pend"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m16 10.5 5-3v9l-5-3"/></svg>Por grabar<i class="ej-pn"></i></button>`;wrap.appendChild(tabs);
  const marca=()=>tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===EJ_TAB));marca();
  const cont=ce('div','');wrap.appendChild(cont);
  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(EJ_TAB===b.dataset.t)return;EJ_TAB=b.dataset.t;try{sessionStorage.setItem('f365_ej_tab',EJ_TAB);}catch(e){}marca();cont.innerHTML='';EJ_TAB==='pend'?renderEjPend(cont,tabs):renderEjBib(cont);});
@@ -9798,45 +9806,84 @@ function ejpSinVideo(L){const ya=new Set((L||[]).filter(x=>x.estado!=='GRABADO')
  return ejSinVideo().filter(e=>!ya.has(ejKey(e.nombre))&&!EJP_NV[e.id]).map(e=>({id:'bib-'+e.id,bib:e,nombre:e.nombre,zona:e.zona||'',notas:'',estado:'PENDIENTE',sinVideo:1,creado:''}));}
 async function ejpCuenta(tabs){try{const L=EJP||await ejpCarga();if(!biblio.length)await loadBiblio();const n=L.filter(x=>x.estado!=='GRABADO').length+ejpSinVideo(L).length;const i=tabs.querySelector('.ej-pn');if(i)i.textContent=n||'';}catch(e){}}
 const ejpBib=x=>!x.sinVideo&&x.estado!=='GRABADO'&&biblio.find(e=>!ejYt(e.youtubeUrl)&&ejKey(e.nombre)===ejKey(x.nombre));
+// Parecido entre dos nombres de ejercicio (0-1): para avisar de repetidos y enlazar los de Por grabar con la biblioteca
+const ejTok=n=>ejKey(n).split(' ').filter(w=>w.length>2&&!['con','del','las','los','por','para','una','sin'].includes(w));
+function ejParec(a,b){const ka=ejKey(a),kb=ejKey(b);if(!ka||!kb)return 0;if(ka===kb)return 1;if(ka.length>5&&kb.length>5&&(ka.includes(kb)||kb.includes(ka)))return .9;
+ const A=new Set(ejTok(a)),B=ejTok(b);if(!A.size||!B.length)return 0;const c=B.filter(w=>A.has(w)).length;return c<2&&Math.min(A.size,B.length)>1?0:c/Math.min(A.size,B.length);}
+const ejParecidos=(nombre,L,min=.6)=>L.map(e=>({e,p:ejParec(nombre,e.nombre)})).filter(r=>r.p>=min).sort((a,b)=>b.p-a.p).map(r=>r.e);
+// Elegir de la biblioteca el ejercicio que ya es (salen primero los que se parecen)
+function ejElegirBib(nombre,onPick){
+ const m=hzModal(`<div class="hz-top"><div><small>Ya está en la biblioteca</small><b>${escH(nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="ejb-ex">Elige el ejercicio de la biblioteca que es. Se quita de Por grabar y le llega una comunicación a quien lo propuso.</p>
+  <input type="search" class="ag-in ejb-q" placeholder="Buscar en la biblioteca…"><div class="ejb-l"></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const q=m.querySelector('.ejb-q'),l=m.querySelector('.ejb-l'),pr=ejParecidos(nombre,biblio,.5);
+ const pinta=()=>{const t=sinTildes(q.value.trim());const L=t?biblio.filter(e=>sinTildes(e.nombre).includes(t)).slice(0,30):pr.slice(0,8);
+  l.innerHTML=L.length?(!t&&pr.length?'<div class="ejb-h">Se parecen</div>':'')+L.map((e,i)=>`<button type="button" class="ejb-it" data-i="${i}"><span class="ejb-th" ${peMini(e)?`style="background-image:url('${escH(peMini(e))}')"`:''}></span><span><b>${escH(e.nombre)}</b><small>${escH(e.zona||'Sin zona')}${ejYt(e.youtubeUrl)?'':' · sin vídeo'}</small></span></button>`).join(''):`<p class="ej-n">${t?'No hay ninguno con ese nombre.':'Busca el ejercicio por su nombre.'}</p>`;
+  l.querySelectorAll('.ejb-it').forEach(b=>b.onclick=()=>{m.remove();onPick(L[+b.dataset.i]);});};
+ let tt;q.oninput=()=>{clearTimeout(tt);tt=setTimeout(pinta,120);};pinta();if(!pr.length)setTimeout(()=>q.focus(),60);}
+// Al añadir un ejercicio a la biblioteca: si es uno de Por grabar, se quita de ahí (y se avisa a quien lo propuso)
+async function ejQuitarDePend(nombre){try{const L=(EJP||await ejpCarga()).filter(x=>x.estado!=='GRABADO');const c=ejParecidos(nombre,L,.6)[0];if(!c)return;
+ if(!await pregunta(`¿Es «${c.nombre.trim()}», el de Por grabar?${c.quien?' Lo quito de la lista y le aviso a '+capTit(String(c.quien).split(' ')[0])+'.':' Lo quito de la lista.'}`,{si:'Sí, quitarlo',no:'No'}))return;
+ const r=await agPost('seg-agenda-ejpend',{op:'enbib',id:c.id,ejNombre:nombre,quien:String((fisioActual&&fisioActual.nombre)||'').trim()});if(!r.ok)throw 0;
+ c.estado='GRABADO';toast('Quitado de Por grabar',true);ejpCarga().catch(()=>{});}catch(_){toast('No se ha podido quitar de Por grabar',false);}}
 function renderEjPend(cont,tabs){
  const yo=String((fisioActual&&fisioActual.nombre)||'').trim(),yo1=yo.split(' ')[0];
- cont.innerHTML='<div class="ejp"><div class="ejp-top"><p>Propón ejercicios que haga falta grabar. Si alguien tiene un rato libre, coge uno y lo graba.</p><button type="button" class="seg-add ejp-nuevo">+ Proponer ejercicio</button></div><div class="ejp-l"><p class="ej-n">Cargando…</p></div></div>';
+ cont.innerHTML='<div class="ejp"><div class="ejp-l"><p class="ej-n">Cargando…</p></div></div>';
  const box=cont.querySelector('.ejp-l');
  const fF=x=>{const d=new Date(x);return d.getDate()+'/'+(d.getMonth()+1);},nom1=n=>capTit(String(n||'').split(' ')[0]);
+ const IC_DOTS='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>';
  const pinta=()=>{const L=EJP||[];tabs&&ejpCuenta(tabs);
   const sv=ejpSinVideo(L),pend=L.filter(x=>x.estado==='PENDIENTE').sort((a,b)=>String(b.creado).localeCompare(String(a.creado))).concat(sv),grab=L.filter(x=>x.estado==='GRABANDO'),hechos=L.filter(x=>x.estado==='GRABADO').sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   // Marcados como «no hace falta vídeo» (siguen en la biblioteca sin vídeo): plegados abajo, con opción de deshacer
   const nv=ejSinVideo().filter(e=>EJP_NV[e.id]).map(e=>({id:'nv-'+e.id,bib:e,nombre:e.nombre,zona:e.zona||'',estado:'NOHACE',nv:EJP_NV[e.id]}));
-  const card=x=>x.nv?`<div class="ejp-c nohace" data-id="${x.id}"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${x.zona?`<span class="ejp-z">${escH(x.zona)}</span>`:''}<small>No hace falta vídeo${x.nv.quien?' · lo marcó '+escH(nom1(x.nv.quien)):''}</small></div><div class="ejp-b"><button type="button" class="ejp-sol ejp-nv0">Sí hace falta</button></div></div>`:`<div class="ejp-c ${x.estado.toLowerCase()}" data-id="${x.id}"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${x.zona?`<span class="ejp-z">${escH(x.zona)}</span>`:''}${x.sinVideo||ejpBib(x)?'<span class="ejp-sv">Ya está · falta vídeo</span>':''}${x.notas?`<p>${escH(x.notas)}</p>`:''}<small>${x.sinVideo?'Está en la biblioteca sin vídeo':x.estado==='GRABADO'?'Grabado por '+escH(nom1(x.graba))+' el '+fF(x.fecha):x.estado==='GRABANDO'?'Lo está grabando '+escH(nom1(x.graba)):'Propuesto por '+escH(nom1(x.quien)||'—')+' el '+fF(x.creado)}</small></div>
-   <div class="ejp-b">${x.estado==='PENDIENTE'?'<button type="button" class="ejp-yo">Lo grabo yo</button>'+(x.sinVideo?'<button type="button" class="ejp-sol ejp-nv1">No hace falta vídeo</button>':''):x.estado==='GRABANDO'?'<button type="button" class="ejp-ok">Ya está grabado</button><button type="button" class="ejp-sol">Soltar</button>':''}${x.estado!=='GRABADO'&&!x.sinVideo&&(nom1(x.quien)===capTit(yo1)||esDireccion())?'<button type="button" class="ejp-del" aria-label="Borrar">✕</button>':''}</div></div>`;
-  box.innerHTML=(grab.length?`<div class="ejp-h">Grabándose ahora · ${grab.length}</div>${grab.map(card).join('')}`:'')
-   +`<div class="ejp-h">Pendientes · ${pend.length}</div>${pend.length?pend.map(card).join(''):'<p class="ej-n">No hay ejercicios pendientes. ¡Propón el primero!</p>'}`
-   +(hechos.length?`<details class="ejp-hechos"><summary>Grabados este mes · ${hechos.length}</summary>${hechos.map(card).join('')}</details>`:'')
+  const puedeBorrar=x=>x.estado!=='GRABADO'&&!x.sinVideo&&(nom1(x.quien)===capTit(yo1)||esDireccion());
+  const tieneMenu=x=>!x.nv&&x.estado!=='GRABADO';
+  const card=x=>{const fv=x.sinVideo||ejpBib(x);const meta=[x.zona,fv?'Solo falta el vídeo':''].filter(Boolean).map(escH).join(' · ');
+   const pie=x.nv?'No hace falta vídeo'+(x.nv.quien?' · lo marcó '+escH(nom1(x.nv.quien)):''):x.sinVideo?'Está en la biblioteca':x.estado==='GRABADO'?'Hecho por '+escH(nom1(x.graba))+' · '+fF(x.fecha):x.estado==='GRABANDO'?'Lo graba '+escH(nom1(x.graba)):'Lo pidió '+escH(nom1(x.quien)||'—')+' · '+fF(x.creado);
+   const bt=x.nv?'<button type="button" class="ejp-bt sec ejp-nv0">Sí hace falta</button>':x.estado==='PENDIENTE'?'<button type="button" class="ejp-bt sec ejp-yo">Lo grabo yo</button>':x.estado==='GRABANDO'?'<button type="button" class="ejp-bt ejp-ok">Ya está grabado</button>':'';
+   return `<div class="ejp-c ${x.nv?'nohace':x.estado.toLowerCase()}" data-id="${x.id}"><div class="ejp-r1"><div class="ejp-tx"><b>${escH(x.nombre)}</b>${meta?`<span class="ejp-m">${meta}</span>`:''}${x.notas?`<p>${escH(x.notas)}</p>`:''}</div>${tieneMenu(x)?`<button type="button" class="ejp-mn" aria-label="Más opciones">${IC_DOTS}</button>`:''}</div><div class="ejp-r2"><small>${x.estado==='GRABANDO'?'<i></i>':''}${pie}</small>${bt}</div></div>`;};
+  box.innerHTML=`<div class="ejp-hd"><div class="ejp-h">${grab.length?'Grabándose ahora · '+grab.length:'Pendientes · '+pend.length}</div><button type="button" class="ejp-nuevo">+ Proponer</button></div>`
+   +(grab.length?grab.map(card).join('')+`<div class="ejp-h">Pendientes · ${pend.length}</div>`:'')
+   +(pend.length?pend.map(card).join(''):'<p class="ej-n">No hay ejercicios por grabar. ¡Propón el primero!</p>')
+   +(hechos.length?`<details class="ejp-hechos"><summary>Hechos este mes · ${hechos.length}</summary>${hechos.map(card).join('')}</details>`:'')
    +(nv.length?`<details class="ejp-hechos"><summary>No hace falta vídeo · ${nv.length}</summary>${nv.map(card).join('')}</details>`:'');
+  box.querySelector('.ejp-nuevo').onclick=proponer;
   box.querySelectorAll('.ejp-c').forEach(c=>{const x=L.find(y=>y.id===c.dataset.id)||sv.find(y=>y.id===c.dataset.id)||nv.find(y=>y.id===c.dataset.id);
-   const marcaNV=async(b,v)=>{b.disabled=true;const ant=EJP_NV;EJP_NV={...EJP_NV};if(v)EJP_NV[x.bib.id]={quien:yo};else delete EJP_NV[x.bib.id];pinta();
+   const marcaNV=async v=>{const ant=EJP_NV;EJP_NV={...EJP_NV};if(v)EJP_NV[x.bib.id]={quien:yo};else delete EJP_NV[x.bib.id];pinta();
      try{const r=await agPost('seg-agenda-ejpend',{op:'novideo',ejId:x.bib.id,v,quien:yo});if(!r.ok)throw 0;EJP_NV=r.noVideo||EJP_NV;}catch(_){EJP_NV=ant;pinta();toast('No se ha podido guardar',false);}};
-   if(x.nv){const b=c.querySelector('.ejp-nv0');if(b)b.onclick=()=>marcaNV(b,false);return;}
-   {const b=c.querySelector('.ejp-nv1');if(b)b.onclick=()=>marcaNV(b,true);}
-   // Uno de la biblioteca sin vídeo: «Lo grabo yo» lo apunta en la lista a tu nombre
-   if(x.sinVideo){const b=c.querySelector('.ejp-yo');if(b)b.onclick=async()=>{b.disabled=true;
-     try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre:x.nombre,zona:x.zona,notas:'',quien:yo,estado:'GRABANDO'});if(!r.ok)throw 0;await ejpCarga();pinta();}catch(_){b.disabled=false;toast('No se ha podido guardar',false);}};return;}
-   const est=async(e,ant)=>{const p=x.estado,g=x.graba;x.estado=e;x.graba=e==='PENDIENTE'?'':yo;x.fecha=new Date().toISOString();pinta();
+   const est=async e=>{const p=x.estado,g=x.graba;x.estado=e;x.graba=e==='PENDIENTE'?'':yo;x.fecha=new Date().toISOString();pinta();
     try{const r=await agPost('seg-agenda-ejpend',{op:'estado',id:x.id,estado:e,quien:yo});if(!r.ok)throw 0;}catch(_){x.estado=p;x.graba=g;pinta();toast('No se ha podido guardar',false);}};
-   const b1=c.querySelector('.ejp-yo');if(b1)b1.onclick=()=>est('GRABANDO');
-   const b2=c.querySelector('.ejp-sol');if(b2)b2.onclick=()=>est('PENDIENTE');
-   const b3=c.querySelector('.ejp-ok');if(b3)b3.onclick=()=>{if(!biblio.length)loadBiblio();const bb=ejpBib(x);ejEditar(bb||{nombre:x.nombre,zona:x.zona,descripcion:x.notas},()=>{est('GRABADO');});};
-   const b4=c.querySelector('.ejp-del');if(b4)b4.onclick=async()=>{if(!b4.classList.contains('arm')){b4.classList.add('arm');b4.textContent='¿Borrar?';setTimeout(()=>{b4.classList.remove('arm');b4.textContent='✕';},4000);return;}
-    EJP=EJP.filter(y=>y!==x);pinta();try{const r=await agPost('seg-agenda-ejpend',{op:'borrar',id:x.id});if(!r.ok)throw 0;}catch(_){EJP.push(x);pinta();toast('No se ha podido borrar',false);}};});};
- cont.querySelector('.ejp-nuevo').onclick=()=>{let z='';const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
-  const m=hzModal(`<div class="hz-top"><div><small>Pendientes de grabar</small><b>Proponer ejercicio</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-   <div class="hz-lab">Nombre</div>${capIn('ejp-nom','Ej.: Sentadilla búlgara con mancuernas','')}
+   const enBib=()=>{if(!biblio.length)loadBiblio();ejElegirBib(x.nombre,async e=>{const p=x.estado;x.estado='GRABADO';x.graba=yo;x.fecha=new Date().toISOString();pinta();
+    try{const r=await agPost('seg-agenda-ejpend',{op:'enbib',id:x.id,ejNombre:e.nombre,quien:yo});if(!r.ok)throw 0;toast(x.quien&&nom1(x.quien)!==capTit(yo1)?'Quitado · le llega el aviso a '+nom1(x.quien):'Quitado de Por grabar',true);}catch(_){x.estado=p;pinta();toast('No se ha podido guardar',false);}});};
+   const borrar=async()=>{if(!await pregunta(`¿Borrar «${x.nombre.trim()}» de Por grabar?`,{si:'Borrar',peligro:1}))return;
+    EJP=EJP.filter(y=>y!==x);pinta();try{const r=await agPost('seg-agenda-ejpend',{op:'borrar',id:x.id});if(!r.ok)throw 0;}catch(_){EJP.push(x);pinta();toast('No se ha podido borrar',false);}};
+   if(x.nv){c.querySelector('.ejp-nv0').onclick=()=>marcaNV(false);return;}
+   // Lo grabo yo: si es uno de la biblioteca sin vídeo, lo apunta en la lista a tu nombre
+   {const b=c.querySelector('.ejp-yo');if(b)b.onclick=x.sinVideo?async()=>{b.disabled=true;
+     try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre:x.nombre,zona:x.zona,notas:'',quien:yo,estado:'GRABANDO'});if(!r.ok)throw 0;await ejpCarga();pinta();}catch(_){b.disabled=false;toast('No se ha podido guardar',false);}}:()=>est('GRABANDO');}
+   {const b=c.querySelector('.ejp-ok');if(b)b.onclick=()=>{if(!biblio.length)loadBiblio();const bb=ejpBib(x);ejEditar(bb||{nombre:x.nombre,zona:x.zona,descripcion:x.notas},()=>{est('GRABADO');},{dePend:1});};}
+   // Menú de los tres puntos: lo que no es la acción principal
+   const mn=c.querySelector('.ejp-mn');if(mn)mn.onclick=()=>{const ops=[];
+    if(x.sinVideo)ops.push(['nv','No hace falta vídeo']);
+    else{if(x.estado==='GRABANDO')ops.push(['sol','Ya no lo grabo']);ops.push(['bib','Ya está en la biblioteca']);if(puedeBorrar(x))ops.push(['del','Borrar','pel']);}
+    const m=hzModal(`<div class="hz-top"><div><small>Por grabar</small><b>${escH(x.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="cs-menu">${ops.map(o=>`<button type="button" data-a="${o[0]}"${o[2]?' style="color:#b42318"':''}>${o[1]}</button>`).join('')}</div>`);
+    m.querySelector('.hz-x').onclick=()=>m.remove();
+    m.querySelectorAll('.cs-menu button').forEach(b=>b.onclick=()=>{m.remove();const a=b.dataset.a;a==='nv'?marcaNV(true):a==='sol'?est('PENDIENTE'):a==='bib'?enBib():borrar();});};});};
+ // Proponer: mientras escribes, salen los de la biblioteca y los de la lista que se parecen (para no repetir)
+ const proponer=()=>{let z='';const zs=[...new Set([...EJ_ZONAS,...biblio.map(x=>x.zona).filter(Boolean)])];
+  const m=hzModal(`<div class="hz-top"><div><small>Por grabar</small><b>Proponer ejercicio</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+   <div class="hz-lab">Nombre</div>${capIn('ejp-nom','Ej.: Sentadilla búlgara con mancuernas','')}<div class="ejp-ya"></div>
    <div class="hz-lab">Zona</div><div class="seg-rap ejp-zs">${zs.map(x=>`<button type="button" data-z="${escH(x)}">${escH(x)}</button>`).join('')}</div>
    <div class="hz-lab">Notas <span>(opcional: cómo se hace, material, para quién…)</span></div><textarea class="seg-n ejp-not" rows="3" placeholder="Ej.: con banco y mancuernas, para readaptación de rodilla"></textarea>
    <div class="hz-bts"><button type="button" class="hz-ok">Proponer</button></div>`);
   m.querySelector('.hz-x').onclick=()=>m.remove();
   m.querySelectorAll('.ejp-zs button').forEach(b=>b.onclick=()=>{z=z===b.dataset.z?'':b.dataset.z;m.querySelectorAll('.ejp-zs button').forEach(x=>x.classList.toggle('on',x.dataset.z===z));});
-  m.querySelector('.hz-ok').onclick=async e=>{const nombre=m.querySelector('.ejp-nom').value.trim();if(nombre.length<2){toast('Pon el nombre del ejercicio',false);return;}e.target.disabled=true;
+  const inp=m.querySelector('.ejp-nom'),ya=m.querySelector('.ejp-ya');let tt;
+  inp.addEventListener('input',()=>{clearTimeout(tt);tt=setTimeout(()=>{const n=inp.value.trim();if(n.length<4){ya.innerHTML='';return;}
+   const B=ejParecidos(n,biblio).slice(0,3),P=ejParecidos(n,(EJP||[]).filter(x=>x.estado!=='GRABADO')).slice(0,2);
+   ya.innerHTML=B.map(e=>`<div class="ejp-yai"><b>Ya existe:</b> ${escH(e.nombre)}${ejYt(e.youtubeUrl)?'':' <span>(sin vídeo)</span>'}</div>`).join('')+P.map(e=>`<div class="ejp-yai"><b>Ya está propuesto:</b> ${escH(e.nombre)}</div>`).join('');},200);});
+  m.querySelector('.hz-ok').onclick=async e=>{const nombre=inp.value.trim();if(nombre.length<2){toast('Pon el nombre del ejercicio',false);return;}e.target.disabled=true;
    try{const r=await agPost('seg-agenda-ejpend',{op:'crear',nombre,zona:z,notas:m.querySelector('.ejp-not').value.trim(),quien:yo});if(!r.ok)throw new Error(r.error||'');m.remove();toast('Propuesto',true);await ejpCarga();pinta();}catch(er){e.target.disabled=false;toast(er.message||'No se ha podido guardar',false);}};};
  (EJP?Promise.resolve(EJP):ejpCarga()).then(async L=>{if(!biblio.length)await loadBiblio();return L;}).then(pinta).catch(()=>{box.innerHTML='<p class="ej-n">No se ha podido cargar.</p>';});
  ejpCarga().then(pinta).catch(()=>{});
@@ -9870,7 +9917,7 @@ async function renderEjBib(wrap){
  box.querySelector('.ej-nuevo').onclick=()=>ejEditar(null,pinta);
  pinta();
 }
-function ejEditar(e,onSaved){
+function ejEditar(e,onSaved,o={}){
  e=e||{};const nuevo=!e.id;let foto=null;
  const m=hzModal(`<div class="ej-mod"><div class="hz-top"><div><small>Ejercicio</small><b>${nuevo?'Nuevo ejercicio':escH(e.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="ej-vid"></div>
@@ -9902,7 +9949,7 @@ function ejEditar(e,onSaved){
   if(mismoV){toast(`Este vídeo ya está en la biblioteca como «${mismoV.nombre.trim()}»`,false);return;}
   const igual=biblio.find(x=>x.id!==e.id&&ejKey(x.nombre)===ejKey(campos.nombre));
   if(igual&&!b.dataset.ok){b.dataset.ok=1;b.textContent='Ya hay uno igual · Toca otra vez';setTimeout(()=>{delete b.dataset.ok;b.textContent=nuevo?'Añadir':'Guardar';},4000);return;}
-  b.disabled=true;try{await ejApi({id:e.id||'',campos,foto:foto?{b64:foto.b64,tipo:foto.tipo}:null});toast(nuevo?'Ejercicio añadido':'Guardado',true);m.remove();await loadBiblio();onSaved&&onSaved();}catch(err){b.disabled=false;toast(err.message,false);}};
+  b.disabled=true;try{await ejApi({id:e.id||'',campos,foto:foto?{b64:foto.b64,tipo:foto.tipo}:null});toast(nuevo?'Ejercicio añadido':'Guardado',true);m.remove();await loadBiblio();onSaved&&onSaved();if(nuevo&&!o.dePend)ejQuitarDePend(campos.nombre);}catch(err){b.disabled=false;toast(err.message,false);}};
  const del=m.querySelector('.ej-del');if(del)capConf(del,'¿Seguro? Toca otra vez',async()=>{await ejApi({accion:'borrar',id:e.id});toast('Borrado',true);m.remove();biblio=biblio.filter(x=>x.id!==e.id);onSaved&&onSaved();});
 }
 
@@ -13623,6 +13670,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-18',t:'Ejercicios › Por grabar, más sencillo: un solo botón por tarjeta y lo demás en los tres puntos. Nuevo «Ya está en la biblioteca» para quitar los que ya existen; a quien lo pidió le llega una comunicación (también cuando se graba).',aviso:1,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Por grabar.'},{el:'.ejp-mn',txt:'Más opciones.',click:['.ej-tabs button[data-t="pend"]']}]}},
  {f:'2026-11-18',dir:1,t:'Facturación: las facturas traídas de Holded que ya están cobradas allí se marcan pagadas solas, y al abrir una pendiente puedes marcarla tú (Tarjeta, Efectivo, Bizum o Transferencia).'},
  {f:'2026-11-18',dir:1,t:'Facturación: el periodo tiene menos opciones (hoy, este mes, el mes pasado, el trimestre, este año) y «Entre dos fechas» abre una ventanita con Desde y Hasta.'},
  {f:'2026-11-17',dir:1,t:'Comparar con Holded: primero ves todos los días del periodo (cuáles cuadran y cuáles no) y tocas uno para ver su detalle, sin ir día a día con las flechas.',ver:{sec:'fx'}},
@@ -15959,7 +16007,7 @@ function renderFormacion(wrap, ruta){
  {ti:'Entreno por días: día A, día B',body:`<b>Cuándo:</b> no quieres que haga todo cada día (por ejemplo, piernas lunes y jueves, tronco martes y viernes).<br><br><b>Qué haces, antes de buscar ejercicios:</b> arriba, en <b>Días de entreno</b>, elige cuántos (2, 3…). Salen las pestañas <b>Día A</b>, <b>Día B</b>… En cada una marca <b>qué días de la semana</b> lo hace (L M X J V S D) y añade sus ejercicios. Para pasar un ejercicio a otro día, en sus <b>Más opciones</b>.<br><br>En su app, cada día le sale el entreno que le toca; los días sin entreno le dice que toca descansar (y no le llega el recordatorio de ejercicios). Si no marcas días de la semana, elige él cuál hace.`},
  {ti:'No usa el móvil: dáselo en papel',body:`<b>Cuándo:</b> el paciente no tiene la app o prefiere los ejercicios impresos.<br><br><b>Qué haces:</b> debajo de <b>Guardar programa</b>, <b>Descargar en PDF para imprimir</b>. Sale con la foto de cada ejercicio, las series y repeticiones, tus indicaciones, cómo se hace y, si lo has dividido, cada día por separado.<br><br>Lo puedes imprimir o mandárselo por WhatsApp o email.`,ver:{sec:'pac',pasos:[{el:'.fp-pdf',txt:'Aquí sacas el PDF.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {ti:'Guarda: le llega solo',shot:'/img/school/panel-b-ejer-guardar.jpg',body:`Escribe un <b>mensaje</b> si quieres y <b>Guardar programa</b>.<br><br>Sustituye al anterior y al paciente le llega un aviso: «Tienes ejercicios nuevos». No hace falta que se lo mandes tú.`},
- {ti:'No está el ejercicio que buscas',body:`Ponlo igualmente con su nombre e indicaciones.<br><br>Y propónlo en <b>Ejercicios › Pendientes de grabar</b> para que se grabe el vídeo.`}
+ {ti:'No está el ejercicio que buscas',body:`Ponlo igualmente con su nombre e indicaciones.<br><br>Y propónlo en <b>Ejercicios › Por grabar</b> para que se grabe el vídeo.`}
  ],
  qs:[
  {q:'Guardas el programa nuevo de un paciente. ¿Se entera?',opts:['No, hay que avisarle','Sí, le llega un aviso a su app','Solo si entra'],ok:1,fb:['Le llega solo.','¡Correcto!','Le llega un aviso.']},
@@ -15967,7 +16015,7 @@ function renderFormacion(wrap, ruta){
  {q:'No sabes si un ejercicio es el que quieres. ¿Cómo lo compruebas?',opts:['Lo pongo y ya','Toco la miniatura ▶ y veo el vídeo','Le pregunto al paciente'],ok:1,fb:['Mejor verlo antes.','¡Bien!','Mejor compruébalo tú antes.'],ver:{sec:'pac',pasos:[{el:'.pe-busca',txt:'Busca aquí y mira el vídeo.',click:['#pacResultados .pt-r','.fp-seg button[data-t="programa"]']}]}},
  {q:'Un paciente de 80 años no usa el móvil. ¿Cómo le das los ejercicios?',opts:['Se los explico y ya','Descargar en PDF para imprimir, debajo de Guardar programa','No se los pongo'],ok:1,fb:['Se le olvidarán: mejor en papel.','¡Eso es! Con fotos, series y repeticiones.','Sí se los puedes dar.']},
  {q:'Quieres que haga piernas lunes y jueves, y tronco martes y viernes. ¿Cómo lo montas?',opts:['Dos programas distintos','Días de entreno: 2, y en cada día marco sus días de la semana','Se lo explico en las indicaciones'],ok:1,fb:['Solo hay un programa: divídelo en días.','¡Bien! Cada día le sale el que le toca.','Mejor con días de entreno: lo ve claro en su app.']},
- {q:'Necesitas un ejercicio que no está en la biblioteca. ¿Qué haces?',opts:['No se lo pongo','Lo pongo con su nombre e indicaciones y lo propongo en Pendientes de grabar','Le mando un vídeo de YouTube'],ok:1,fb:['Sí se puede poner.','¡Eso es!','Mejor que lo grabemos nosotros.']}
+ {q:'Necesitas un ejercicio que no está en la biblioteca. ¿Qué haces?',opts:['No se lo pongo','Lo pongo con su nombre e indicaciones y lo propongo en Por grabar','Le mando un vídeo de YouTube'],ok:1,fb:['Sí se puede poner.','¡Eso es!','Mejor que lo grabemos nosotros.']}
  ]},
 
  {t:'La anamnesis',sub:'Primera visita: la valoración guiada',
@@ -16141,14 +16189,14 @@ function renderFormacion(wrap, ruta){
  {t:'La biblioteca de ejercicios',sub:'Falta un vídeo: cómo se añade',
  cards:[
  {ti:'Explicación para suelo pélvico',body:`Si un ejercicio general también se usa en suelo pélvico y allí se explica distinto, no hace falta subirlo otra vez: ábrelo en la <b>Biblioteca</b> y activa <b>Explicación para suelo pélvico</b>.<br><br>¿No te apetece escribirla? Toca <b>Escribir con IA</b> y te la redacta por fases (al bajar, al subir…): respiración y cuándo activar o relajar el suelo pélvico. Revísala y guarda.<br><br>Luego, en el programa del paciente, activa <b>Explicación de suelo pélvico</b> en ese ejercicio y verá esa explicación en vez de la general.`,ver:{sec:'ejer',pasos:[{el:'.ej-g .ej-c',txt:'Abre el ejercicio.'}]}},
- {ti:'Buscar un ejercicio',body:`En <b>Ejercicios › Biblioteca</b> están todos los vídeos que ven los pacientes, con buscador y por zonas.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Pendientes de grabar.'}]}},
+ {ti:'Buscar un ejercicio',body:`En <b>Ejercicios › Biblioteca</b> están todos los vídeos que ven los pacientes, con buscador y por zonas.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Biblioteca y Por grabar.'}]}},
  {ti:'Ya tienes el vídeo grabado',body:`<b>＋ Nuevo ejercicio</b>: nombre, enlace de YouTube, zona, cómo se hace (lo lee el paciente) y foto.<br><br>Si ese vídeo ya está en la biblioteca, no deja repetirlo.`},
- {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Pendientes de grabar › ＋ Proponer ejercicio</b>.<br><br>Si tienes un rato libre, coge uno: <b>Lo grabo yo</b>. Al subirlo, <b>Ya está grabado</b> (te abre el alta en la biblioteca). ¿Al final no puedes? <b>Soltar</b>.<br><br>Los ejercicios que ya están en la biblioteca pero sin vídeo salen solos en la lista, con <b>Ya está · falta vídeo</b>: al grabarlo solo pegas el link. Si no lo necesita, <b>No hace falta vídeo</b> y deja de salir (se puede deshacer abajo).`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Pendientes de grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
+ {ti:'Hace falta uno que no está',shot:'/img/school/panel-c-ejer.jpg',body:`<b>Cuándo:</b> quieres mandar un ejercicio y no hay vídeo.<br><br><b>Qué haces:</b> <b>Ejercicios › Por grabar › + Proponer</b>. Mientras escribes el nombre te salen los que ya existen, para no repetir.<br><br>Cada tarjeta tiene un solo botón: <b>Lo grabo yo</b> si está pendiente, y <b>Ya está grabado</b> cuando lo has subido (te abre el alta en la biblioteca). Lo demás está en los <b>tres puntos</b>: <b>Ya no lo grabo</b>, <b>Ya está en la biblioteca</b> (eliges cuál es y se quita de la lista) y <b>Borrar</b>.<br><br>Cuando se graba o se marca que ya estaba, a quien lo pidió le llega una <b>comunicación</b>. Y si das de alta un ejercicio en la Biblioteca que estaba en Por grabar, el panel te pregunta si lo quita de la lista.<br><br>Los que están en la biblioteca sin vídeo salen solos con <b>Solo falta el vídeo</b>; si no lo necesitan, tres puntos › <b>No hace falta vídeo</b>.`,ver:{sec:'ejer',pasos:[{el:'.ej-tabs',txt:'Por grabar.'},{el:'.ejp-nuevo',txt:'Proponer ejercicio.',click:['.ej-tabs button[data-t="pend"]']}]}}
  ],
  qs:[
- {q:'Quieres mandar un ejercicio que no tiene vídeo. ¿Qué haces?',opts:['Pendientes de grabar › Proponer ejercicio','Nada','Se lo explico de palabra y ya'],ok:0,fb:['¡Bien! Así alguien lo graba.','Así nunca estará.','Mejor que quede en vídeo.']},
- {q:'Tienes un rato libre y ves un ejercicio pendiente. ¿Qué tocas?',opts:['Lo grabo yo','Soltar','Nada'],ok:0,fb:['¡Eso es! Así nadie más lo graba a la vez.','Eso es para dejarlo.','Mejor cogerlo.']},
- {q:'Acabas de subir el vídeo a YouTube. ¿Qué haces?',opts:['Ya está grabado, y lo doy de alta en la biblioteca','Nada','Soltar'],ok:0,fb:['¡Correcto!','Seguiría saliendo como pendiente.','No: Soltar es para dejarlo.']},
+ {q:'Quieres mandar un ejercicio que no tiene vídeo. ¿Qué haces?',opts:['Por grabar › Proponer','Nada','Se lo explico de palabra y ya'],ok:0,fb:['¡Bien! Así alguien lo graba.','Así nunca estará.','Mejor que quede en vídeo.']},
+ {q:'Tienes un rato libre y ves un ejercicio pendiente. ¿Qué tocas?',opts:['Lo grabo yo','Ya no lo grabo','Nada'],ok:0,fb:['¡Eso es! Así nadie más lo graba a la vez.','Eso es para dejarlo.','Mejor cogerlo.']},
+ {q:'Acabas de subir el vídeo a YouTube. ¿Qué haces?',opts:['Ya está grabado, y lo doy de alta en la biblioteca','Nada','Ya no lo grabo'],ok:0,fb:['¡Correcto! Y a quien lo pidió le llega el aviso.','Seguiría saliendo como pendiente.','No: eso es para dejarlo.']},
  {q:'Intentas añadir un vídeo que ya está en la biblioteca. ¿Qué pasa?',opts:['Se duplica','El panel no deja repetirlo','Se borra el otro'],ok:1,fb:['No se duplica.','¡Correcto!','No.']}
  ]},
 

@@ -6044,11 +6044,33 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             await guardarAjuste('ej-sin-video-ok', NV, txt(q.quien, 60));
             return res.status(200).json({ ok: true, noVideo: NV });
           }
+          // Aviso a quien lo propuso, como comunicación (Informe, solo leer): cuando se graba o cuando ya estaba en la biblioteca
+          const pilaE = s => { const p = String(s || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
+          const avisarProp = async (rec, como, ejNombre) => {
+            const F = (rec && rec.fields) || {}, prop = pilaE(F['PROPUESTO POR']), yoE = pilaE(q.quien), nom = String(F.NOMBRE || '').trim();
+            if (!prop || !yoE || prop === yoE || !nom) return;
+            const otro = ejNombre && ejNombre.trim().toLowerCase() !== nom.toLowerCase() ? ` (está como «${ejNombre.trim()}»)` : '';
+            const cuerpo = como === 'bib'
+              ? `El ejercicio que propusiste para grabar, «${nom}», ya está en la biblioteca${otro}. Lo he quitado de Por grabar.\n\nLo tienes en [[sec:ejer|Ejercicios]] para ponérselo a tus pacientes.`
+              : `Ya está grabado el ejercicio que propusiste, «${nom}». Está en la biblioteca con su vídeo.\n\nLo tienes en [[sec:ejer|Ejercicios]] para ponérselo a tus pacientes.`;
+            await at('tbl2qRD3WsvQVPrwX', { method: 'POST', body: JSON.stringify({ typecast: true, records: [{ fields: { ASUNTO: `Ya está en la biblioteca: ${nom}`.slice(0, 140), TIPO: 'Informe', DE: yoE, PARA: prop, CUERPO: cuerpo, FECHA: ahora, MODO: 'leer',
+              'REQUIERE ACCIÓN': false, 'LEÍDO': JSON.stringify({ [yoE]: ahora }), HECHO: '{}', RECIBIDO: '{}', ESTADO: 'Abierta' } }] }) }).catch(() => {});
+          };
+          if (op === 'enbib') { // ya estaba en la biblioteca: sale de la lista (cuenta como hecho) y se avisa a quien lo pidió
+            if (!okId(q.id)) return res.status(400).json({ ok: false });
+            const rec = await at(`${EP}/${q.id}`); if (rec.error || !rec.fields) return res.status(200).json({ ok: false, error: 'Ya no está en la lista' });
+            const d = await at(`${EP}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: 'GRABADO', GRABA: txt(q.quien, 60), 'FECHA ESTADO': ahora }, typecast: true }) });
+            if (d.error) return res.status(200).json({ ok: false });
+            if (q.avisar !== false) await avisarProp(rec, 'bib', txt(q.ejNombre, 120));
+            return res.status(200).json({ ok: true });
+          }
           if (op === 'estado' || op === 'borrar') {
             if (!okId(q.id)) return res.status(400).json({ ok: false });
             if (op === 'borrar') { const d = await at(`${EP}/${q.id}`, { method: 'DELETE' }); return res.status(200).json({ ok: !d.error }); }
             const est = ['PENDIENTE', 'GRABANDO', 'GRABADO'].includes(q.estado) ? q.estado : 'PENDIENTE';
+            const ant = est === 'GRABADO' ? await at(`${EP}/${q.id}`).catch(() => null) : null;
             const d = await at(`${EP}/${q.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: est, GRABA: est === 'PENDIENTE' ? '' : txt(q.quien, 60), 'FECHA ESTADO': ahora }, typecast: true }) });
+            if (!d.error && ant && ant.fields && nmA(ant.fields.ESTADO) !== 'GRABADO') await avisarProp(ant, 'grab');
             return res.status(200).json({ ok: !d.error });
           }
           const rs = await todosT(EP, `filterByFormula=${encodeURIComponent(`OR({ESTADO}!='GRABADO',IS_AFTER({FECHA ESTADO},DATEADD(NOW(),-30,'days')))`)}`);
