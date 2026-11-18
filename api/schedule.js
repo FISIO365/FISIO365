@@ -161,6 +161,14 @@ async function cobrosHolded(pacT, yaPanel, desde, hasta) {
   return out;
 }
 const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
+// Las facturas traídas de Holded que salen «pendientes»: si en Holded ya están cobradas, se marcan pagadas aquí también
+async function pagosDeHolded(max, hasta) { if (!HOLDED_KEY) return 0; const FX1 = require('./_facturacion'), D = await FX1.db(); let n = 0;
+  const L = (await D.query(`select id, holded, tipo from fac_facturas where holded is not null and estado='emitida' and tipo in ('simplificada','completa') and coalesce(pagos->>'estado','') in ('pendiente','parcial') order by fecha desc limit $1`, [max])).rows;
+  const R = await Promise.all(L.map(x => (Date.now() > hasta ? Promise.resolve(null) : holded('/' + (x.tipo === 'completa' ? 'invoices' : 'sales-receipts') + '/' + x.holded).catch(() => null))));
+  for (const [i, x] of L.entries()) { const d = R[i]; if (!d || typeof d !== 'object') continue;
+    const pend = aNum(d.payments_pending ?? d.paymentsPending), st = String(d.status ?? '').toLowerCase();
+    if ((Number.isFinite(pend) && pend <= 0.004) || /complet|paid|pagad/.test(st)) { await FX1.pago(x.id, 'pagada', '', { holded: true }).catch(() => {}); n++; } }
+  return n; }
 
 // Busca contactos de Holded por un filtro exacto (code = DNI/NIF, email, mobile, phone)
 async function buscarContactos(campo, valor) {
@@ -8022,6 +8030,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         // Cada cobro de los últimos 10 días con su copia (lo pesado se hace aquí, no al abrir la lista)
         if (HOLDED_KEY) try { const t0 = Date.now(); out.arreglados = 0; for (let k = 0; k < 10 && Date.now() - t0 < 25000; k++) { const x = new Date(hoy + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - k); const d0 = x.toISOString().slice(0, 10);
           const filasD = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{Nº FACTURA}!='',DATETIME_FORMAT({FECHA DE COBRO},'YYYY-MM-DD')='${d0}')`)}`).catch(() => []); if (await arreglarDia(d0, filasD, t0 + 25000).catch(() => false)) out.arreglados++; } } catch (e) { out.arreglarErr = e.message; }
+        try { out.pagosHolded = await pagosDeHolded(120, Date.now() + 15000); } catch (e) { out.pagosHoldedErr = e.message; }
         try { out.vfPendientes = await FACX.vfPendientes(300); } catch (e) { out.vfPendErr = e.message; }
         // Pagos con tarjeta que no volvieron a la página (cerraron antes): se miran en Stripe
         if (process.env.STRIPE_SECRET_KEY) try { const D0 = await FACX.db(); const L = (await D0.query(`select id from fac_facturas where pagos->>'sid' is not null and coalesce(pagos->>'estado','') <> 'pagada' and fecha > now() - interval '120 days' limit 40`)).rows; out.tarjeta = 0; for (const x of L) { const F = await FACX.una(x.id); if (F && await facPagoVerifica(F).catch(() => false)) out.tarjeta++; } } catch (e) { out.tarjetaErr = e.message; }
@@ -8052,7 +8061,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return enviaPdf(await GS.pdf(X, { empresa: C.emisor.razon, nif: C.emisor.nif, periodo: String(q.periodo || '').slice(0, 40), actNom: A ? (A.id === 'principal' ? (A.nombre || CLI.marca) : A.nombre) : '', color: (A && A.color) || '#c2552e' }), 'Gestoria_' + String(q.periodo || q.desde).replace(/\s+/g, '_')); }
       // ── Cobros pendientes: facturas emitidas que aún no están pagadas (las más antiguas primero) ──
       if (action === 'fac-recordar-conf') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const D = await FACX.db(); await D.query(`insert into fac_config(k,v) values('recordar',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify({ auto: !!q.auto })]); return res.status(200).json({ ok: true }); }
-      if (action === 'fac-pendientes') { const D = await FACX.db();
+      if (action === 'fac-pendientes') { const D = await FACX.db(); await pagosDeHolded(40, Date.now() + 6000).catch(() => {});
         const L = (await D.query(`select id, codigo, fecha::text fecha, total::float total, (total - case when pagos->>'estado'='parcial' then coalesce((pagos->>'cobrado')::numeric,0) else 0 end)::float falta, cliente, actividad, enviada, (current_date - fecha)::int dias from fac_facturas where estado='emitida' and tipo<>'rectificativa' and pagos->>'estado' in ('pendiente','parcial') and actividad=$1 order by fecha, numero`, [String(q.actividad || 'principal')])).rows;
         return res.status(200).json({ ok: true, auto: !!((((await D.query(`select v from fac_config where k='recordar'`)).rows[0] || {}).v || {}).auto), facturas: L.map(x => Object.assign(x, { k: FACX.firma(x.id) })) }); }
       // ── Gastos y banco (api/_gastos.js) ──
