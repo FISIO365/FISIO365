@@ -13846,18 +13846,23 @@ const novLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';loca
 function esDireccionSeguro(){try{return typeof esDireccion==='function'&&esDireccion();}catch(e){return false;}}
 // dir:1 = solo dirección · adm:1 = dirección y administración
 const novMias=()=>NOVEDADES.filter(n=>n.adm?(esDireccionSeguro()||(typeof fisioActual!=='undefined'&&fisioActual&&fisioActual.role==='admin')):(!n.dir||esDireccionSeguro()));
-function novNuevas(){const v=novLS('f365_nov_punto');return novMias().filter(n=>n.aviso&&n.f>v).length;}
-function novMarcarVistas(){novLS('f365_nov_punto',novMax());novPunto();}
+// Cada novedad cuenta por separado (no solo por fecha): si hay dos el mismo día, la segunda también sale como nueva
+const novK=n=>n.f+'|'+String(n.t).slice(0,60);
+const novVistas=k=>{try{return new Set(JSON.parse(localStorage.getItem(k)||'[]'));}catch(e){return new Set();}};
+const novGuardaVistas=k=>{try{const S=novVistas(k);NOVEDADES.filter(n=>n.aviso).forEach(n=>S.add(novK(n)));localStorage.setItem(k,JSON.stringify([...S].slice(-300)));}catch(e){}};
+const novEsNueva=(n,v,S)=>!!n.aviso&&(n.f>v||(n.f===v&&!S.has(novK(n))));
+function novNuevas(){const v=novLS('f365_nov_punto'),S=novVistas('f365_nov_kpunto');return novMias().filter(n=>novEsNueva(n,v,S)).length;}
+function novMarcarVistas(){novLS('f365_nov_punto',novMax());novGuardaVistas('f365_nov_kpunto');novPunto();}
 function novPunto(){const n=novNuevas();['sb-school','pmSchool','sb-mas'].forEach(id=>{const e=$(id);if(e)e.classList.toggle('nov-dot',n>0);});}
-function novPinta(box){if(box.dataset.v0===undefined){box.dataset.v0=novLS('f365_nov_visto');novLS('f365_nov_visto',novMax());} // se ven esta vez y ya cuentan como vistas
- const v=box.dataset.v0,M=novMias(),nuevas=M.filter(n=>n.aviso&&n.f>v),abierta=box.dataset.abierta==='1';
+function novPinta(box){if(box.dataset.v0===undefined){box.dataset.v0=novLS('f365_nov_visto');box._k0=novVistas('f365_nov_kvisto');novLS('f365_nov_visto',novMax());novGuardaVistas('f365_nov_kvisto');} // se ven esta vez y ya cuentan como vistas
+ const v=box.dataset.v0,K=box._k0||new Set(),M=novMias(),nuevas=M.filter(n=>novEsNueva(n,v,K)),abierta=box.dataset.abierta==='1';
  const fd=f=>{const d=new Date(f+'T12:00:00');return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];};
- const it=n=>`<div class="nov-it${n.aviso&&n.f>v?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`;
+ const it=n=>`<div class="nov-it${novEsNueva(n,v,K)?' nueva':''}"><span>${fd(n.f)}</span><p>${escH(n.t)}${n.ver?`<button type="button" class="nov-ver" data-i="${NOVEDADES.indexOf(n)}"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Enséñamelo</button>`:''}</p></div>`;
  if(!M.length){box.innerHTML='';return;}
  if(nuevas.length) box.innerHTML=`<div class="nov-card"><div class="nov-h nov-hf"><span>Novedades</span><button type="button" class="nov-ok">✓ Visto</button></div>${nuevas.map(it).join('')}</div>`;
  else box.innerHTML=`<div class="nov-card nov-cerr"><button type="button" class="nov-tog"><span>Novedades anteriores</span><i>${abierta?'Ocultar':'Ver'}</i></button>${abierta?M.slice(0,6).map(it).join(''):''}</div>`;
  box.querySelectorAll('.nov-ver').forEach(b=>b.onclick=()=>{const n=NOVEDADES[+b.dataset.i];if(n&&n.ver)ensename(n.ver,null);});
- const ok=box.querySelector('.nov-ok');if(ok)ok.onclick=()=>{novLS('f365_nov_visto',novMax());box.dataset.v0=novMax();box.dataset.abierta='';novPinta(box);};
+ const ok=box.querySelector('.nov-ok');if(ok)ok.onclick=()=>{novLS('f365_nov_visto',novMax());novGuardaVistas('f365_nov_kvisto');box.dataset.v0=novMax();box._k0=novVistas('f365_nov_kvisto');box.dataset.abierta='';novPinta(box);};
  const tg=box.querySelector('.nov-tog');if(tg)tg.onclick=()=>{box.dataset.abierta=abierta?'':'1';novPinta(box);};}
 let tourVolver=null;
 function tourScroll(v){const f=()=>{try{window.scrollTo(0,v.y||0);const w=$('mainWrap');if(w)w.scrollTop=v.w||0;}catch(e){}};requestAnimationFrame(f);setTimeout(f,120);}
