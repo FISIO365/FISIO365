@@ -340,16 +340,17 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   realizadas.forEach(c => { const n = nomFisio(c.fields['PREF.']); if (NO_FISIO.test(n)) return; const k = n + '|' + pid(c), f = String(c.fields['FECHA']).slice(0, 10); if (!ultima[k] || f > ultima[k]) ultima[k] = f; });
   const pacs = [...new Set(realizadas.map(c => pid(c)))];
   const futuras = {}; // paciente -> fecha más lejana con cita
+  const cancelo = {}; // paciente -> citas que reservó y luego canceló (fecha de la cita cancelada más lejana)
   for (let i = 0; i < pacs.length; i += 40) {
     const lote = pacs.slice(i, i + 40);
-    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA`).catch(() => []);
-    r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
+    const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'CANCELADA'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=ESTADO`).catch(() => []);
+    r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10), canc = est(c) === 'CANCELADA'; (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (canc) { if (!cancelo[id] || f > cancelo[id]) cancelo[id] = f; return; } if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
   }
   const sinCita = [];
   Object.entries(ultima).forEach(([k, f]) => {
     const [n, id] = k.split('|'); const x = de(n);
     x.atendidos++;
-    if (futuras[id] && futuras[id] > f) x.reagendan++; else { x.lista.push({ id, ultima: f }); sinCita.push(id); }
+    if (futuras[id] && futuras[id] > f) x.reagendan++; else { x.lista.push(Object.assign({ id, ultima: f }, cancelo[id] && cancelo[id] > f ? { cancelo: cancelo[id] } : {})); if (cancelo[id] && cancelo[id] > f) x.cancelaron = (x.cancelaron || 0) + 1; sinCita.push(id); }
   });
   // Nombres de los que no han reagendado
   const nombres = {};
