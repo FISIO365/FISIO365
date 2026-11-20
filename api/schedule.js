@@ -1451,7 +1451,7 @@ async function avisosReservarDelDia() {
       const vias = [];
       if (await avisar('paciente', x.pid, { title: tit, body: txt.slice(0, 160), url: '/?s=citas', tag: 'reservar' }).catch(() => false)) vias.push('app');
       await at('tblgexkXJ4S36faPa', { method: 'POST', body: JSON.stringify({ fields: { PacienteId: x.pid, Titulo: tit, Texto: txt, Fecha: new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }), Leida: false, Tipo: 'cita' } }) }).catch(() => 0);
-      if (F.EMAIL && await valeMail(F.EMAIL, tit, `Hola${pila ? ' ' + escHtml(pila) : ''},`, `${escHtml(txt)}<br><br>Desde la app eliges día, hora y fisio, y queda reservada al momento.`, 'Reservar mi cita', 'https://app.fisioterapia365.com/?s=citas').catch(() => false)) vias.push('email');
+      if (F.EMAIL && await valeMail(F.EMAIL, tit, `Hola${pila ? ' ' + escHtml(pila) : ''},`, `${escHtml(txt)}<br><br>Eliges día, hora y fisio, y queda reservada al momento. No hace falta entrar en la app.`, 'Reservar mi cita', 'https://app.fisioterapia365.com/reserva').catch(() => false)) vias.push('email');
       x.env = hoy; x.res = vias.length ? 'enviado por ' + vias.join(' y ') : 'sin app ni email: hay que escribirle'; cambio = true; n++;
     } catch (e) { console.log('aviso reservar', x.pid, e.message); }
   }
