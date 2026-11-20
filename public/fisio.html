@@ -211,7 +211,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pc-tabs button.on{background:#fff;color:var(--black);box-shadow:0 2px 8px rgba(20,20,20,.06)}
 .pc-tabs i{font-style:normal;font-size:10.5px;font-weight:700;min-width:17px;height:17px;border-radius:9px;background:#c2552e;color:#fff;display:none;align-items:center;justify-content:center;padding:0 4px}.pc-tabs i:not(:empty){display:inline-flex}
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;width:100%}.pc-top .pc-l{min-width:0}.pc-top .pc-d{flex:none;white-space:nowrap}
-.pc-per{display:flex;width:100%;box-sizing:border-box;margin:0 0 12px;background:#fff;border:1.5px solid #e6d9cf;border-radius:14px;padding:10px 44px 10px 14px;gap:10px;font-size:14.5px;box-shadow:0 1px 3px rgba(60,40,30,.05)}.pc-per::after{content:'';right:16px;top:50%;width:8px;height:8px;margin-top:-6px;border:solid #c2552e;border-width:0 2px 2px 0;transform:rotate(45deg)}.pc-per::before{content:'Periodo';font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a8a80}.pc-per .pc-pert{color:#2b211c}.pc-per:hover{border-color:#c2552e}
+.pc-perw{text-align:center;margin:0 0 14px}.pc-per{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #e3cfc3;border-radius:99px;padding:8px 16px 8px 18px;font-size:14px;font-weight:600;color:#c2552e}.pc-per::after,.pc-per::before{content:none!important;display:none!important}.pc-per svg{width:15px;height:15px;stroke:#c2552e;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}.pc-per:hover{background:#fdf6f2}
 .pc-bar{display:block;width:100%;height:5px;border-radius:9px;background:#efe8e1;overflow:hidden;margin-top:4px}.pc-bar i{display:block;height:100%;background:#c2552e;border-radius:9px}
 .pc-ley{font-size:11.5px}.pc-ley em{font-style:normal;font-weight:700}
 .pc-c{font-size:12px;color:#4a423c;line-height:1.35}.pc-t .pc-c b{font-size:inherit;font-weight:600;letter-spacing:0;line-height:inherit;color:inherit}.pc-t .pc-c b.pc-fal{color:#c2552e}.pc-t .pc-c b.pc-sup{color:#2e7d4f}.pc-al{font-style:normal;color:var(--muted)}
@@ -12509,7 +12509,7 @@ async function renderControl(wrap){
  const box=ce('div','pc');wrap.appendChild(box);
  const PER=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['rango','Elegir fechas…']];
  let K='semana';try{K=sessionStorage.getItem('f365_pc_per2')||K;}catch(e){}
- box.innerHTML=`<label class="ag-sel pc-per"><span class="pc-pert"></span><select>${PER.map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></label><div class="pc-res"></div>`;
+ box.innerHTML=`<div class="pc-perw"><label class="ag-sel pc-per"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="pc-pert"></span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg><select>${PER.map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></label></div><div class="pc-res"></div>`;
  const selP=box.querySelector('.pc-per select'),selT=box.querySelector('.pc-pert');
  const res=box.querySelector('.pc-res'),mv=(f,n)=>{const d=new Date(f+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);},dias=(a,b)=>Math.round((new Date(b+'T12:00:00Z')-new Date(a+'T12:00:00Z'))/864e5)+1;
  const eur=n=>n==null?'—':Math.round(n).toLocaleString('es-ES')+' €',pct=(a,b)=>b?Math.round(a*100/b):null;
