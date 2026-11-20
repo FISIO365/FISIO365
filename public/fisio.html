@@ -211,6 +211,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .rnr-h{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:10px;padding:0 0 6px;border-bottom:1px solid var(--border)}
 .rnr-f{padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}.rnr-f b{text-align:left;font-weight:600}.rnr-f span{font-weight:600}.rnr-f span.ok{color:#2e7d4f}.rnr-f span.mal{color:#c2552e}.rnr-f span.med{color:#b7791f}.rn-nota.canc{color:#b7791f}
 .rnr-av{font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer}
+.rnr-ph{visibility:hidden;text-transform:none;letter-spacing:0}.rnr-h span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rnr-n{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}
 .rnr-prev{background:#faf7f4;border:1px solid var(--border);border-radius:14px;padding:14px;font-size:14px;line-height:1.55;margin-top:12px;max-height:46vh;overflow:auto}
 .rend-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.rend-chips button{font-family:var(--font);font-size:13px;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--black)}.rend-chips button.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
@@ -12457,7 +12458,7 @@ function rendNoReag(L,d,h){
  const F=L.filter(x=>x.lista&&x.lista.length).map(x=>{const P=x.lista.map(p=>Object.assign({},p,cls(p)));return {x,P,altas:P.filter(p=>p.alta),seg:P.filter(p=>!p.alta&&p.seg),rev:P.filter(p=>p.rev),sinExp:P.filter(p=>!p.alta&&!p.exp)};});
  if(!F.length)return {html:'',F};
  const html=`<div class="rend-card rnr"><div class="rend-top"><b>Pacientes sin reagendar</b><span class="rnr-per">${escH(per)}</span></div>
-  <div class="rnr-h"><span></span><span>Total</span><span>Altas</span><span>Seguim.</span><span>Cancel.</span><span>Revisar</span><span>Sin explicar</span></div>
+  <div class="rnr-h"><span></span><span>Total</span><span>Altas</span><span>Seguim.</span><span>Cancel.</span><span>Revisar</span><span>Sin expl.</span><span class="rnr-av rnr-ph" aria-hidden="true">Avisar</span></div>
   ${F.map((f,i)=>`<div class="rnr-f"><b>${escH(String(f.x.fisio).split(' ')[0])}</b><span>${f.P.length}</span><span class="ok">${f.altas.length}</span><span class="ok">${f.seg.length}</span><span class="${f.P.filter(p=>p.canc).length?'med':'ok'}">${f.P.filter(p=>p.canc).length}</span><span class="${f.rev.length?'mal':'ok'}">${f.rev.length}</span><span class="${f.sinExp.length?'mal':'ok'}">${f.sinExp.length}</span>
    <button type="button" class="rnr-av" data-i="${i}">Avisar</button></div>`).join('')}
   <p class="rnr-n">«Cancel.» = reservaron otra cita y luego la cancelaron (ya está explicado solo). «Revisar» = ni de alta ni en seguimiento. Las altas están bien. «Avisar» le escribe a cada fisio con sus pacientes enlazados.</p></div>`;
