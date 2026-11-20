@@ -39,7 +39,7 @@ function baja(url,conBarra,listo){if(blobs[url]){listo();return}if(cargando[url]
   x.onerror=function(){cargando[url]=0;listo();};x.send();
  }catch(e){cargando[url]=0;listo();}}
 function siguiente(){var L=lista();pos=(pos+1)%L.length;var url=L[pos];
- if(blobs[url]||L.length===1)pon(url);else{pon(L[(pos+1)%L.length]);}
+ pon(url); // si aún no está guardado en memoria, lo reproduce directamente desde internet
  L.forEach(function(u){baja(u,false,function(){});});}
 // Arranque: el primero de la lista con barra; los demás se bajan detrás
 (function(){var L=lista();pos=0;baja(L[0],true,function(){b.style.width='100%';pon(L[0]);L.slice(1).forEach(function(u){baja(u,false,function(){});});});})();
