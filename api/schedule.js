@@ -5278,7 +5278,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (!conPlan.has(id)) sinPlan.push(x);
           else if (!P['ÚLTIMO ACCESO APP'] && !P['PushSubscription'] && !usaApp.has(id)) { if (!x.pin) { x.pin = nuevoPin(); x.pinNuevo = true; } sinApp.push(x); } });
         for (const x of sinApp.filter(x => x.pinNuevo).slice(0, 20)) await at(`${PACIENTES}/${x.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { PIN: x.pin } }) }).catch(() => {});
-        return res.status(200).json({ ok: true, sinApp, sinPlan });
+        const RS = await resueltos(), fil = k => x => { const r = resDe(RS, k, x.pacienteId, x.ultima); if (r && r.para && r.fecha !== '*') { x.fisio = r.para; x.pasadoPor = r.por || ''; return true; } return !r; };
+        return res.status(200).json({ ok: true, sinApp: sinApp.filter(fil('app')), sinPlan: sinPlan.filter(fil('ejercicios')) });
       }
       if (action === 'seg-app-ignorar' && req.method === 'POST') {
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
@@ -7082,7 +7083,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         (await Promise.all(lotes.map(l => todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + l.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=HISTORIAL ACTUALIZADO`).catch(() => [])))).forEach(r => r.forEach(p => { info[p.id] = { nombre: p.fields['FULL NAME'] || '—', mod: p.fields['HISTORIAL ACTUALIZADO'] || '' }; }));
         const diaMad = x => x ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(x)) : '';
         const out = pids.filter(id => info[id] && diaMad(info[id].mod) < ult[id].fecha).map(id => ({ pacienteId: id, nombre: info[id].nombre, fecha: ult[id].fecha, hora: ult[id].hora, fisio: ult[id].fisio, historialMod: diaMad(info[id].mod) }));
-        return res.status(200).json({ ok: true, sesiones: out.sort((a, b) => a.fecha.localeCompare(b.fecha)) });
+        const RS = await resueltos(), out2 = out.filter(x => { const r = resDe(RS, 'historia', x.pacienteId, x.fecha); if (r && r.para && r.fecha !== '*') { x.fisio = r.para; x.pasadoPor = r.por || ''; return true; } return !r; });
+        return res.status(200).json({ ok: true, sesiones: out2.sort((a, b) => a.fecha.localeCompare(b.fecha)) });
       }
       if (action === 'seg-cierre') {
         let fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
