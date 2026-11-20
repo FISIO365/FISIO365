@@ -8003,6 +8003,9 @@ Devuelve solo el texto del mensaje, sin comillas.`;
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         if (action === 'fac-holded-traer') { if (!es(q.desde) || !es(q.hasta)) return res.status(400).json({ ok: false, error: 'Elige el periodo' });
           const r = await HI.traer(Hh, q.desde, q.hasta, q.mapa || {}, q.compras !== false); if (q.clientes) r.clientes = await HI.clientes(Hh); return res.status(200).json({ ok: true, ...r }); }
+        if (action === 'fac-holded-auto') { // al abrir Facturación: lo que se haya hecho en Holded en las 2 últimas semanas (solo ventas; no repite)
+          const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), d0 = new Date(hoyM + 'T12:00:00Z'); d0.setUTCDate(d0.getUTCDate() - 14);
+          const r = await HI.traer(Hh, d0.toISOString().slice(0, 10), hoyM, {}, false); return res.status(200).json({ ok: true, ...r }); }
         if (action === 'fac-holded-archivos') return res.status(200).json({ ok: true, ...(await HI.archivos(Hh, 20)) });
         if (action === 'fac-holded-bancos') return res.status(200).json({ ok: true, cuentas: await HI.bancos(Hh) });
         return res.status(400).json({ ok: false }); }
