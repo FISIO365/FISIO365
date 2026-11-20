@@ -7273,7 +7273,20 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const C = await ajuste('carpetas-' + q.id, null); if (C && C.de && C.de[q.att]) { delete C.de[q.att]; await guardarAjuste('carpetas-' + q.id, C, q.quien || '').catch(() => {}); }
         return res.status(200).json({ ok: true });
       }
+      if (action === 'seg-ficha-trozo') { // archivos grandes: llegan a trozos (≤3 MB) y se juntan en «seg-ficha-archivo» con k
+        const PGm = require('./_pg'); if (!PGm.ACTIVO) return res.status(400).json({ ok: false, error: 'Archivo demasiado grande (máximo 3 MB)' });
+        if (!/^[a-z0-9]{16,40}$/.test(q.k || '') || !(Number(q.i) >= 0 && Number(q.i) < 12) || !q.data) return res.status(400).json({ ok: false, error: 'Trozo no válido' });
+        const D = PGm.db(); await D.query('create table if not exists subidas (k text not null, i int not null, datos bytea, creado timestamptz not null default now(), primary key (k, i))');
+        await D.query("delete from subidas where creado < now() - interval '1 day'");
+        await D.query('insert into subidas (k, i, datos) values ($1,$2,$3) on conflict (k, i) do update set datos = excluded.datos', [q.k, Number(q.i), Buffer.from(String(q.data), 'base64')]);
+        return res.status(200).json({ ok: true });
+      }
       if (action === 'seg-ficha-archivo') {
+        if (!q.file && q.k && /^[a-z0-9]{16,40}$/.test(q.k)) { // juntar los trozos
+          const D = require('./_pg').db(), r = await D.query('select i, datos from subidas where k = $1 order by i', [q.k]);
+          if (!r.rows.length || r.rows.length !== Number(q.n)) return res.status(400).json({ ok: false, error: 'Faltan trozos del archivo, vuelve a probar' });
+          q.file = Buffer.concat(r.rows.map(x => Buffer.from(x.datos))).toString('base64'); await D.query('delete from subidas where k = $1', [q.k]);
+        }
         if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '') || !q.file) return res.status(400).json({ ok: false, error: 'Falta el archivo' });
         const r = await fetch(`https://content.airtable.com/v0/${BASE_ID}/${q.id}/fldTMnwMj4c1C2835/uploadAttachment`, { method: 'POST', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contentType: String(q.tipo || 'application/octet-stream'), file: String(q.file), filename: String(q.nombre || 'archivo').slice(0, 120) }) });
         const d = await r.json().catch(() => ({}));
