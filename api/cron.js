@@ -142,7 +142,7 @@ async function reporteDia(fecha) {
     }
     L.forEach(p => { const x = info[p.id] || { porQue: '', est: [] };
       p.porQue = x.porQue;
-      p.situacion = conCita.has(p.id) ? 'Ya tiene cita' : conSeg.has(p.id) ? 'En seguimiento' : x.est.includes('ALTA') ? 'De alta' : x.est.includes('ABANDONO') ? 'Dejó el tratamiento' : x.est.includes('NO ACUDIÓ') ? 'No llegó a venir' : p.cancelo ? 'Reservó y canceló' : '';
+      p.situacion = conCita.has(p.id) ? 'Ya tiene cita' : conSeg.has(p.id) ? 'En seguimiento' : /^\s*reserva por la app/i.test(x.porQue) ? 'Reserva por la app' : x.est.includes('ALTA') ? 'De alta' : x.est.includes('ABANDONO') ? 'Dejó el tratamiento' : x.est.includes('NO ACUDIÓ') ? 'No llegó a venir' : p.cancelo ? 'Reservó y canceló' : '';
     });
   } catch (e) {} })();
   const hora = t => t ? new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }) : '';

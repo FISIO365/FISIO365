@@ -8113,7 +8113,7 @@ function agHorasChips(box,fecha,fisio,horaSel,onPick,soloSuyas,excl){
 }
 // Cancela y ya no necesita más sesiones: alta (sin seguimiento) y, si se quiere, pedirle reseña
 // «No hace falta»: siempre con motivo (otra cita, alta, no llegó a venir, dejó el tratamiento) y explicación. Así no sale como pendiente ni para llamar
-const NOH=[['otra','Ya tiene otra cita'],['alta','Está de alta'],['noacudio','No llegó a venir'],['abandono','Dejó el tratamiento']];
+const NOH=[['otra','Ya tiene otra cita'],['alta','Está de alta'],['app','Reserva por la app'],['noacudio','No llegó a venir'],['abandono','Dejó el tratamiento']];
 function nohHtml(conOtra){return `<div class="nh"><div class="hz-lab">¿Por qué no hace falta?</div><div class="seg-rap nh-mot">${NOH.filter(x=>conOtra||x[0]!=='otra').map(([v,t])=>`<button type="button" data-v="${v}">${t}</button>`).join('')}</div>
  <textarea class="seg-n nh-txt" rows="2" placeholder="Explica por qué (obligatorio)"></textarea></div>`;}
 function nohAtar(root){let mot='';root.querySelectorAll('.nh-mot button').forEach(b=>b.onclick=()=>{mot=b.dataset.v;root.querySelectorAll('.nh-mot button').forEach(x=>x.classList.toggle('on',x===b));root.querySelector('.nh').classList.remove('falta');});
@@ -8125,6 +8125,7 @@ function nohValida(root,v){const nh=root.querySelector('.nh');if(v.mot&&v.txt.le
 // Lo apunta: alta (etiqueta y motivo), no llegó / dejó el tratamiento (estado y motivo). «Otra cita» va en las notas de la cita
 async function nohAplicar(c,v){const lab=(NOH.find(x=>x[0]===v.mot)||[])[1]||'',quien=String((fisioActual&&fisioActual.nombre)||'');
  if(v.mot==='otra')return true;
+ if(v.mot==='app'){const r=await fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:c.pacienteId,nota:'Reserva por la app: '+v.txt,fisio:quien})}).then(x=>x.json()).catch(()=>({ok:false}));return !!(r&&r.ok);}
  if(v.mot==='alta'){const r=await agPost('seg-agenda-alta',{pacienteId:c.pacienteId,nota:'Alta: '+v.txt,fisio:quien}).catch(()=>({ok:false}));if(r&&r.estados){const px=(pacs||[]).find(x=>x.id===c.pacienteId);if(px)px.estados=r.estados;}return !!(r&&r.ok);}
  const [a,b]=await Promise.all([agPost('seg-etapa',{pacienteId:c.pacienteId,etapa:v.mot}).catch(()=>({ok:false})),
   fetch('/api/schedule?action=nota-reagenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId:c.pacienteId,nota:lab+': '+v.txt,fisio:quien})}).then(x=>x.json()).catch(()=>({ok:false}))]);
@@ -11446,7 +11447,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    box.innerHTML=`<div class="fp-pqrow"><label class="fp-pqchk"><input type="checkbox" ${on?'checked':''}><span>No reagenda</span>${sinCita&&!on?'<em>Sin próxima cita</em>':''}</label>${!editando&&P.porQue&&sp?'<button type="button" class="fp-ed fp-pq-ed">Editar</button>':''}</div>`+
     (editando?`<textarea class="fp-ta fp-pqmot" rows="3" placeholder="¿Por qué? Ej.: alta, se va de viaje, le cuesta pagar…">${escH(P.porQue||'')}</textarea>
      <div class="hz-lab">Estado del paciente</div><div class="fp-pqest"></div>
-     ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqmodo"><button type="button" data-m="seg">Pasa a seguimiento</button><button type="button" data-m="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div><div class="fp-pqalt" hidden><div class="fp-pqcie"><button type="button" data-c="alta" class="on">Está de alta</button><button type="button" data-c="noacudio">No llegó a venir</button><button type="button" data-c="abandono">Dejó el tratamiento</button></div><span class="fp-pqcx">Se le pone ese estado y no pasa a seguimiento ni sale en «sin próxima cita».</span></div><div class="fp-pqseg">
+     ${sp?`<div class="fp-pqya">✓ Ya está en seguimiento${sp.fecha?' · llamar el '+segFecha(sp.fecha):''}${sp.quien?' · '+escH(sp.quien):''}</div>`:`<div class="fp-pqmodo"><button type="button" data-m="seg">Pasa a seguimiento</button><button type="button" data-m="alta"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No hace falta</button></div><div class="fp-pqalt" hidden><div class="fp-pqcie"><button type="button" data-c="alta" class="on">Está de alta</button><button type="button" data-c="noacudio">No llegó a venir</button><button type="button" data-c="abandono">Dejó el tratamiento</button><button type="button" data-c="app">Reserva por la app</button></div><span class="fp-pqcx">Se le pone ese estado y no pasa a seguimiento ni sale en «sin próxima cita».</span></div><div class="fp-pqseg">
       <div class="hz-lab">Pasa a seguimiento · ¿cuándo llamar?</div><div class="seg-rap fp-pqcu">${[['Mañana',1],['En 1 semana',7],['En 2 semanas',14],['En 1 mes',30]].map(([t,n])=>`<button type="button" data-d="${n}">${t}</button>`).join('')}</div>
       <input type="date" class="fp-pqf" value="${segIso(7)}" min="${segIso(0)}">
       <div class="hz-lab">¿Quién le contacta?</div><div class="seg-rap fp-pqre">${TAR_NOMBRES.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('')}</div>
@@ -11475,25 +11476,26 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
    // ¿Seguimiento o alta? Si es alta no se manda a seguimiento
    let alta=false;const mb=box.querySelector('.fp-pqmodo'),okB=box.querySelector('.fp-ok');
    const bAlta=()=>[...selE.querySelectorAll('button')].find(b=>/^alta$/i.test(b.textContent.trim()));
-   let cierre='alta';const TXT_C={alta:'Guardar como alta',noacudio:'Guardar: no llegó a venir',abandono:'Guardar: dejó el tratamiento'};
-   box.querySelectorAll('.fp-pqcie button').forEach(b=>b.onclick=()=>{cierre=b.dataset.c;box.querySelectorAll('.fp-pqcie button').forEach(x=>x.classList.toggle('on',x===b));okB.textContent=TXT_C[cierre];const ba=bAlta();if(ba&&ba.classList.contains('on')!==(cierre==='alta'))ba.click();});
+   let cierre='alta';const TXT_C={alta:'Guardar como alta',noacudio:'Guardar: no llegó a venir',abandono:'Guardar: dejó el tratamiento',app:'Guardar: reserva por la app'};
+   box.querySelectorAll('.fp-pqcie button').forEach(b=>b.onclick=()=>{cierre=b.dataset.c;box.querySelectorAll('.fp-pqcie button').forEach(x=>x.classList.toggle('on',x===b));okB.textContent=TXT_C[cierre];const cx=box.querySelector('.fp-pqcx');if(cx)cx.textContent=cierre==='app'?'Tiene sus sesiones y se coge él las citas desde la app. No pasa a seguimiento ni sale en «sin próxima cita», y no se le cambia el estado.':'Se le pone ese estado y no pasa a seguimiento ni sale en «sin próxima cita».';const ba=bAlta();if(ba&&ba.classList.contains('on')!==(cierre==='alta'))ba.click();});
    const modo=(a,auto)=>{alta=a;mb.querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.m==='alta')===a));
     sb.hidden=a;box.querySelector('.fp-pqalt').hidden=!a;okB.textContent=a?TXT_C[cierre]:'Guardar y pasar a seguimiento';
     const ba=bAlta();if(ba&&!auto&&ba.classList.contains('on')!==(a&&cierre==='alta'))ba.click();};
    if(mb){mb.querySelectorAll('button').forEach(b=>b.onclick=()=>modo(b.dataset.m==='alta'));modo(/^\s*alta\b/i.test(ta.value),true);
     ta.addEventListener('input',()=>{const es=/^\s*alta\b/i.test(ta.value);if(es&&!alta)modo(true);});}
-   box.querySelector('.fp-ok').onclick=async e=>{const t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}
+   box.querySelector('.fp-ok').onclick=async e=>{let t=ta.value.trim();if(!t){toast('Escribe el motivo',false);return;}
+    if(sb&&alta&&cierre==='app'&&!/^\s*reserva por la app/i.test(t))t='Reserva por la app: '+t;
     const conSeg=sb&&!alta;if(conSeg&&!sb.querySelector('.fp-pqf').value){toast('Elige cuándo llamar',false);return;}
     const bt=e.target,t0=bt.textContent;bt.disabled=true;bt.textContent='Guardando…';
     try{const r=await post('nota-reagenda',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');
      P.porQue=t;P.porQueFecha=r.fecha||d.hoy;P.porQueFisio=fisioActual.nombre;
      {const nv=selE.get();if(nv.slice().sort().join()!==est0.slice().sort().join()){await guardarEstados(id,nv);P.estados=nv;}}
      if(sb&&alta&&cierre==='alta'){const r3=await post('seg-agenda-alta',{pacienteId:id,nota:t,fisio:fisioActual.nombre});if(!r3.ok)throw new Error('Motivo guardado, pero no se ha podido dar el alta');if(r3.estados)P.estados=r3.estados;}
-     if(sb&&alta&&cierre!=='alta'){const r4=await post('seg-etapa',{pacienteId:id,etapa:cierre});if(!r4.ok)throw new Error('Motivo guardado, pero no se ha podido cambiar el estado');}
+     if(sb&&alta&&cierre!=='alta'&&cierre!=='app'){const r4=await post('seg-etapa',{pacienteId:id,etapa:cierre});if(!r4.ok)throw new Error('Motivo guardado, pero no se ha podido cambiar el estado');}
      if(conSeg){const fecha=sb.querySelector('.fp-pqf').value,nota=sb.querySelector('.fp-pqn').value.trim();
       const r2=await post('seg-crear',{pacienteId:id,fecha,nota,responsable:resp});if(!r2.ok)throw new Error('Motivo guardado, pero no se ha podido pasar a seguimiento');
       SEG_PAC[id]={fecha,quien:resp};(d.seguimiento=d.seguimiento||[]).unshift({fecha,nota,hecho:false,quien:resp});}
-     toast(conSeg?'Guardado y pasado a seguimiento':alta?(cierre==='alta'?'Alta apuntada':cierre==='noacudio'?'Apuntado: no llegó a venir':'Apuntado: dejó el tratamiento')+' · no pasa a seguimiento':'Guardado',true);if(conSeg)recargarSeg();else{refrescarTareas();pintar();}}
+     toast(conSeg?'Guardado y pasado a seguimiento':alta?(cierre==='alta'?'Alta apuntada':cierre==='app'?'Apuntado: reserva por la app':cierre==='noacudio'?'Apuntado: no llegó a venir':'Apuntado: dejó el tratamiento')+' · no pasa a seguimiento':'Guardado',true);if(conSeg)recargarSeg();else{refrescarTareas();pintar();}}
     catch(err){bt.disabled=false;bt.textContent=t0;toast(err.message,false);}};};
   pinta(false);}
  // El parte para el club vive en una tarjeta de la ficha (Resumen e Historia): «¿Juega en algún club?» o «Parte para … › Rellenar»
@@ -12471,14 +12473,14 @@ const fchR=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
 function rendNoReag(L,d,h){
  const ML=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],hoyI=isoMadrid(new Date());
  const per=d===h?`El ${fchR(d)}`:(d.slice(8)==='01'&&d.slice(0,7)===h.slice(0,7)&&h===hoyI)?`En lo que va de ${ML[+d.slice(5,7)-1]}`:`Del ${fchR(d)} al ${fchR(h)}`;
- const cls=p=>{const alta=pacEstados(p.id).map(estNom).some(n=>String(n||'').trim().toUpperCase()==='ALTA'),seg=!!SEG_PAC[p.id],exp=!!((p.nota&&p.notaFecha>=p.ultima)||p.cancelo);return {alta,seg,exp,canc:!!p.cancelo,rev:!alta&&!seg};};
+ const cls=p=>{const alta=pacEstados(p.id).map(estNom).some(n=>String(n||'').trim().toUpperCase()==='ALTA')||/^\s*reserva por la app/i.test(p.nota||''),seg=!!SEG_PAC[p.id],exp=!!((p.nota&&p.notaFecha>=p.ultima)||p.cancelo);return {alta,seg,exp,canc:!!p.cancelo,rev:!alta&&!seg};};
  const F=L.filter(x=>x.lista&&x.lista.length).map(x=>{const P=x.lista.map(p=>Object.assign({},p,cls(p)));return {x,P,altas:P.filter(p=>p.alta),seg:P.filter(p=>!p.alta&&p.seg),rev:P.filter(p=>p.rev),sinExp:P.filter(p=>!p.alta&&!p.exp)};});
  if(!F.length)return {html:'',F};
  const html=`<div class="rend-card rnr"><div class="rend-top"><b>Pacientes sin reagendar</b><span class="rnr-per">${escH(per)}</span></div>
   <div class="rnr-h"><span></span><span>Tot.</span><span>Altas</span><span>Seg.</span><span>Canc.</span><span>Rev.</span><span>S/expl.</span><span class="rnr-av rnr-ph" aria-hidden="true">Avisar</span></div>
   ${F.map((f,i)=>`<div class="rnr-f"><b>${escH(String(f.x.fisio).split(' ')[0])}</b><span>${f.P.length}</span><span class="ok">${f.altas.length}</span><span class="ok">${f.seg.length}</span><span class="${f.P.filter(p=>p.canc).length?'med':'ok'}">${f.P.filter(p=>p.canc).length}</span><span class="${f.rev.length?'mal':'ok'}">${f.rev.length}</span><span class="${f.sinExp.length?'mal':'ok'}">${f.sinExp.length}</span>
    <button type="button" class="rnr-av" data-i="${i}">Avisar</button></div>`).join('')}
-  <p class="rnr-n">«Seg.» = en seguimiento. «Canc.» = reservaron otra cita y luego la cancelaron (ya está explicado solo). «Rev.» = por revisar: ni de alta ni en seguimiento. «S/expl.» = sin explicar. Las altas están bien. «Avisar» le escribe a cada fisio con sus pacientes enlazados.</p></div>`;
+  <p class="rnr-n">«Seg.» = en seguimiento. «Canc.» = reservaron otra cita y luego la cancelaron (ya está explicado solo). «Rev.» = por revisar: ni de alta ni en seguimiento. «S/expl.» = sin explicar. Las altas (y los que reservan por la app) están bien. «Avisar» le escribe a cada fisio con sus pacientes enlazados.</p></div>`;
  return {html,F,per};
 }
 function rendAvisoTxt(f,per){
@@ -13938,6 +13940,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-20',aviso:1,t:'Nuevo motivo en «No reagenda › No hace falta»: «Reserva por la app», para quien tiene sus sesiones y prefiere cogerse él las citas. No pasa a seguimiento y ya no te sale como pendiente en el check-list.'},
  {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes: las llamadas y tareas atrasadas (también lo que quedó del check-list: historias, ejercicios, app, sin reagendar…) salen por fisio, con sus pacientes y «Avisar», sin salir del panel. Y si sales tocando algo, abajo tienes «Volver al panel de control».',ver:{sec:'ctrl',pasos:[{el:'.pc-perw',txt:'Elige aquí el periodo.'}]}},
  {f:'2026-11-20',dir:1,t:'Panel de control › Equipo: check-lists enviadas de cada fisio frente a los días que trabajó, comunicaciones sin leer, por responder y por hacer, y School. «Avisar» le manda lo que le falta, en buen tono.',ver:{sec:'ctrl',pasos:[{el:'.pce',txt:'Cómo va cada fisio con lo suyo.'}]}},
  {f:'2026-11-20',dir:1,aviso:1,t:'Nueva sección «Panel de control» (Gestión): el centro de un vistazo para el periodo que elijas. Ocupación, ingresos, nuevos, conversión, faltas, sin reagendar, llamadas atrasadas, encuestas, lo que tienes que aprobar o validar, huecos libres, reservas y tarjetas regalo.',ver:{sec:'ctrl',pasos:[{el:'.pc-sec',txt:'Cada tarjeta lleva a su detalle.'}]}},
@@ -16150,7 +16153,7 @@ function renderFormacion(wrap, ruta){
  {ti:'¿Está cobrada?',shot:'/img/school/panel-16-cobro.jpg',body:`Al abrir la cita te dice si está <b>cubierta por un pack</b>, <b>pagada como suelta</b> o <b>sin pagar</b>.<br><br>¿Sin pagar? <b>Facturar</b> te lleva a cobrarla. ¿Trae un bono de antes? <b>Tiene pack</b>.`,ver:{sec:'agenda',pasos:[{el:'.ag-sinfac || .hz-modal .ag-est',txt:'Aquí ves si la sesión está cobrada.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Te contesta «ok» por WhatsApp',body:`Toca <b>Confirmada</b> en la cita. Así todo el equipo sabe que viene.`,ver:{sec:'agenda',pasos:[{el:'.ag-conf',txt:'Confirmada a mano.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Hay que llamarle más adelante',shot:'/img/school/panel-17-botones.jpg',body:`<b>Cuándo:</b> cancela, está por reagendar o quieres saber cómo sigue.<br><br><b>Qué haces:</b> <b>Seguimiento</b>, con una nota. Pasa a Pendientes › Llamadas para que alguien le llame.`,ver:{sec:'agenda',pasos:[{el:'.ag-segb',txt:'Seguimiento.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
- {ti:'Ya está bien: el alta',shot:'/img/school/panel-13-alta.jpg',body:`<b>Cuándo:</b> el paciente ya no necesita más sesiones.<br><br><b>Qué haces:</b> <b>No hace falta › Está de alta</b> (o «No llegó a venir» si nunca fue paciente, o «Ha dejado el tratamiento»). Después te ofrece mandarle la <b>reseña de Google</b> o la <b>encuesta de alta</b>.<br><br><b>Para qué:</b> así no sale como «sin próxima cita» ni le llamáis para nada.`,ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí das el alta.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
+ {ti:'Ya está bien: el alta',shot:'/img/school/panel-13-alta.jpg',body:`<b>Cuándo:</b> el paciente ya no necesita más sesiones.<br><br><b>Qué haces:</b> <b>No hace falta › Está de alta</b> (o «No llegó a venir» si nunca fue paciente, o «Reserva por la app» si tiene sus sesiones y se coge él las citas desde la app, o «Ha dejado el tratamiento»). Después te ofrece mandarle la <b>reseña de Google</b> o la <b>encuesta de alta</b>.<br><br><b>Para qué:</b> así no sale como «sin próxima cita» ni le llamáis para nada.`,ver:{sec:'agenda',pasos:[{el:'.ag-altab',txt:'Aquí das el alta.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}},
  {ti:'Cambiar día, hora o fisio',body:`<b>Cambiar cita</b> (día u hora): la original queda como Reprogramada y se crea la nueva con todo copiado.<br><b>Cambiar fisio:</b> misma hora, otro fisio.`,ver:{sec:'agenda',pasos:[{el:'.ag-mov',txt:'Cambiar cita.',click:['.ag-grid .ag-c:not(.lib):not(.blq)']}]}}
  ],
  qs:[

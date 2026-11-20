@@ -2859,7 +2859,7 @@ async function cierreDia(fecha, soloFisio) {
   const P = [...new Set(hechas.map(c => c.fields['RELACIÓN - CITA'][0]))];
   const todosP = [...new Set(conPac.map(c => c.fields['RELACIÓN - CITA'][0]))];
   const [nombres, segs, futuras, previas, planes, sf, cons] = await Promise.all([
-    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=ÚLTIMO ACCESO APP&fields[]=HISTORIAL ACTUALIZADO`), 40).catch(() => []),
+    lotes(todosP, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=ÚLTIMO ACCESO APP&fields[]=HISTORIAL ACTUALIZADO&fields[]=POR QUÉ NO REAGENDA`), 40).catch(() => []),
     lotes(P, ids => capTodos('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),${orIds(ids, 'PacRec')})`)}&fields[]=PacRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='PENDIENTE',IS_AFTER({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
     lotes(P, ids => capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',IS_BEFORE({FECHA},'${fecha}'),${orIds(ids, 'PacienteRec')})`)}&fields[]=PacienteRec`)).catch(() => []),
@@ -2884,6 +2884,8 @@ async function cierreDia(fecha, soloFisio) {
     if (faltan.length) (await lotes(faltan, ids => capTodos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + ids.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL%20NAME`)).catch(() => [])).forEach(p => { nom[p.id] = p.fields['FULL NAME'] || ''; }); }
   const nomLink = v => (Array.isArray(v) ? v : []).map(x => (x && x.name) || nom[x] || (/^rec[A-Za-z0-9]{14}$/.test(String(x)) ? '' : x)).filter(Boolean).join(', ');
   const conFutura = new Set([...futuras.flatMap(c => c.fields['PacienteRec'] || []), ...segs.flatMap(r => r.fields['PacRec'] || [])]);
+  // «Reserva por la app»: tiene pack y se coge él las citas desde la app; no hace falta seguimiento
+  nombres.filter(p => /^\s*reserva por la app/i.test(String(p.fields['POR QUÉ NO REAGENDA'] || ''))).forEach(p => conFutura.add(p.id));
   const usaApp = new Set(nombres.filter(p => p.fields['ÚLTIMO ACCESO APP']).map(p => p.id));
   // Historia actualizada: la última vez que se tocó su historial es de ese día o posterior
   const diaMadH = x => x ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(x)) : '';
