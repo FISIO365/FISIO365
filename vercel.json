@@ -20,6 +20,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/tv/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/regalo/*",
       "use": "@vercel/static"
     },
@@ -224,6 +228,20 @@
     {
       "src": "/c/(rec[A-Za-z0-9]{14})-([a-f0-9]{10})",
       "dest": "/api/schedule.js?action=cita-confirmar&id=$1&s=$2"
+    },
+    {
+      "src": "/tv/?",
+      "headers": {
+        "Cache-Control": "no-cache"
+      },
+      "dest": "/public/tv/index.html"
+    },
+    {
+      "src": "/tv/(.*\\.mp4)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/public/tv/$1"
     },
     {
       "src": "/img/(.*)",
