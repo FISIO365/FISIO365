@@ -6608,13 +6608,14 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
         const [ci, ct] = await Promise.all([
-          capTodos(CIERRES_T, `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=FISIO`).catch(() => []),
+          capTodos(CIERRES_T, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},DATEADD('${q.desde}',-2,'days')),IS_BEFORE({FECHA},DATEADD('${q.hasta}',2,'days')))`)}&fields[]=FECHA&fields[]=FISIO`).catch(() => []),
           todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO}&'')='REALIZADA',NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}`).catch(() => [])]);
         const R = {}; const de = k => (R[k] = R[k] || { trabajo: new Set(), envio: new Set() });
         ct.forEach(c => { const k = fisioKey(nm(c.fields['PREF.'])); if (k) de(k).trabajo.add(String(c.fields.FECHA || '').slice(0, 10)); });
-        ci.forEach(x => { const k = fisioKey(x.fields.FISIO); if (k) de(k).envio.add(String(x.fields.FECHA || '').slice(0, 10)); });
+        ci.forEach(x => { const k = fisioKey(nm(x.fields.FISIO)), f = String(x.fields.FECHA || '').slice(0, 10); if (k && f >= q.desde && f <= q.hasta) de(k).envio.add(f); });
+        const nombres = [...new Set(ci.map(x => nm(x.fields.FISIO)))];
         const fisios = Object.entries(R).filter(([, x]) => x.trabajo.size).map(([k, x]) => ({ fisio: k, dias: x.trabajo.size, enviadas: [...x.trabajo].filter(f => x.envio.has(f)).length, faltan: [...x.trabajo].filter(f => !x.envio.has(f)).sort() }));
-        return res.status(200).json({ ok: true, fisios });
+        return res.status(200).json({ ok: true, fisios, nombres });
       }
       if (action === 'seg-nuevos-rango') { // Panel de control: pacientes nuevos y conversión de días exactos (misma regla que Estadísticas)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
