@@ -10554,12 +10554,11 @@ async function datosTareas(){
 // Todos los números cuentan lo mismo: lo que toca hoy o está atrasado (lo de próximos días no suma)
 // Los números de Pendientes son de lo que le toca a cada uno (lo de los demás se ve eligiendo «Todo el equipo»)
 const esMioPend=x=>String(x.quien||'').trim().split(' ')[0].toLowerCase()===String(miNombreCorto()||'').toLowerCase();
-function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.fecha<=h&&esMioPend(x)).length,nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h&&esMioPend(x)).length;
+function pintarNumPend(d){const h=d.hoy;const nT=d.items.filter(x=>x.tipo!=='llamar'&&x.tipo!=='anotar'&&x.tipo!=='plan'&&x.fecha<=h&&esMioPend(x)).length+(window._atrN||0),nL=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=h&&esMioPend(x)).length;
  document.querySelectorAll('.tt-n[data-n]').forEach(e=>{const n=e.dataset.n==='seg'?nL:nT;e.textContent=n||'';e.classList.toggle('on',n>0);});
  window._tarN=nT+nL;diaBadge();}
 async function contarTareas(){
- try{const d0=await datosTareasTodas();pintarNumPend(d0);const {items,hoy}=d0;const n=items.filter(x=>x.fecha<=hoy&&esMioPend(x)).length;
-  window._tarN=n;diaBadge();
+ try{const d0=await datosTareasTodas();pintarNumPend(d0);pendAhora(v=>{window._atrN=atrDe(v,miNombreCorto()).reduce((t,g)=>t+g.tareas,0);pintarNumPend(d0);});
  }catch(e){}
 }
 function itemExplicar(p,onDone){
@@ -10608,13 +10607,14 @@ async function listaTareas(cont,keep){
  const nLl=d.items.filter(x=>x.tipo==='llamar'&&x.fecha<=d.hoy&&(!tarFiltro||x.quien===tarFiltro)).length;
  d={...d,items:d.items.filter(x=>x.tipo!=='llamar')};
  const quien=[...new Set(d.items.map(x=>x.quien).filter(Boolean))].sort((a,b)=>TAR_NOMBRES.indexOf(a)-TAR_NOMBRES.indexOf(b));
- const L=d.items.filter(x=>!tarFiltro||x.quien===tarFiltro);
+ const L=d.items.filter(x=>(!tarFiltro||x.quien===tarFiltro)&&x.tipo!=='anotar'&&x.tipo!=='plan');
  const hoy=d.hoy;
  // Agrupadas por tipo; dentro, por fecha (las atrasadas primero, marcadas en rojo)
  const TIPOS_T=[['sinevo','Sin evolución: decidir cómo seguir'],['tarea','Tareas del equipo'],['anotar','Historia por actualizar'],['explicar','Sin próxima cita'],['consent','Consentimientos'],['consentAnt','Antiguos: subir el consentimiento en papel'],['hueco','Huecos libres para la lista de espera'],['regalo','Tarjetas regalo por dar'],['negocio','Negocios que toca visitar'],['plan','Sin plan de ejercicios en la app'],['app','Sin la app']];
  const grT=x=>x.tipo==='consent'&&x.k&&x.k.antiguo?'consentAnt':x.tipo;
  const grupos=TIPOS_T.map(([k,t])=>[t,k,L.filter(x=>grT(x)===k).sort((a,b)=>a.fecha.localeCompare(b.fecha))]);
  box.innerHTML=`<div class="ll-per"><label class="ll-sel ${tarFiltro?'on':''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="ll-pre">De quién:</span><select class="tar-quien"><option value="">Todo el equipo (${d.items.filter(x=>x.fecha<=hoy).length})</option>${[...new Set(TAR_NOMBRES.concat(quien))].map(n=>`<option value="${escH(n)}" ${tarFiltro===n?'selected':''}>${escH(n)} (${d.items.filter(x=>x.quien===n&&x.fecha<=hoy).length})</option>`).join('')}</select><i>▾</i></label><button type="button" class="seg-add tar-nueva">+ Tarea</button></div>`;
+ {const sl=ce('div','tar-atr');box.appendChild(sl);const pinta=v=>{if(!sl.isConnected&&!box.isConnected)return;const atr=atrDe(v,tarFiltro||'');window._atrN=atrDe(v,miNombreCorto()).reduce((t,g)=>t+g.tareas,0);sl.innerHTML=pcAtrasHtml(atr,{mio:1});pcAtrasOn(sl,atr);if(_dtC.d)pintarNumPend(_dtC.d);};pendAhora(pinta);}
  if(d.fallo)box.insertAdjacentHTML('beforeend','<button type="button" class="tar-ll-av tar-fallo">⚠️ No se han podido cargar los pacientes por explicar. <b>Reintentar</b></button>');
  if(!L.length){box.insertAdjacentHTML('beforeend','<div class="tar-ok">✓ Nada pendiente</div>');}
  grupos.forEach(([t,c,g])=>{if(!g.length)return;
@@ -12598,11 +12598,16 @@ function pendResolver(o,hecho){const T=PCA_T.find(t=>t[0]===o.k)||PCA_T.find(t=>
 const PCA_T=[['llamada','Llamada de seguimiento','Llamadas de seguimiento','','Llámale y apunta cómo ha ido en Seguimiento'],['historia','Historia clínica sin actualizar','Historias clínicas sin actualizar','historia','Abre su historia y escribe la sesión'],['ejercicios','Sin ejercicios en la app','Sin ejercicios en la app','programa','Ponle su programa en Ejercicios'],['app','Sin acceso a la app','Sin acceso a la app','','Dale acceso desde su ficha'],['consent','Consentimiento sin firmar','Consentimientos sin firmar','','Que lo firme desde su ficha o en la próxima visita'],['cobrar','Sesión sin cobrar','Sesiones sin cobrar','facturas','Cóbrala o descuéntala de su pack'],['marcar','Cita sin marcar','Citas sin marcar','citas','Marca si vino o no'],['otra','Otra tarea','Otras tareas','','']];
 const pcaTipo=it=>it.tipo!=='tarea'?'llamada':(PCA_T.some(t=>t[0]===it.k&&t[0]!=='llamada')?it.k:'otra');
 const pcaGrupos=L=>PCA_T.map(t=>[t,L.filter(it=>pcaTipo(it)===t[0])]).filter(x=>x[1].length);
-function pcAtrasHtml(atr){
+// Lo que sigue sin hacer de los check-lists (30 días), con el mismo caché que el Panel de control
+function pendAhora(cb){let c=null;try{c=JSON.parse(localStorage.getItem('f365_pca_pend')||'null');}catch(e){}if(c&&Date.now()-c.t<6*3600e3)cb(c.v,true);
+ const M=window.__pcAhoraP=window.__pcAhoraP||{};if(!M.pend||Date.now()-M.pend.t>120000)M.pend={t:Date.now(),p:fetch(`/api/schedule?action=seg-pend-ahora&pwd=${encodeURIComponent(apiPwd)}&dias=30`).then(x=>x.json()).then(v=>{if(v&&v.ok!==false)try{localStorage.setItem('f365_pca_pend',JSON.stringify({t:Date.now(),v}));}catch(e){}return v;}).catch(()=>null)};
+ M.pend.p.then(v=>{if(v)cb(v,false);});}
+function atrDe(pend,quien){const key=n=>String(n||'').trim().split(' ')[0].toLowerCase();return pcAtrasMezcla({},pend&&pend.ok?pend:{items:[]}).filter(g=>!quien||key(g.fisio)===key(quien));}
+function pcAtrasHtml(atr,o){o=o||{};
  const IC_T='<svg viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4-1.9 1.3a12 12 0 0 0 6.5 6.5l1.3-1.9 4 1.4v2.6a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg>',IC_K='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>';
- const top=`<div class="rend-card pca"><div class="pca-top"><b>Llamadas y tareas atrasadas</b><span>De días anteriores, ahora mismo</span></div>`;
- if(!atr)return top+'<div class="pc-vac">Cargando…</div></div>';
- if(!atr.length)return top+'<div class="pc-vac">Nada atrasado ✓ Todo lo de días anteriores está hecho.</div></div>';
+ const top=`<div class="rend-card pca${o.mio?' pca-mio':''}"><div class="pca-top"><b>${o.mio?'Lo que quedó sin hacer':'Llamadas y tareas atrasadas'}</b><span>${o.mio?'De tus check-lists de días anteriores':'De días anteriores, ahora mismo'}</span></div>`;
+ if(!atr)return o.mio?'':top+'<div class="pc-vac">Cargando…</div></div>';
+ if(!atr.length)return o.mio?'':top+'<div class="pc-vac">Nada atrasado ✓ Todo lo de días anteriores está hecho.</div></div>';
  const dd=n=>n===1?'1 día':n+' días',nT=atr.reduce((a,g)=>a+g.tareas,0),nL=atr.reduce((a,g)=>a+g.llamadas,0),nm=(t,n)=>n===1?t[1]:t[2];
  const tipos=pcaGrupos(atr.flatMap(g=>g.items)).filter(x=>x[0][0]!=='llamada');
  const kpi=(n,ic,t)=>`<div class="pca-k ${n?'mal':'ok'}"><i>${ic}</i><b>${n||'✓'}</b><span>${t}</span></div>`;
@@ -12610,10 +12615,10 @@ function pcAtrasHtml(atr){
  return top+`<div class="pca-ks">${kpi(nL,IC_T,nL===1?'llamada':'llamadas')}${kpi(nT,IC_K,nT===1?'tarea':'tareas')}</div>
   ${tipos.length?`<div class="pca-tps">${tipos.map(([t,L])=>`<span class="pca-tp t-${t[0]}"><b>${L.length}</b>${nm(t,L.length)}</span>`).join('')}</div>`:''}
   <div class="pca-lh"><span>Quién</span><span>${IC_T}</span><span>${IC_K}</span><span></span></div>`+atr.map((g,i)=>{const sa=/^sin asignar$/i.test(g.fisio),nom=sa?'Sin asignar':escH(String(g.fisio).split(' ')[0]),vj=g.maxDias>3,G=pcaGrupos(g.items),GT=G.filter(x=>x[0][0]!=='llamada');
-  return `<details class="pca-f"><summary><span class="pca-q"><b><i class="pca-fl">›</i>${nom}</b><small class="${vj?'mal':''}">la más antigua, hace ${dd(g.maxDias)}</small>${GT.length?`<small class="pca-tq">${GT.map(([t,L])=>L.length+' '+nm(t,L.length).toLowerCase()).join(' · ')}</small>`:''}</span>${ch(g.llamadas,IC_T,'Llamadas')}${ch(g.tareas,IC_K,'Tareas')}${sa?`<button type="button" class="rnr-av pca-rep">Repartir</button>`:`<button type="button" class="rnr-av" data-g="${i}">Avisar</button>`}</summary>
+  return `<details class="pca-f"${o.mio&&atr.length===1?' open':''}><summary><span class="pca-q"><b><i class="pca-fl">›</i>${nom}</b><small class="${vj?'mal':''}">la más antigua, hace ${dd(g.maxDias)}</small>${GT.length?`<small class="pca-tq">${GT.map(([t,L])=>L.length+' '+nm(t,L.length).toLowerCase()).join(' · ')}</small>`:''}</span>${ch(g.llamadas,IC_T,'Llamadas')}${ch(g.tareas,IC_K,'Tareas')}${o.mio?'<span></span>':sa?`<button type="button" class="rnr-av pca-rep">Repartir</button>`:`<button type="button" class="rnr-av" data-g="${i}">Avisar</button>`}</summary>
    <div class="pca-l">${sa?'<p class="pca-nota">Están en «Por llamar» sin nadie asignado, así que nadie las ve como suyas. Repártelas.</p>':''}
    ${G.map(([t,L])=>`<div class="pca-gr" data-t="${t[0]==='llamada'?'llamada':'tarea'}"><div class="pca-gh t-${t[0]}"><i class="pca-ii">${t[0]==='llamada'?IC_T:IC_K}</i><b>${nm(t,L.length)}</b><em>${L.length}</em>${t[4]?`<small>${t[4]}</small>`:''}</div>
-    ${L.map(it=>`<div class="pca-i"${it.pacienteId&&t[0]!=='otra'?` data-k="${t[0]}" data-id="${escH(it.pacienteId)}" data-f="${escH(it.fecha||'')}" data-n="${escH(it.paciente||'')}"`:''}><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}" data-tab="${t[3]}">${escH(capTit(it.paciente))}</button>`:''}${t[0]==='otra'||!it.paciente?`<small>${escH(it.tipo==='tarea'?it.texto:'Llamada de seguimiento')}</small>`:''}</span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em>${it.pacienteId&&t[0]!=='otra'?'<button type="button" class="pca-res">Resolver</button>':'<span></span>'}</div>`).join('')}</div>`).join('')}</div></details>`;}).join('')+'<p class="rnr-n">Toca un nombre para ver su lista, separada por tipo: el teléfono abre solo las llamadas y el check solo las tareas. Al tocar un paciente se abre su ficha donde se arregla. «Avisar» le manda su lista igual de ordenada, y cada paciente abre su ficha en el sitio justo.</p></div>';
+    ${L.map(it=>`<div class="pca-i"${it.pacienteId&&t[0]!=='otra'?` data-k="${t[0]}" data-id="${escH(it.pacienteId)}" data-f="${escH(it.fecha||'')}" data-n="${escH(it.paciente||'')}"`:''}><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}" data-tab="${t[3]}">${escH(capTit(it.paciente))}</button>`:''}${t[0]==='otra'||!it.paciente?`<small>${escH(it.tipo==='tarea'?it.texto:'Llamada de seguimiento')}</small>`:''}</span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em>${it.pacienteId&&t[0]!=='otra'?'<button type="button" class="pca-res">Resolver</button>':'<span></span>'}</div>`).join('')}</div>`).join('')}</div></details>`;}).join('')+(o.mio?'<p class="rnr-n">Toca cada paciente para arreglarlo en su ficha, o «Resolver» si no hace falta (y dinos por qué).</p></div>':'<p class="rnr-n">Toca un nombre para ver su lista, separada por tipo: el teléfono abre solo las llamadas y el check solo las tareas. Al tocar un paciente se abre su ficha donde se arregla. «Avisar» le manda su lista igual de ordenada, y cada paciente abre su ficha en el sitio justo.</p></div>');
 }
 // Junta las llamadas/tareas atrasadas con lo que le quedó a cada fisio en su check-list del último día (historias, ejercicios, app, sin reagendar…): también son tareas
 function pcAtrasMezcla(rep,pend){
@@ -14086,6 +14091,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes › Tareas: arriba, «Lo que quedó sin hacer» de tus check-lists del último mes, por tipo (historias, ejercicios, app, consentimientos, cobros, citas sin marcar). Toca el paciente para arreglarlo en su ficha, o «Resolver» si no hace falta y dinos por qué.'},
  {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes › «Cerradas con motivo»: todo lo que el equipo ha cerrado con «Resolver» (quién, por qué y cuándo). Si algo no te convence, «Deshacer» y vuelve a salir como pendiente.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes: en «Historia por actualizar», «Sin plan de ejercicios» y «Sin la app» tienes «Resolver»: si no hace falta, dinos por qué (no es tu paciente y se lo pasas a quien sea, está de alta, su tratamiento no lleva ejercicios, no usa la app…) y desaparece. Queda apuntado quién lo cerró y por qué.'},
  {f:'2026-11-20',aviso:1,t:'Tareas atrasadas: cuando dirección te avise, cada paciente lleva un botón «Resolver». Ahí lo haces (se abre su ficha donde toca) o nos dices por qué no hace falta: no es tu paciente (se lo pasas a quien sea), está de alta, su tratamiento no lleva ejercicios, no usa la app, firmó en papel, ya estaba cobrado… Y en las llamadas: no contesta, volver a llamar, ha cogido cita o dejar de llamar.'},
