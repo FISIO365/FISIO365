@@ -210,10 +210,12 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pc-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#6b6158;background:none;border:none;border-radius:10px;padding:10px 4px;cursor:pointer}
 .pc-tabs button.on{background:#fff;color:var(--black);box-shadow:0 2px 8px rgba(20,20,20,.06)}
 .pc-tabs i{font-style:normal;font-size:10.5px;font-weight:700;min-width:17px;height:17px;border-radius:9px;background:#c2552e;color:#fff;display:none;align-items:center;justify-content:center;padding:0 4px}.pc-tabs i:not(:empty){display:inline-flex}
-.pc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;width:100%}.pc-top .pc-l{min-width:0}.pc-top .pc-d{flex:none;white-space:nowrap}
+.pc-per{display:flex;width:100%;box-sizing:border-box;margin:0 0 12px}
 .pc-bar{display:block;width:100%;height:5px;border-radius:9px;background:#efe8e1;overflow:hidden;margin-top:4px}.pc-bar i{display:block;height:100%;background:#c2552e;border-radius:9px}
 .pc-ley{font-size:11.5px}.pc-ley em{font-style:normal;font-weight:700}
 .pc-c{font-size:12px;color:#4a423c;line-height:1.35}.pc-t .pc-c b{font-size:inherit;font-weight:600;letter-spacing:0;line-height:inherit;color:inherit}.pc-t .pc-c b.pc-fal{color:#c2552e}.pc-t .pc-c b.pc-sup{color:#2e7d4f}.pc-al{font-style:normal;color:var(--muted)}
+.pc-n summary{cursor:pointer;font-weight:600;color:#6b6158;margin-bottom:6px}
 .pc-n{font-size:12px;color:var(--muted);margin:4px 2px 30px}
 .rnr .rend-top{align-items:baseline}.rnr-per{font-size:12.5px;color:var(--muted);font-weight:500}
 .rnr-h,.rnr-f{display:grid;grid-template-columns:minmax(60px,1.3fr) repeat(6,minmax(30px,1fr)) auto;gap:6px;align-items:center;text-align:center}
@@ -12506,8 +12508,9 @@ async function renderControl(wrap){
  if(!esDireccion()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
  const box=ce('div','pc');wrap.appendChild(box);
  const PER=[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['rango','Elegir fechas…']];
- let K='mes';try{K=sessionStorage.getItem('f365_pc_per')||K;}catch(e){}
- box.innerHTML=`<div class="rend-chips pc-chips">${PER.map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div><div class="pc-res"></div>`;
+ let K='semana';try{K=sessionStorage.getItem('f365_pc_per2')||K;}catch(e){}
+ box.innerHTML=`<label class="ag-sel pc-per"><span class="pc-pert"></span><select>${PER.map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></label><div class="pc-res"></div>`;
+ const selP=box.querySelector('.pc-per select'),selT=box.querySelector('.pc-pert');
  const res=box.querySelector('.pc-res'),mv=(f,n)=>{const d=new Date(f+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);},dias=(a,b)=>Math.round((new Date(b+'T12:00:00Z')-new Date(a+'T12:00:00Z'))/864e5)+1;
  const eur=n=>n==null?'—':Math.round(n).toLocaleString('es-ES')+' €',pct=(a,b)=>b?Math.round(a*100/b):null;
  const sec=(t,sub,html)=>`<div class="pc-sec"><div class="pc-st"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</div>${html}</div>`;
@@ -12522,8 +12525,8 @@ async function renderControl(wrap){
   return `<button type="button" class="pc-t ${o.cls||''}"${o.go?` data-go="${o.go}"`:''}><span class="pc-top"><span class="pc-l">${o.t}</span>${dl}</span><b>${o.v==null?'—':(o.fmt?o.fmt(o.v):o.v)}${o.v!=null&&o.suf?o.suf:''}</b>${o.sub?`<span class="pc-s">${o.sub}</span>`:''}${pie}</button>`;};
  const ocup=L=>{const F=(L||[]).filter(x=>!x.sinHoras);const r=F.reduce((a,x)=>a+x.realizadas,0),h=F.reduce((a,x)=>a+x.huecos,0);return h?Math.round(r*100/h):null;};
  const sum=(L,k)=>(L||[]).reduce((a,x)=>a+(x[k]||0),0);
- const cargar=async k=>{K=k;try{sessionStorage.setItem('f365_pc_per',k);}catch(e){}
-  box.querySelectorAll('.pc-chips button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+ const cargar=async k=>{K=k;try{sessionStorage.setItem('f365_pc_per2',k);}catch(e){}
+  selP.value=k;{const [d1,h1]=rangoRend(k);selT.textContent=k==='rango'?fchR(d1)+' – '+fchR(h1):(PER.find(x=>x[0]===k)||['',''])[1];}
   res.innerHTML='<div class="fac-vacio">Calculando…</div>';
   const [d,h]=rangoRend(k),n=dias(d,h),hoy=isoMadrid(new Date()),MN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   // Con qué se compara: el mismo trozo del periodo anterior (ayer con anteayer, este mes con los mismos días del mes pasado…)
@@ -12558,7 +12561,7 @@ async function renderControl(wrap){
   const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
   const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
   const TABS=[['neg','Negocio'],['pac','Pacientes'],['equ','Equipo'],['age','Agenda']];let T0='neg';try{T0=sessionStorage.getItem('f365_pc_tab')||T0;}catch(e){}
-  res.innerHTML=`<div class="pc-tabs">${TABS.map(([t,n])=>`<button type="button" data-t="${t}"><span>${n}</span><i></i></button>`).join('')}</div><div data-tab="neg"><div data-b="neg">${cargando('Cómo va el negocio')}</div></div><div data-tab="pac"><div data-b="fid">${cargando('Pacientes')}</div></div><div data-tab="equ"><div data-b="equ">${cargando('Equipo')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div></div><div data-tab="age"><div data-b="vie">${cargando('Lo que viene')}</div></div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Debajo de cada número: lo que hubo en ${k==='semana'?'la semana pasada entera':fullL.toLowerCase()+(parcial?' entero':'')} y cuánto falta para igualarlo. La flecha dice cuánto más (↑) o menos (↓) vais ${parcial?'a estas alturas ('+vs.replace(/^que /,'comparado con ')+')':vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=`<div class="pc-tabs">${TABS.map(([t,n])=>`<button type="button" data-t="${t}"><span>${n}</span><i></i></button>`).join('')}</div><div data-tab="neg"><div data-b="neg">${cargando('Cómo va el negocio')}</div></div><div data-tab="pac"><div data-b="fid">${cargando('Pacientes')}</div></div><div data-tab="equ"><div data-b="equ">${cargando('Equipo')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div></div><div data-tab="age"><div data-b="vie">${cargando('Lo que viene')}</div></div><details class="pc-n"><summary>Del ${fchR(d)} al ${fchR(h)} · ¿cómo se calcula?</summary>Debajo de cada número: lo que hubo en ${k==='semana'?'la semana pasada entera':fullL.toLowerCase()+(parcial?' entero':'')} y cuánto falta para igualarlo. La flecha dice cuánto más (↑) o menos (↓) vais ${parcial?'a estas alturas ('+vs.replace(/^que /,'comparado con ')+')':vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</details>`;
   const verT=t=>{try{sessionStorage.setItem('f365_pc_tab',t);}catch(e){}res.querySelectorAll('.pc-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));res.querySelectorAll('[data-tab]').forEach(x=>x.hidden=x.dataset.tab!==t);};
   res.querySelectorAll('.pc-tabs button').forEach(b=>b.onclick=()=>verT(b.dataset.t));verT(TABS.some(x=>x[0]===T0)?T0:'neg');
   // Punto en la pestaña si dentro hay algo en rojo
@@ -12639,9 +12642,8 @@ async function renderControl(wrap){
     ${tile({t:'Tarjetas regalo',v:V.length,sub:V.length?eur(V.reduce((a,v)=>a+(Number(v.importe)||0),0))+' en el periodo':'en el periodo',go:'admin'})}
    </div>`));});
  };
- box.querySelectorAll('.pc-chips button').forEach(b=>b.onclick=()=>{if(b.dataset.k!=='rango')return cargar(b.dataset.k);
-  const [d0]=rangoRend('rango');miniCal(b,d0,d=>{toast('Ahora elige el último día',true);setTimeout(()=>miniCal(b,d,h=>{if(h<d)[d,h]=[h,d];try{sessionStorage.setItem('f365_rend_rango',d+'|'+h);}catch(e){}b.textContent=fchR(d)+' – '+fchR(h);cargar('rango');}),60);});});
- {let v='';try{v=sessionStorage.getItem('f365_rend_rango')||'';}catch(e){}if(v){const [d,h]=v.split('|');const b=box.querySelector('.pc-chips [data-k="rango"]');if(b&&h)b.textContent=fchR(d)+' – '+fchR(h);}}
+ selP.onchange=()=>{const v=selP.value;if(v!=='rango')return cargar(v);selP.value=K;
+  const [d0]=rangoRend('rango');miniCal(selT,d0,d=>{toast('Ahora elige el último día',true);setTimeout(()=>miniCal(selT,d,h=>{if(h<d)[d,h]=[h,d];try{sessionStorage.setItem('f365_rend_rango',d+'|'+h);}catch(e){}cargar('rango');}),60);});};
  cargar(K);
 }
 async function renderRendimiento(wrap,solo){
