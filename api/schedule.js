@@ -6604,6 +6604,18 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-checklists-rango') { // Panel de control: check-lists enviadas por fisio frente a los días que trabajó (sesiones hechas)
+        const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
+        const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
+        const [ci, ct] = await Promise.all([
+          capTodos(CIERRES_T, `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=FISIO`).catch(() => []),
+          todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO}&'')='REALIZADA',NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${q.desde}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${q.hasta}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}`).catch(() => [])]);
+        const R = {}; const de = k => (R[k] = R[k] || { trabajo: new Set(), envio: new Set() });
+        ct.forEach(c => { const k = fisioKey(nm(c.fields['PREF.'])); if (k) de(k).trabajo.add(String(c.fields.FECHA || '').slice(0, 10)); });
+        ci.forEach(x => { const k = fisioKey(x.fields.FISIO); if (k) de(k).envio.add(String(x.fields.FECHA || '').slice(0, 10)); });
+        const fisios = Object.entries(R).filter(([, x]) => x.trabajo.size).map(([k, x]) => ({ fisio: k, dias: x.trabajo.size, enviadas: [...x.trabajo].filter(f => x.envio.has(f)).length, faltan: [...x.trabajo].filter(f => !x.envio.has(f)).sort() }));
+        return res.status(200).json({ ok: true, fisios });
+      }
       if (action === 'seg-nuevos-rango') { // Panel de control: pacientes nuevos y conversión de días exactos (misma regla que Estadísticas)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         const d0 = q.desde, h0 = q.hasta, nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');

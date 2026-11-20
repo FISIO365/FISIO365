@@ -213,6 +213,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .rnr-h{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:10px;padding:0 0 6px;border-bottom:1px solid var(--border)}
 .rnr-f{padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}.rnr-f b{text-align:left;font-weight:600}.rnr-f span{font-weight:600}.rnr-f span.ok{color:#2e7d4f}.rnr-f span.mal{color:#c2552e}.rnr-f span.med{color:#b7791f}.rn-nota.canc{color:#b7791f}
 .rnr-av{font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;border:1.5px solid #c2552e;background:#fff;color:#c2552e;cursor:pointer}
+.pce .rnr-h,.pce .rnr-f{grid-template-columns:minmax(60px,1.3fr) repeat(5,minmax(30px,1fr)) auto}
 .rnr-ph{visibility:hidden;text-transform:none;letter-spacing:0}.rnr-h span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rnr-n{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}
 .rnr-prev{background:#faf7f4;border:1px solid var(--border);border-radius:14px;padding:14px;font-size:14px;line-height:1.55;margin-top:12px;max-height:46vh;overflow:auto}
@@ -12476,6 +12477,14 @@ function rendAvisoTxt(f,per){
  if(f.rev.length||segSE.length)t+='\n\nRevísalos hoy: ponlos en seguimiento con el motivo, o márcalos como alta si ya han terminado, y apunta por qué no han reagendado los que están sin explicar. ¡Gracias!';
  return {pf,t};
 }
+function pcAvisar(pf,asunto,t){
+ const m=hzModal(`<div class="hz-top"><div><small>Comunicación · Que lo haga · para hoy</small><b>Avisar a ${escH(pf)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="hz-lab">Asunto</div><input type="text" class="com-in rnr-as" maxlength="140" value="${escH(asunto)}">
+  <div class="rnr-prev">${comCuHtml(t).replace(/\n/g,'<br>')}</div><div class="hz-bts"><button type="button" class="s-n">Cancelar</button><button type="button" class="hz-ok">Enviar a ${escH(pf)}</button></div>`);
+ const cerrar=()=>m.remove();m.querySelector('.hz-x').onclick=m.querySelector('.s-n').onclick=cerrar;
+ m.querySelector('.hz-ok').onclick=async()=>{const b=m.querySelector('.hz-ok');b.disabled=true;b.textContent='Enviando…';
+  try{const r=await comPost('seg-com-enviar',{para:[pf],tipo:'Solicitud',asunto:m.querySelector('.rnr-as').value.trim()||asunto,cuerpo:t,req:true,modo:'hacer',limite:isoMadrid(new Date())});if(!r.ok)throw new Error(r.error||'No se ha podido enviar');toast('Enviado a '+pf,true);cerrar();}
+  catch(e){b.disabled=false;b.textContent='Enviar a '+pf;toast(e.message,false);}};}
 function rendAvisar(f,per){const {pf,t}=rendAvisoTxt(f,per);
  const m=hzModal(`<div class="hz-top"><div><small>Comunicación · Que lo haga · para hoy</small><b>Avisar a ${escH(pf)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
   <div class="hz-lab">Asunto</div><input type="text" class="com-in rnr-as" maxlength="140" value="Tus pacientes sin reagendar">
@@ -12533,11 +12542,12 @@ async function renderControl(wrap){
     ...(parcial?{prevF:get(`/api/schedule?action=rendimiento&${A}&desde=${fd}&hasta=${fh}`),ingF:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${fd}&hasta=${fh}`),nvF:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${fd}&hasta=${fh}`)}:{}),
     rep:comPost('reporte-dia',{fecha:''}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
     onl:get(`/api/schedule?action=seg-agenda-online&${A}`),vales:get(`/api/schedule?action=seg-vales&${A}`),prox:get(`/api/schedule?action=seg-agenda-dia&${A}&desde=${hoy}&hasta=${mv(hoy,6)}`),
+    chk:get(`/api/schedule?action=seg-checklists-rango&${A}&desde=${d}&hasta=${h<hoy?h:mv(hoy,-1)}`),
     aux:Promise.all([cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]),
     horas:cur.then(r=>Promise.all(((r&&r.fisios)||[]).filter(x=>x.dias).map(x=>get(`/api/schedule?action=horas&${A}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`).then(hz=>[String(x.fisio).split(' ')[0],(hz.registros||[]).filter(r=>r.pendiente).length]))))};}
   const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
   const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
-  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Debajo de cada número: lo que hubo en ${k==='semana'?'la semana pasada entera':fullL.toLowerCase()+(parcial?' entero':'')} y cuánto falta para igualarlo. La flecha dice cuánto más (↑) o menos (↓) vais ${parcial?'a estas alturas ('+vs.replace(/^que /,'comparado con ')+')':vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="equ">${cargando('Equipo')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Debajo de cada número: lo que hubo en ${k==='semana'?'la semana pasada entera':fullL.toLowerCase()+(parcial?' entero':'')} y cuánto falta para igualarlo. La flecha dice cuánto más (↑) o menos (↓) vais ${parcial?'a estas alturas ('+vs.replace(/^que /,'comparado con ')+')':vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
   const pon=(b,html,fn)=>{if(!vivo())return;const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
   // 1 · Negocio
   Promise.all([Q.cur,Q.prev,Q.nv,Q.ingR,Q.ingP,Q.nvP,Q.prevF||Q.prev,Q.ingF||Q.ingP,Q.nvF||Q.nvP]).then(([cur,prev,nv,ingR,ingP0,nvP,prevF,ingF0,nvF])=>{
@@ -12567,6 +12577,29 @@ async function renderControl(wrap){
     ${tile({t:'Fueron a Google',v:E.filter(x=>x.resena).length,sub:'reseñas · 14 días',go:'val'})}
    </div>`),el=>el.querySelectorAll('.rnr-av').forEach(b=>b.onclick=()=>rendAvisar(NR.F[+b.dataset.i],NR.per)));
    pinta(null);Q.rep.then(rep=>pinta((rep&&rep.atrasado)||[]));});
+  // 2b · Equipo: check-lists, comunicaciones y School de cada fisio, con aviso en un toque
+  Promise.all([Q.chk,Q.buz]).then(([chk,buz])=>{
+   const H=((buz&&buz.hilos)||[]).filter(x=>x.abierta&&x.tipo!=='Ausencia'),M={},key=n=>String(n||'').trim().split(' ')[0].toLowerCase(),pila=n=>{const x=String(n||'').trim().split(' ')[0];return x.charAt(0).toUpperCase()+x.slice(1).toLowerCase();};
+   const yoK=key(fisioActual&&fisioActual.nombre),eq=x=>M[x]=M[x]||{k:x,dias:0,env:0,faltan:[],leer:[],resp:[],hacer:[],school:0};
+   ((chk&&chk.fisios)||[]).forEach(f=>{const m=eq(key(f.fisio));m.dias=f.dias;m.env=f.enviadas;m.faltan=f.faltan||[];});
+   H.forEach(x=>(x.para||[]).forEach(p=>{const k=key(p);if(k===yoK||(x.hecho||{})[p])return;const m=eq(k);
+    if(x.tipo==='School'){m.school++;return;}if(!(x.leido||{})[p])m.leer.push(x);else if(x.modo==='responder')m.resp.push(x);else if(x.modo==='hacer')m.hacer.push(x);}));
+   const F=Object.values(M).filter(m=>m.dias||m.leer.length||m.resp.length||m.hacer.length||m.school).sort((a,b)=>a.k.localeCompare(b.k));
+   const nDia=f=>{const t=new Date(f+'T12:00:00Z');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][t.getUTCDay()]+' '+t.getUTCDate();};
+   const txt=m=>{const P=pila(m.k),L=[];const cl=m.dias-m.env;
+    if(cl>0)L.push(`· Check-list: ${m.env} de ${m.dias} días enviados. Faltan ${m.faltan.map(nDia).join(', ')} → [[sec:rep|Check-list]]`);
+    if(m.leer.length)L.push(`· ${m.leer.length} comunicación${m.leer.length>1?'es':''} sin leer: ${m.leer.map(x=>'«'+x.asunto+'»').join(', ')}`);
+    if(m.resp.length)L.push(`· ${m.resp.length} por responder: ${m.resp.map(x=>'«'+x.asunto+'»').join(', ')}`);
+    if(m.hacer.length)L.push(`· ${m.hacer.length} por marcar como hecha${m.hacer.length>1?'s':''}: ${m.hacer.map(x=>'«'+x.asunto+'»').join(', ')}`);
+    if(m.school)L.push(`· ${m.school} módulo${m.school>1?'s':''} de [[sec:school|School]] por hacer`);
+    if(!L.length)return `¡${P}! 👏 Lo tienes todo al día: check-lists enviadas y comunicaciones respondidas. Así da gusto, ¡gracias por ponérnoslo tan fácil! 🙌`;
+    return `¡Hola ${P}! 💪 Gracias por el trabajazo de estos días, se nota.\n\nPara dejarlo todo redondo, te queda:\n${L.join('\n')}\n\nLo tienes todo en [[sec:com|Comunicaciones]]. ¿Lo dejamos al día hoy? ¡Vamos, que tú puedes! 🙌`;};
+   const nr=(n,mal)=>`<span class="${n?(mal||'mal'):'ok'}">${n}</span>`;
+   pon('equ',sec('Equipo','Check-lists '+(k==='hoy'?'(hoy aún no cuenta)':'del periodo')+' · comunicaciones de ahora',F.length?`<div class="rend-card rnr pce"><div class="rnr-h"><span></span><span>Check</span><span>Sin leer</span><span>Resp.</span><span>Hacer</span><span>School</span><span class="rnr-av rnr-ph" aria-hidden="true">Avisar</span></div>
+    ${F.map((m,i)=>`<div class="rnr-f"><b>${escH(pila(m.k))}</b><span class="${m.dias&&m.env<m.dias?'mal':'ok'}">${m.dias?m.env+'/'+m.dias:'—'}</span>${nr(m.leer.length)}${nr(m.resp.length)}${nr(m.hacer.length,'med')}${nr(m.school,'med')}<button type="button" class="rnr-av" data-i="${i}">Avisar</button></div>`).join('')}
+    <p class="rnr-n">«Check» = check-lists enviadas de los días que trabajó (con sesiones hechas). Comunicaciones abiertas que te han llegado o has enviado tú. «Avisar» le escribe con lo que le falta, en buen tono.</p></div>`:'<div class="pc-vac">Nada que revisar ✓</div>'),
+    el=>el.querySelectorAll('.pce .rnr-av[data-i]').forEach(b=>b.onclick=()=>{const m=F[+b.dataset.i];pcAvisar(pila(m.k),'Para dejarlo todo al día',txt(m));}));
+  });
   // 3 · Lo que tienes que resolver
   Promise.all([Q.buz,Q.rep,Q.horas]).then(([buz,rep,hz])=>{
    const H=(buz&&buz.hilos)||[],aus=H.filter(x=>x.puedeAprobar),pend={},sch={},porVal={};(hz||[]).forEach(([f,n])=>{if(n)porVal[f]=n;});
@@ -13853,6 +13886,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+ {f:'2026-11-20',dir:1,t:'Panel de control › Equipo: check-lists enviadas de cada fisio frente a los días que trabajó, comunicaciones sin leer, por responder y por hacer, y School. «Avisar» le manda lo que le falta, en buen tono.',ver:{sec:'ctrl',pasos:[{el:'.pce',txt:'Cómo va cada fisio con lo suyo.'}]}},
  {f:'2026-11-20',dir:1,aviso:1,t:'Nueva sección «Panel de control» (Gestión): el centro de un vistazo para el periodo que elijas. Ocupación, ingresos, nuevos, conversión, faltas, sin reagendar, llamadas atrasadas, encuestas, lo que tienes que aprobar o validar, huecos libres, reservas y tarjetas regalo.',ver:{sec:'ctrl',pasos:[{el:'.pc-sec',txt:'Cada tarjeta lleva a su detalle.'}]}},
  {f:'2026-11-20',dir:1,t:'Sin reagendar: los que reservaron otra cita y luego la cancelaron salen como «Reservó y canceló» y ya no cuentan como sin explicar (ni se le pide al fisio que lo explique).'},
  {f:'2026-11-20',dir:1,aviso:1,t:'Rendimiento: arriba tienes «Pacientes sin reagendar» de cada fisio (altas, en seguimiento, por revisar y sin explicar) y el botón «Avisar», que le envía a cada uno su lista con los pacientes enlazados. Nuevos periodos: Mes pasado y Elegir fechas.',ver:{sec:'rend',pasos:[{el:'.rnr',txt:'Cómo va cada fisio con los que no reagendan.'}]}},
