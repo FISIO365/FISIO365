@@ -10596,10 +10596,11 @@ async function renderTareas(wrap){
  // Todo en una sola pantalla: lo de hoy y lo atrasado (llamadas incluidas) en la tarjeta; abajo, el resto de llamadas
  const top=ce('div','tar-top');top.innerHTML='<i class="tt-n" data-n="tareas" hidden></i><i class="tt-n" data-n="seg" hidden></i>';wrap.appendChild(top);
  datosTareasTodas().then(pintarNumPend).catch(()=>{});
+ {const cbox=ce('div','seg-con');wrap.appendChild(cbox);segContactos(cbox);}
  const cont=ce('div','');wrap.appendChild(cont);listaTareas(cont);
  const dS=ce('details','tar-segd');let ab=false;try{ab=sessionStorage.getItem('f365_tsegd')==='1';}catch(e){}
  dS.innerHTML='<summary><span><b>Todas las llamadas</b><small>Próximos días, ya hechas, buscar y añadir</small></span><i>›</i></summary><div class="tar-segc"></div>';wrap.appendChild(dS);
- const abre=()=>{if(dS.dataset.ok)return;dS.dataset.ok=1;renderSeguimiento(dS.querySelector('.tar-segc'));};
+ const abre=()=>{if(dS.dataset.ok)return;dS.dataset.ok=1;renderSeguimiento(dS.querySelector('.tar-segc'),{sinCon:1});};
  dS.addEventListener('toggle',()=>{try{sessionStorage.setItem('f365_tsegd',dS.open?'1':'0');}catch(e){}if(dS.open)abre();});if(ab){dS.open=true;}
 }
 let tarFiltro=null; // null = aún sin elegir → lo mío
@@ -12042,10 +12043,10 @@ function waPersonal(o){
    if(f==='otra')return miniCal(bt,segIso(14),v=>{if(v&&v>segIso(0))guarda(bt,v);});
    guarda(bt,segIso(+f));});};
 }
-async function renderSeguimiento(wrap){
+async function renderSeguimiento(wrap,o){o=o||{};
  const box=ce('div','seg');wrap.appendChild(box);
  // Los que preguntaron sin citarse y tienen recordatorio para hoy: encima de la lista de llamadas
- const cbox=ce('div','seg-con');box.before(cbox);segContactos(cbox);
+ if(!o.sinCon){const cbox=ce('div','seg-con');box.before(cbox);segContactos(cbox);}
  let tab='pend',filtroFisio=(()=>{try{const g=sessionStorage.getItem('f365_llq');if(g!=null)return g;}catch(e){}return '__yo';})(),datos=null,perH='30',diaH='',segYaCargo=false,resF='',antF=false,busq='';
  const normB=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const esAntigua=x=>/^Recuperado de las llamadas antiguas/i.test(String(x&&x.nota||''));
