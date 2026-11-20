@@ -6606,6 +6606,16 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-ctrl-admin') { // Panel de control › ¿Está todo al día?: lo administrativo (cobros, banco, gastos, VeriFactu, impuestos)
+        const out = {}, FX = FACX, GX = require('./_gastos');
+        try { const D = await FX.db(); const r = (await D.query(`select count(*)::int n, coalesce(sum(total),0)::float total, count(*) filter (where current_date - fecha > 30)::int viejas from fac_facturas where estado='emitida' and tipo<>'rectificativa' and actividad='principal' and pagos->>'estado' in ('pendiente','parcial')`)).rows[0]; out.cobrar = r; } catch (e) { out.cobrar = null; }
+        try { const R = await GX.resumenBanco(); out.banco = { pendientes: R.reduce((t, x) => t + (x.pendientes || 0), 0), hasta: R.map(x => x.hasta).filter(Boolean).sort().pop() || '' }; } catch (e) { out.banco = null; }
+        try { const D = await GX.db(); out.gastos = (await D.query(`select count(*)::int n from fac_gastos where (actividad='principal' or comun) and archivo is null and fecha >= date_trunc('year', current_date) and coalesce(categoria,'') not in ('Nóminas','Seguridad Social','Impuestos','Comisiones bancarias')`)).rows[0]; } catch (e) { out.gastos = null; }
+        try { const M = await FX.modo(); if (M && M.propio) { const E = await require('./_vf_envio').estado('real'); out.vf = { errores: (E.errores || []).length, pendientes: (E.cuenta || {}).pendiente || 0 }; } } catch (e) {}
+        const h = new Date(hoyF + 'T12:00:00Z'), y = h.getUTCFullYear(), F = [[y, 0, 30], [y, 3, 20], [y, 6, 20], [y, 9, 20], [y + 1, 0, 30]].map(([a, m, d]) => new Date(Date.UTC(a, m, d, 12)));
+        const prox = F.find(d => d >= h); out.trimestre = { fecha: prox.toISOString().slice(0, 10), dias: Math.round((prox - h) / 864e5) };
+        return res.status(200).json({ ok: true, ...out });
+      }
       if (action === 'seg-pend-ahora') { // Panel de control: lo que sigue sin hacer AHORA de los check-lists de los últimos días (historias, ejercicios, app, cobros, citas sin marcar, sin reagendar…)
         const nd = Math.min(30, Math.max(1, Number(q.dias) || 14)), dias = [];
         for (let i = 1; i <= nd; i++) { const t = new Date(hoyF + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() - i); if (t.getUTCDay() !== 0) dias.push(t.toISOString().slice(0, 10)); }

@@ -341,11 +341,12 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   const pacs = [...new Set(realizadas.map(c => pid(c)))];
   const futuras = {}; // paciente -> fecha más lejana con cita
   const cancelo = {}; // paciente -> citas que reservó y luego canceló (fecha de la cita cancelada más lejana)
-  for (let i = 0; i < pacs.length; i += 40) {
-    const lote = pacs.slice(i, i + 40);
+  const LOTES = []; for (let i = 0; i < pacs.length; i += 40) LOTES.push(pacs.slice(i, i + 40));
+  // De 4 en 4 a la vez (antes uno detrás de otro: con 3 meses eran muchas vueltas seguidas)
+  for (let j = 0; j < LOTES.length; j += 4) await Promise.all(LOTES.slice(j, j + 4).map(async lote => {
     const r = await todosAT(CITAS, `filterByFormula=${encodeURIComponent(`AND(OR(${['PENDIENTE', 'REALIZADA', 'CITA PERDIDA', 'NO ASISTIÓ', 'CANCELADA'].map(e => `TRIM({ESTADO})='${e}'`).join(',')}),IS_AFTER({FECHA},'${desde}'),OR(${lote.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=RELACIÓN - CITA&fields[]=FECHA&fields[]=ESTADO`).catch(() => []);
     r.forEach(c => { const f = String(c.fields['FECHA']).slice(0, 10), canc = est(c) === 'CANCELADA'; (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (canc) { if (!cancelo[id] || f > cancelo[id]) cancelo[id] = f; return; } if (!futuras[id] || f > futuras[id]) futuras[id] = f; }); });
-  }
+  }));
   const sinCita = [];
   Object.entries(ultima).forEach(([k, f]) => {
     const [n, id] = k.split('|'); const x = de(n);
@@ -355,10 +356,11 @@ async function rendimiento(desde, hasta, _fresco, opts) {
   // Nombres de los que no han reagendado
   const nombres = {};
   const ids = [...new Set(sinCita)];
-  for (let i = 0; i < ids.length; i += 40) {
-    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + ids.slice(i, i + 40).map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`).catch(() => []);
+  const LN = []; for (let i = 0; i < ids.length; i += 40) LN.push(ids.slice(i, i + 40));
+  for (let j = 0; j < LN.length; j += 4) await Promise.all(LN.slice(j, j + 4).map(async lt => {
+    const r = await todosAT(PACIENTES_T, `filterByFormula=${encodeURIComponent('OR(' + lt.map(id => `RECORD_ID()='${id}'`).join(',') + ')')}&fields[]=FULL NAME&fields[]=WHATSAPP&fields[]=POR QUÉ NO REAGENDA&fields[]=POR QUÉ FECHA&fields[]=POR QUÉ FISIO`).catch(() => []);
     r.forEach(p => { nombres[p.id] = { nombre: p.fields['FULL NAME'] || '—', tel: p.fields['WHATSAPP'] || '', nota: p.fields['POR QUÉ NO REAGENDA'] || '', notaFecha: p.fields['POR QUÉ FECHA'] || '', notaFisio: p.fields['POR QUÉ FISIO'] || '' }; });
-  }
+  }));
   Object.values(R).forEach(x => { x.lista = x.lista.map(p => ({ ...p, ...(nombres[p.id] || { nombre: '—' }) })).sort((a, b) => b.ultima.localeCompare(a.ultima)); });
   return Object.values(R).filter(x => x.realizadas || x.callin || x.videos).map(x => { const k = x.fisio.toLowerCase(); const r = { ...x, huecos: capacidad(k), sinHoras: !horasDia[k], dias: diario(k), control: control.has(k), bancoOn: conBanco.has(k) };
     if (din) { const L = din.lista.filter(q => q.n === k), S = L.filter(q => q.e === 'REALIZADA'), P = L.filter(q => q.e !== 'REALIZADA'), su = a => Math.round(a.reduce((t, q) => t + (q.eur || 0), 0) * 100) / 100;
