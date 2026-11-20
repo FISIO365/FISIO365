@@ -12529,8 +12529,8 @@ async function renderControl(wrap){
    ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
    ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
    ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
-   ${tile({t:'Pacientes nuevos',v:W.length?sw(W,'nuevos'):null,prev:WP.length?sw(WP,'nuevos'):null,sub:semTxt,go:'stats'})}
-   ${tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:'conversión · '+(semTxt||'—'),go:'stats'})}
+   ${n<7?'':tile({t:'Pacientes nuevos',v:W.length?sw(W,'nuevos'):null,prev:WP.length?sw(WP,'nuevos'):null,sub:semTxt,go:'stats'})}
+   ${n<7?'':tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:'conversión · '+(semTxt||'—'),go:'stats'})}
    ${tile({t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
    ${tile({t:'Faltas',v:falt,prev:faltP,menos:1,cls:falt?'med':'ok',sub:'no vinieron sin avisar',go:'rend'})}
    ${tile({t:'Cancelaciones',v:canc,prev:cancP,menos:1,go:'rend'})}
@@ -12570,7 +12570,7 @@ async function renderControl(wrap){
    ${tile({t:'Reservas por internet',v:RO.length,sub:RO.length?RO.filter(x=>x.origen==='App').length+' por la app · '+RO.filter(x=>x.origen!=='App').length+' por la web':'en el periodo',go:'agenda'})}
    ${tile({t:'Tarjetas regalo',v:V.length,sub:V.length?eur(V.reduce((a,v)=>a+(Number(v.importe)||0),0))+' en el periodo':'en el periodo',go:'admin'})}
   </div>`);
-  res.innerHTML=html+`<p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas comparan con los ${n} días anteriores. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=html+`<p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas comparan con los ${n} días anteriores. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
   res.querySelectorAll('.pc-t[data-go]').forEach(b=>b.onclick=()=>{showSection(b.dataset.go);window.scrollTo(0,0);});
   res.querySelectorAll('.rnr-av').forEach(b=>b.onclick=()=>rendAvisar(NR.F[+b.dataset.i],NR.per));
  };
