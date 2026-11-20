@@ -1435,7 +1435,7 @@ async function valeVerificarStripe(id, F, sid) {
 }
 // Lo llama el resumen diario (cron): los vales que hay que mandar hoy a quien los recibe
 // ── «Acuérdate de reservar»: el fisio programa un aviso al paciente para un día (p. ej. la semana que viene) ──
-// Se guarda en el ajuste «avisos_reservar» (lista). El cron de la mañana lo manda: aviso a la app, notificación y, si tiene, email.
+// Se guarda en el ajuste «avisos_reservar» (lista). El cron de la mañana lo manda: aviso a la app y notificación (sin email); el WhatsApp, desde Mensajes › Avisos.
 // Si cuando toca ya tiene una cita pendiente, no se le manda nada.
 async function avisosReservarDelDia() {
   const L = await ajuste('avisos_reservar', []).catch(() => []); if (!Array.isArray(L) || !L.length) return 0;
@@ -1451,8 +1451,8 @@ async function avisosReservarDelDia() {
       const vias = [];
       if (await avisar('paciente', x.pid, { title: tit, body: txt.slice(0, 160), url: '/?s=citas', tag: 'reservar' }).catch(() => false)) vias.push('app');
       await at('tblgexkXJ4S36faPa', { method: 'POST', body: JSON.stringify({ fields: { PacienteId: x.pid, Titulo: tit, Texto: txt, Fecha: new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }), Leida: false, Tipo: 'cita' } }) }).catch(() => 0);
-      if (F.EMAIL && await valeMail(F.EMAIL, tit, `Hola${pila ? ' ' + escHtml(pila) : ''},`, `${escHtml(txt)}<br><br>Eliges día, hora y fisio, y queda reservada al momento. No hace falta entrar en la app.`, 'Reservar mi cita', 'https://app.fisioterapia365.com/reserva').catch(() => false)) vias.push('email');
-      x.env = hoy; x.res = vias.length ? 'enviado por ' + vias.join(' y ') : 'sin app ni email: hay que escribirle'; cambio = true; n++;
+      // Sin email: solo aviso en la app (y el WhatsApp desde Mensajes › Avisos)
+      x.env = hoy; x.res = vias.length ? 'enviado por ' + vias.join(' y ') : 'sin app: hay que escribirle'; cambio = true; n++;
     } catch (e) { console.log('aviso reservar', x.pid, e.message); }
   }
   if (cambio) { const lim = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10); await guardarAjuste('avisos_reservar', L.filter(x => !x.env || x.env >= lim), 'cron').catch(() => 0); }
