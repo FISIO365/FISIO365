@@ -6604,6 +6604,25 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-nuevos-rango') { // Panel de control: pacientes nuevos y conversión de días exactos (misma regla que Estadísticas)
+        const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
+        const d0 = q.desde, h0 = q.hasta, nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
+        const madrid = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(t));
+        const [pn, real] = await Promise.all([
+          todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`AND(NOT(IS_BEFORE(CREATED_TIME(),DATEADD('${d0}',-1,'days'))),NOT(IS_AFTER(CREATED_TIME(),DATEADD('${h0}',1,'days'))))`)}&fields[]=FULL%20NAME`).catch(() => []),
+          todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO}&'')='REALIZADA',NOT(IS_BEFORE({FECHA},DATETIME_PARSE('${d0}','YYYY-MM-DD'))),NOT(IS_AFTER({FECHA},DATETIME_PARSE('${h0}','YYYY-MM-DD'))))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => [])]);
+        const nuevos = pn.filter(p => { const f = madrid(p.createdTime); return f >= d0 && f <= h0; }).length;
+        const prim = {}; real.forEach(c => { const pid = (c.fields['RELACIÓN - CITA'] || [])[0], f = String(c.fields.FECHA || '').slice(0, 10); if (pid && (!prim[pid] || f < prim[pid])) prim[pid] = f; });
+        const ids = Object.keys(prim), todas = {};
+        for (let i = 0; i < ids.length; i += 40) { const t = ids.slice(i, i + 40);
+          (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO}&'')='REALIZADA',TRIM({ESTADO}&'')='PENDIENTE'),OR(${t.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=ESTADO&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []))
+            .forEach(c => (c.fields['RELACIÓN - CITA'] || []).forEach(pid => (todas[pid] = todas[pid] || []).push({ f: String(c.fields.FECHA || '').slice(0, 10), e: String(nm(c.fields.ESTADO)).trim() }))); }
+        let vinieron = 0, reagendaron = 0;
+        ids.forEach(pid => { const L = todas[pid] || [], p0 = prim[pid];
+          if (L.some(c => c.e === 'REALIZADA' && c.f < d0)) return; // ya había venido antes: no es primera visita
+          vinieron++; if (L.some(c => c.f > p0 || (c.f === p0 && c.e === 'PENDIENTE'))) reagendaron++; });
+        return res.status(200).json({ ok: true, nuevos, vinieron, reagendaron, conversion: vinieron ? Math.round(reagendaron * 100 / vinieron) : null });
+      }
       if (action === 'seg-ingresos-rango') { // Panel de control: ingresos de días exactos (lo mismo que cuenta Estadísticas: tickets de Holded + facturas del panel + packs)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         if (!HOLDED_KEY || q.desde < HOLDED_DESDE) return res.status(200).json({ ok: true, total: null });

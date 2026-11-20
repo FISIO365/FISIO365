@@ -12506,7 +12506,7 @@ async function renderControl(wrap){
   // Con qué se compara: el mismo trozo del periodo anterior (ayer con anteayer, este mes con los mismos días del mes pasado…)
   const mesAnt=(f,dia)=>{const x=new Date(f.slice(0,8)+'01T12:00:00Z');x.setUTCDate(0);const fin=x.toISOString().slice(0,10);return dia?fin.slice(0,8)+String(Math.min(+dia,+fin.slice(8))).padStart(2,'0'):fin;};
   let pd,ph,vs;
-  if(k==='hoy'||k==='ayer'){pd=ph=mv(d,-1);vs=k==='hoy'?'que ayer':'que anteayer';}
+  if(k==='hoy'||k==='ayer'){pd=ph=mv(d,-7);vs='que el '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][new Date(d+'T12:00:00Z').getUTCDay()]+' pasado ('+fchR(pd)+')';}
   else if(k==='semana'||k==='semanaPasada'){pd=mv(d,-7);ph=mv(h,-7);vs=k==='semana'?'que los mismos días de la semana pasada':'que la semana anterior';}
   else if(k==='mes'){pd=mesAnt(d).slice(0,8)+'01';ph=mesAnt(d,h.slice(8));vs='que del 1 al '+(+ph.slice(8))+' de '+MN[+pd.slice(5,7)-1];}
   else if(k==='mesPasado'){ph=mesAnt(d);pd=ph.slice(0,8)+'01';vs='que '+MN[+pd.slice(5,7)-1];}
@@ -12516,30 +12516,28 @@ async function renderControl(wrap){
   if(!Q||Date.now()-Q.t>180000){const get=u=>fetch(u).then(x=>x.json()).catch(()=>({})),A=`pwd=${encodeURIComponent(apiPwd)}`;
    const cur=get(`/api/schedule?action=rendimiento&${A}&desde=${d}&hasta=${h}`);
    Q=window.__pcC[ck]={t:Date.now(),cur,prev:get(`/api/schedule?action=rendimiento&${A}&desde=${pd}&hasta=${ph}`),
-    est:get(`/api/schedule?action=seg-estadisticas&${A}&semanas=10`),ingR:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${d}&hasta=${h}`),ingP:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${pd}&hasta=${ph}`),
+    ingR:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${d}&hasta=${h}`),ingP:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${pd}&hasta=${ph}`),nv:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${d}&hasta=${h}`),nvP:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${pd}&hasta=${ph}`),
     rep:comPost('reporte-dia',{fecha:''}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
     onl:get(`/api/schedule?action=seg-agenda-online&${A}`),vales:get(`/api/schedule?action=seg-vales&${A}`),prox:get(`/api/schedule?action=seg-agenda-dia&${A}&desde=${hoy}&hasta=${mv(hoy,6)}`),
     aux:Promise.all([cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]),
     horas:cur.then(r=>Promise.all(((r&&r.fisios)||[]).filter(x=>x.dias).map(x=>get(`/api/schedule?action=horas&${A}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`).then(hz=>[String(x.fisio).split(' ')[0],(hz.registros||[]).filter(r=>r.pendiente).length]))))};}
   const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
   const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
-  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas dicen cuánto más (↑) o menos (↓) hay ${vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas dicen cuánto más (↑) o menos (↓) hay ${vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
   const pon=(b,html,fn)=>{if(!vivo())return;const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
   // 1 · Negocio
-  Promise.all([Q.cur,Q.prev,Q.est,Q.ingR,Q.ingP]).then(([cur,prev,est,ingR,ingP0])=>{
+  Promise.all([Q.cur,Q.prev,Q.nv,Q.ingR,Q.ingP,Q.nvP]).then(([cur,prev,nv,ingR,ingP0,nvP])=>{
   const L=cur.fisios||[],P=prev.fisios||[],ingP=ingP0&&ingP0.total!=null?ingP0.total:null;
-  const lun=f=>mv(f,-((new Date(f+'T12:00:00Z').getUTCDay()+6)%7)),W=((est&&est.semanas)||[]).filter(w=>w.semana>=lun(d)&&w.semana<=h),WP=((est&&est.semanas)||[]).filter(w=>w.semana<lun(d)).sort((a,b)=>b.semana.localeCompare(a.semana)).slice(0,W.length);
-  const sw=(A,q)=>A.reduce((a,w)=>a+(Number(w[q])||0),0),ing=ingR&&ingR.total!=null?ingR.total:null;
-  const conv=sw(W,'vinieron')?Math.round(sw(W,'reagendaron')*100/sw(W,'vinieron')):null,convP=sw(WP,'vinieron')?Math.round(sw(WP,'reagendaron')*100/sw(WP,'vinieron')):null;
+  const ing=ingR&&ingR.total!=null?ingR.total:null,okN=x=>x&&x.ok;
+  const conv=okN(nv)?nv.conversion:null,convP=okN(nvP)?nvP.conversion:null;
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
-  const semTxt=W.length?(W.length===1?'semana del '+fchR(W[0].semana):'semanas del '+fchR(W.map(w=>w.semana).sort()[0])+' en adelante'):'';
   pon('neg',sec('Cómo va el negocio','Flechas: más o menos '+vs,`<div class="pc-g">
    ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
    ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
    ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
-   ${n<7?'':tile({t:'Pacientes nuevos',v:W.length?sw(W,'nuevos'):null,prev:WP.length?sw(WP,'nuevos'):null,sub:semTxt,go:'stats'})}
-   ${n<7?'':tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:'conversión · '+(semTxt||'—'),go:'stats'})}
+   ${tile({t:'Pacientes nuevos',v:okN(nv)?nv.nuevos:null,prev:okN(nvP)?nvP.nuevos:null,sub:'fichas nuevas',go:'stats'})}
+   ${tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:okN(nv)?nv.reagendaron+' de '+nv.vinieron+' primeras visitas':'',go:'stats'})}
    ${tile({t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
    ${tile({t:'Faltas',v:falt,prev:faltP,menos:1,cls:falt?'med':'ok',sub:'no vinieron sin avisar',go:'rend'})}
    ${tile({t:'Cancelaciones',v:canc,prev:cancP,menos:1,go:'rend'})}
@@ -12565,7 +12563,7 @@ async function renderControl(wrap){
     ${tile({t:'Comunicaciones sin hacer',v:nPend,cls:nPend?'med':'ok',sub:lst(pend)||'todo hecho',go:'com'})}
     ${tile({t:'School sin hacer',v:nSch,cls:nSch?'med':'ok',sub:lst(sch)||'todos al día',go:'school'})}
     ${tile({t:'Check-lists sin enviar',v:noEnv.length,cls:noEnv.length?'mal':'ok',sub:noEnv.length?noEnv.map(f=>escH(String(f.fisio).split(' ')[0])).join(' · ')+' · '+(rep.fecha?fchR(rep.fecha):'ayer'):'todas enviadas',go:'rdia'})}
-    ${sf?tile({t:'Sesiones sin facturar',v:sf.reduce((a,x)=>a+(x.n||0),0),cls:sf.length?'mal':'ok',sub:sf.length?'hasta ayer':'todo facturado',go:'agenda'}):''}
+    ${tile({t:'Sesiones sin facturar',v:sf?sf.reduce((a,x)=>a+(x.n||0),0):null,cls:sf?(sf.length?'mal':'ok'):'',sub:sf?(sf.length?'hasta ayer':'todo facturado'):'no disponible',go:'agenda'})}
    </div>`));});
   // 4 · Lo que viene
   Promise.all([Q.prox,Q.onl,Q.vales]).then(([prox,onl,vales])=>{
