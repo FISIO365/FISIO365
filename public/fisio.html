@@ -12518,14 +12518,25 @@ function pcAtrasHtml(atr){
  return top+`<div class="pca-res"><span class="${nL?'mal':'ok'}">${nL?nL+(nL===1?' llamada atrasada':' llamadas atrasadas'):'Llamadas: todo al día ✓'}</span><span class="${nT?'mal':'ok'}">${nT?nT+(nT===1?' tarea atrasada':' tareas atrasadas'):'Tareas: ninguna atrasada ✓'}</span></div>`+atr.map((g,i)=>{const sa=/^sin asignar$/i.test(g.fisio),nom=sa?'Sin asignar':escH(String(g.fisio).split(' ')[0]),c=g.maxDias>3?'mal':'med';
   return `<details class="pca-f"><summary><span class="pca-fl">›</span><b>${nom}</b><span class="pca-n ${c}">${cnt(g)}</span><em>la más antigua, hace ${dd(g.maxDias)}</em>${sa?`<button type="button" class="rnr-av pca-rep">Repartir</button>`:`<button type="button" class="rnr-av" data-g="${i}">Avisar</button>`}</summary>
    ${sa?'<p class="pca-nota">Están en «Por llamar» sin nadie asignado, así que nadie las ve como suyas. Repártelas.</p>':''}
-   ${g.items.map(it=>`<div class="pca-i"><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}">${escH(capTit(it.paciente))}</button>`:''}<small>${it.tipo==='tarea'?escH(it.texto):'Llamada de seguimiento'}</small></span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em></div>`).join('')}</details>`;}).join('')+'<p class="rnr-n">Toca un nombre para ver su lista. «Avisar» le manda a ese fisio lo suyo, con los pacientes enlazados.</p></div>';
+   ${g.items.map(it=>`<div class="pca-i"><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}">${escH(capTit(it.paciente))}</button>`:''}<small>${it.tipo==='tarea'?escH(it.texto):'Llamada de seguimiento'}</small></span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em></div>`).join('')}</details>`;}).join('')+'<p class="rnr-n">Tareas = lo de Pendientes más lo que le quedó en el check-list del último día (historias, ejercicios, app, sin reagendar…). Toca un nombre para ver su lista. «Avisar» le manda a ese fisio lo suyo, con los pacientes enlazados.</p></div>';
+}
+// Junta las llamadas/tareas atrasadas con lo que le quedó a cada fisio en su check-list del último día (historias, ejercicios, app, sin reagendar…): también son tareas
+function pcAtrasMezcla(rep){
+ const A=((rep&&rep.atrasado)||[]).map(g=>Object.assign({},g,{items:g.items.slice()})),key=n=>String(n||'').trim().split(' ')[0].toLowerCase();
+ const TX={historia:'Actualizar la historia clínica',ejercicios:'Ponerle ejercicios en la app',app:'Darle acceso a la app',proxima:'Explicar por qué no reagenda o pasarlo a seguimiento',consent:'Que firme el consentimiento',cobrar:'Cobrar la sesión',marcar:'Marcar la cita'};
+ const f0=rep&&rep.fecha,dias=f0?Math.max(0,Math.round((new Date(isoMadrid(new Date())+'T12:00:00Z')-new Date(f0+'T12:00:00Z'))/864e5)):1;
+ ((rep&&rep.fisios)||[]).forEach(f=>(f.pendiente||[]).filter(c=>c.k!=='llamadas'&&c.k!=='tareas').forEach(c=>c.items.forEach(it=>{
+  let g=A.find(x=>key(x.fisio)===key(f.fisio));if(!g){g={fisio:f.fisio,tareas:0,llamadas:0,maxDias:0,items:[]};A.push(g);}
+  g.tareas++;g.maxDias=Math.max(g.maxDias,dias);g.items.push({tipo:'tarea',texto:TX[c.k]||c.t,pacienteId:it.id||'',paciente:it.nombre||'',dias});})));
+ A.forEach(g=>g.items.sort((a,b)=>b.dias-a.dias||(a.tipo<b.tipo?1:-1)));
+ return A.sort((a,b)=>/^sin asignar$/i.test(a.fisio)-/^sin asignar$/i.test(b.fisio)||(b.tareas+b.llamadas)-(a.tareas+a.llamadas));
 }
 function pcAtrasOn(el,atr){
  if(!atr)return;
  el.querySelectorAll('.pca .rd-pac').forEach(b=>b.onclick=()=>abrirFichaPaciente(b.dataset.p,b.dataset.n));
  el.querySelectorAll('.pca-rep').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();showSection('seg');window.scrollTo(0,0);});
  el.querySelectorAll('.pca .rnr-av[data-g]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const g=atr[+b.dataset.g],pf=String(g.fisio).split(' ')[0],dd=n=>n===1?'1 día':n+' días';
-  const t=`¡Hola ${pf}! Vamos a dejarlo todo al día 💪 Te quedan estas cosas de días anteriores:\n\n${g.items.map(it=>'• '+(it.tipo==='tarea'?it.texto:'Llamada de seguimiento')+(it.paciente&&it.pacienteId?' · [['+'pac:'+it.pacienteId+'|'+capTit(String(it.paciente).replace(/[\]|\[]/g,''))+']]':'')+' (hace '+dd(it.dias)+')').join('\n')}\n\nSi alguna ya está hecha, márcala en Mi día › Pendientes y desaparece. ¡Gracias!`;
+  const t=`¡Hola ${pf}! Vamos a dejarlo todo al día 💪 Te quedan estas cosas de días anteriores:\n\n${g.items.map(it=>'• '+(it.tipo==='tarea'?it.texto:'Llamada de seguimiento')+(it.paciente&&it.pacienteId?' · [['+'pac:'+it.pacienteId+'|'+capTit(String(it.paciente).replace(/[\]|\[]/g,''))+']]':'')+' (hace '+dd(it.dias)+')').join('\n')}\n\nLo que ya esté hecho, márcalo o actualízalo y desaparece solo. ¡Gracias!`;
   pcAvisar(pf,'Tus llamadas y tareas atrasadas',t);});
 }
 
@@ -12619,7 +12630,7 @@ async function renderControl(wrap){
     ${tile({t:'Encuestas contentos',v:En.length?Math.round(ok*100/En.length):null,suf:'%',cls:cl(En.length?Math.round(ok*100/En.length):null,85,70),sub:En.length+' respuestas · 14 días',go:'val'})}
     ${tile({t:'Fueron a Google',v:E.filter(x=>x.resena).length,sub:'reseñas · 14 días',go:'val'})}
    </div>${pcAtrasHtml(atr)}`),el=>{el.querySelectorAll('.rnr-av[data-i]').forEach(b=>b.onclick=()=>rendAvisar(NR.F[+b.dataset.i],NR.per));pcAtrasOn(el,atr);});
-   pinta(null);Q.rep.then(rep=>pinta((rep&&rep.atrasado)||[]));});
+   pinta(null);Q.rep.then(rep=>pinta(pcAtrasMezcla(rep)));});
   // 2b · Equipo: check-lists, comunicaciones y School de cada fisio, con aviso en un toque
   Promise.all([Q.chk,Q.buz]).then(([chk,buz])=>{
    const H=((buz&&buz.hilos)||[]).filter(x=>x.abierta&&x.tipo!=='Ausencia'),M={},key=n=>String(n||'').trim().split(' ')[0].toLowerCase(),pila=n=>{const x=String(n||'').trim().split(' ')[0];return x.charAt(0).toUpperCase()+x.slice(1).toLowerCase();};
@@ -13927,7 +13938,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
- {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes: las llamadas y tareas atrasadas salen por fisio, con sus pacientes y «Avisar», sin salir del panel. Y si sales tocando algo, abajo tienes «Volver al panel de control».',ver:{sec:'ctrl',pasos:[{el:'.pc-perw',txt:'Elige aquí el periodo.'}]}},
+ {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes: las llamadas y tareas atrasadas (también lo que quedó del check-list: historias, ejercicios, app, sin reagendar…) salen por fisio, con sus pacientes y «Avisar», sin salir del panel. Y si sales tocando algo, abajo tienes «Volver al panel de control».',ver:{sec:'ctrl',pasos:[{el:'.pc-perw',txt:'Elige aquí el periodo.'}]}},
  {f:'2026-11-20',dir:1,t:'Panel de control › Equipo: check-lists enviadas de cada fisio frente a los días que trabajó, comunicaciones sin leer, por responder y por hacer, y School. «Avisar» le manda lo que le falta, en buen tono.',ver:{sec:'ctrl',pasos:[{el:'.pce',txt:'Cómo va cada fisio con lo suyo.'}]}},
  {f:'2026-11-20',dir:1,aviso:1,t:'Nueva sección «Panel de control» (Gestión): el centro de un vistazo para el periodo que elijas. Ocupación, ingresos, nuevos, conversión, faltas, sin reagendar, llamadas atrasadas, encuestas, lo que tienes que aprobar o validar, huecos libres, reservas y tarjetas regalo.',ver:{sec:'ctrl',pasos:[{el:'.pc-sec',txt:'Cada tarjeta lleva a su detalle.'}]}},
  {f:'2026-11-20',dir:1,t:'Sin reagendar: los que reservaron otra cita y luego la cancelaron salen como «Reservó y canceló» y ya no cuentan como sin explicar (ni se le pide al fisio que lo explique).'},
