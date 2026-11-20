@@ -338,7 +338,7 @@ async function registros(entorno, limite) { const D = await db(), C = await conf
   return { lista: L, cadena: nif ? await VF.comprobar(D, entorno, nif) : { n: 0, mal: [] } }; }
 // Marcar una factura como pagada (o pendiente). No cambia nada fiscal: solo cómo está el cobro
 async function pago(id, estado, modo, extra) { const D = await db(); const P = Object.assign({ estado: estado === 'pendiente' ? 'pendiente' : 'pagada', modo: String(modo || '').slice(0, 30), fecha: estado === 'pendiente' ? null : isoMad() }, extra || {});
-  const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return P; }
+  const r = await D.query(`update fac_facturas set pagos = coalesce(pagos,'{}'::jsonb) || $2::jsonb where id=$1 and tipo<>'rectificativa' returning id, cobro`, [id, JSON.stringify(P)]); if (!r.rows.length) throw new Error('No encuentro esa factura'); return Object.assign({}, P, { cobro: r.rows[0].cobro || null }); }
 // ── Clientes guardados: los de las facturas hechas a mano (y los de las facturas ya hechas) para no escribirlos cada vez ──
 const cliLimpio = c => { c = c || {}; const o = {}; ['nombre', 'nif', 'direccion', 'cp', 'ciudad', 'provincia', 'pais', 'email', 'tel'].forEach(k => { o[k] = String(c[k] || '').trim().slice(0, k === 'direccion' ? 300 : 200); }); o.nif = o.nif.toUpperCase(); return o; };
 async function guardarCliente(actividad, c) { const D = await db(), x = cliLimpio(c); if (!x.nombre) return null;

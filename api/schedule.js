@@ -2359,7 +2359,7 @@ const facPagoUrl = (host, id) => `https://${host || 'app.fisioterapia365.com'}/a
 async function facPagoVerifica(F, sid) { sid = sid || String((F.pagos || {}).sid || ''); if (!/^cs_[A-Za-z0-9_]+$/.test(sid)) return false;
   const s = await stripeApi('checkout/sessions/' + sid).catch(() => null); if (!s || s.payment_status !== 'paid' || (s.metadata || {}).factura !== F.id) return false;
   if ((F.pagos || {}).estado === 'pagada') return true;
-  const imp = (s.amount_total || 0) / 100; await FACX.pago(F.id, 'pagada', 'Tarjeta', { sid, ref: String(s.payment_intent || sid), online: true });
+  const imp = (s.amount_total || 0) / 100; await pagoFactura(F.id, 'pagada', 'Tarjeta', { sid, ref: String(s.payment_intent || sid), online: true });
   await pagoAvisar(null, `💳 Factura ${F.codigo} pagada con tarjeta`, `${(F.cliente || {}).nombre || 'El cliente'} ha pagado ${imp.toFixed(2).replace('.', ',')} € con el enlace.`, 'facpago-' + F.id);
   return true; }
 // Avisos al móvil de dirección (Ramiro y Nora) y, si se indica, del fisio de la cita
@@ -3024,6 +3024,15 @@ async function repararSinCliente(desde) { const filas = await capTodos(FACTURAS_
       if (!rr.ok) { out.errores.push((f[FF.num] || hid) + ': ' + (await rr.text().catch(() => '')).slice(0, 120)); continue; }
       out.arreglados++; } catch (e) { out.errores.push(e.message.slice(0, 120)); } }
   return out; }
+// Cómo queda el cobro de la factura: pagada con su forma de pago, o pendiente si se emitió sin cobrar
+const PEND_PAGO = 'Pendiente de pago';
+const pagosDe = m => m === PEND_PAGO ? { estado: 'pendiente', modo: '', fecha: null } : { modo: m || '' };
+// Marca una factura propia como pagada / pendiente y lo pasa también a su fila de cobro (para la caja del día)
+async function pagoFactura(id, estado, modo, extra) {
+  const P = await FACX.pago(id, estado, modo, extra);
+  if (P && P.cobro && /^rec[A-Za-z0-9]{14}$/.test(P.cobro)) await at(`${FACTURAS_TABLE}/${P.cobro}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'fldafSkOOldJ8gH70': estado === 'pendiente' ? PEND_PAGO : (String(modo || '').trim() || 'Tarjeta') }, typecast: true }) }).catch(() => {});
+  if (P) delete P.cobro; return P;
+}
 async function emitirFactura(recId, quien, fisioSel, descuento) {
   const CF = await conf().catch(() => CONF_DEF), borradorH = CF.holded.borrador !== false, rgpdH = String(CF.holded.rgpd || TEXTO_RGPD);
   const rec = await at(`${FACTURAS_TABLE}/${recId}?returnFieldsByFieldId=true`);
@@ -3095,7 +3104,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
   if (propio) {
     const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
     const r = await FACX.desdeCobro({ real: true, cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
-      lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+      lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, por: quien || '', pagos: pagosDe(nombreSel(f['fldafSkOOldJ8gH70'])) });
     num = r.codigo; borrador = false;
     await at(`${FACTURAS_TABLE}/${recId}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.estado]: 'Emitida', [FF.num]: String(num), [FF.fecha]: fecha, [FF.fechaVieja]: fecha }, typecast: true }) });
     // El PDF se guarda en la fila (como el de Holded): lo ven la ficha y la app del paciente
@@ -3123,7 +3132,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     // Facturación propia: la misma factura con nuestra numeración (en paralelo; si falla, el cobro sigue igual)
     try { const ivaC = items.map((it, i) => conPack || (lineas[i] || lineas[0]).concepto);
       await FACX.desdeCobro({ cobro: recId, paciente: pacId, fecha, otro: !!String(f[FF.aNombre] || '').trim(), cliente: { nombre: datos.name, nif: datos.code || '', direccion: datos.address || '', email: datos.email || '' },
-        lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, holded: String(docId), holdedNum: borrador ? '' : String(num), por: quien || '', pagos: { modo: nombreSel(f['fldafSkOOldJ8gH70']) || '' } });
+        lineas: items.map((it, i) => ({ concepto: it.name, uds: it.units, precio: it.price, ivaDe: ivaC[i] })), fisio: fisioTxt, nota: notas, holded: String(docId), holdedNum: borrador ? '' : String(num), por: quien || '', pagos: pagosDe(nombreSel(f['fldafSkOOldJ8gH70'])) });
       await vfEnviarSuave();
     } catch (e) { console.log('Facturación propia:', e.message); }
   }
@@ -8216,7 +8225,14 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(400).json({ ok: false, error: 'Acción desconocida' }); }
       if (action === 'fac-una') { const F = await FACX.una(String(q.id || '')); if (!F) return res.status(404).json({ ok: false, error: 'No encontrada' });
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
-      if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await FACX.pago(String(q.id || ''), q.estado, q.modo) }); }
+      if (action === 'fac-cobro-pago') { // cobro del panel que se dejó pendiente (ticket de Holded): se marca pagado aquí y en su copia
+        if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.cobro || '')) return res.status(400).json({ ok: false });
+        const modo = ['Tarjeta', 'Efectivo', 'Bizum', 'Transferencia', 'Stripe'].includes(q.modo) ? q.modo : 'Tarjeta';
+        const u = await at(`${FACTURAS_TABLE}/${q.cobro}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'fldafSkOOldJ8gH70': modo }, typecast: true }) });
+        if (!u || u.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
+        try { const D = await FACX.db(); const r = await D.query(`select id from fac_facturas where cobro=$1 and tipo<>'rectificativa'`, [q.cobro]); for (const x of r.rows) await FACX.pago(x.id, 'pagada', modo); } catch (e) {}
+        return res.status(200).json({ ok: true }); }
+      if (action === 'fac-pago') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); return res.status(200).json({ ok: true, pagos: await pagoFactura(String(q.id || ''), q.estado, q.modo) }); }
       if (action === 'fac-rectificar') { if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const r = await FACX.rectificar({ id: q.id, modo: q.modo, lineas: q.lineas, motivo: q.motivo, fecha: q.fecha, por: q.quien, nota: q.nota }); await vfEnviarSuave();
         return res.status(200).json({ ok: true, ...r, k: FACX.firma(r.id) }); }
@@ -8300,7 +8316,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       const filasP = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}')`)}`).catch(() => []);
       const sesFila = F => [[F['CONCEPTO 1'], F['Nº SESIONES 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2']]].reduce((t2, [c, n]) => t2 + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
       const facPanel = {}, sueltos = [];
-      filasP.forEach(r => { const F = r.fields, s0 = sesFila(F); if (!s0) return; const x = { id: r.id, ses: s0, total: Number(F['TOTAL'] || 0), num: F['Nº FACTURA'] || '', fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), enPack: !!F['EN PACK'], grupo: F['PACK GRUPO'] || '' };
+      filasP.forEach(r => { const F = r.fields, s0 = sesFila(F); if (!s0) return; const x = { id: r.id, ses: s0, total: Number(F['TOTAL'] || 0), num: F['Nº FACTURA'] || '', fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), enPack: !!F['EN PACK'], grupo: F['PACK GRUPO'] || '', pend: nmA(F['MODO DE PAGO']) === PEND_PAGO };
         if (F['HOLDED ID']) facPanel[F['HOLDED ID']] = x; if (!x.enPack && !x.grupo && s0 <= 3) sueltos.push(x); });
       sueltos.sort((a, b) => b.fecha.localeCompare(a.fecha));
       // Packs cobrados enteros que se facturan por sesión: cuántas sesiones llevan factura
@@ -8397,6 +8413,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (Math.abs(r2(D.reduce((t, x) => t + x.v, 0)) - totL) > 0.01 && !q.tarjetaId && !q.descuento) return res.status(200).json({ ok: false, error: `Las formas de pago suman ${r2(D.reduce((t, x) => t + x.v, 0))} € y el total es ${totL} €` });
       desglose = D.map(x => `${x.m}: ${x.v}`).join(' · '); q.modoPago = 'Varias';
     }
+    if (q.modoPago === PEND_PAGO && (q.pack || q.porSesion || q.gratis || desglose)) return res.status(200).json({ ok: false, error: 'Un pack o un pago en varias formas no se puede dejar pendiente: elige cómo paga' });
     if (q.dni && normDni(q.dni).length >= 8) await at(`${PACIENTES}/${pac}`, { method: 'PATCH', body: JSON.stringify({ fields: { DNI: String(q.dni).trim().toUpperCase() } }) });
     let descuento = null, tarjeta = null;
     if (q.tarjetaId) {
