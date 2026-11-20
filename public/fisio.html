@@ -205,6 +205,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pc-t.mal b{color:#c2552e}.pc-s{font-size:11.5px;color:var(--muted);line-height:1.35;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .pc-d{font-style:normal;font-weight:600;font-size:11.5px;padding:1px 7px;border-radius:99px}.pc-d.ok{color:#2e7d4f;background:#e9f5ee}.pc-d.mal{color:#c2552e;background:#fbeee8}
 .pc-vac{font-size:13px;color:#2e7d4f;background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:10px}.pc .rnr{margin-bottom:10px}
+.pc-sk{min-height:96px;cursor:default;background:linear-gradient(90deg,#fff 0%,#f6f1ec 50%,#fff 100%);background-size:200% 100%;animation:pcsk 1.2s linear infinite}@keyframes pcsk{to{background-position:-200% 0}}
 .pc-n{font-size:12px;color:var(--muted);margin:4px 2px 30px}
 .rnr .rend-top{align-items:baseline}.rnr-per{font-size:12.5px;color:var(--muted);font-weight:500}
 .rnr-h,.rnr-f{display:grid;grid-template-columns:minmax(60px,1.3fr) repeat(6,minmax(30px,1fr)) auto;gap:6px;align-items:center;text-align:center}
@@ -12502,30 +12503,30 @@ async function renderControl(wrap){
   box.querySelectorAll('.pc-chips button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   res.innerHTML='<div class="fac-vacio">Calculando…</div>';
   const [d,h]=rangoRend(k),n=dias(d,h),pd=mv(d,-n),ph=mv(d,-1),hoy=isoMadrid(new Date());
-  const get=u=>fetch(u).then(x=>x.json()).catch(()=>({}));
-  const [cur,prev,est,rep,buz,onl,vales,prox,ingR]=await Promise.all([
-   get(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`),
-   get(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${pd}&hasta=${ph}`),
-   get(`/api/schedule?action=seg-estadisticas&pwd=${encodeURIComponent(apiPwd)}&semanas=10`),
-   comPost('reporte-dia',{fecha:''}).catch(()=>({})),comPost('seg-com-buzon').catch(()=>({})),
-   get(`/api/schedule?action=seg-agenda-online&pwd=${encodeURIComponent(apiPwd)}`),
-   get(`/api/schedule?action=seg-vales&pwd=${encodeURIComponent(apiPwd)}`),
-   get(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&desde=${hoy}&hasta=${mv(hoy,6)}`),
-   get(`/api/schedule?action=seg-ingresos-rango&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`),
-   cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]);
-  if(K!==k||!res.isConnected)return;
-  let ingP=null;try{const r2=await get(`/api/schedule?action=seg-ingresos-rango&pwd=${encodeURIComponent(apiPwd)}&desde=${pd}&hasta=${ph}`);ingP=r2&&r2.total!=null?r2.total:null;}catch(e){}
-  if(K!==k||!res.isConnected)return;
-  const L=cur.fisios||[],P=prev.fisios||[];
-  // Semanas (lunes) del periodo, para nuevos, conversión e ingresos
+  // Todo se pide a la vez y cada bloque se pinta en cuanto llega lo suyo; 3 min de memoria por periodo
+  const ck=k+'|'+d+'|'+h;window.__pcC=window.__pcC||{};let Q=window.__pcC[ck];
+  if(!Q||Date.now()-Q.t>180000){const get=u=>fetch(u).then(x=>x.json()).catch(()=>({})),A=`pwd=${encodeURIComponent(apiPwd)}`;
+   const cur=get(`/api/schedule?action=rendimiento&${A}&desde=${d}&hasta=${h}`);
+   Q=window.__pcC[ck]={t:Date.now(),cur,prev:get(`/api/schedule?action=rendimiento&${A}&desde=${pd}&hasta=${ph}`),
+    est:get(`/api/schedule?action=seg-estadisticas&${A}&semanas=10`),ingR:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${d}&hasta=${h}`),ingP:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${pd}&hasta=${ph}`),
+    rep:comPost('reporte-dia',{fecha:''}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
+    onl:get(`/api/schedule?action=seg-agenda-online&${A}`),vales:get(`/api/schedule?action=seg-vales&${A}`),prox:get(`/api/schedule?action=seg-agenda-dia&${A}&desde=${hoy}&hasta=${mv(hoy,6)}`),
+    aux:Promise.all([cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]),
+    horas:cur.then(r=>Promise.all(((r&&r.fisios)||[]).filter(x=>x.dias).map(x=>get(`/api/schedule?action=horas&${A}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`).then(hz=>[String(x.fisio).split(' ')[0],(hz.registros||[]).filter(r=>r.pendiente).length]))))};}
+  const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
+  const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
+  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas comparan con los ${n} días anteriores. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
+  const pon=(b,html,fn)=>{if(!vivo())return;const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
+  // 1 · Negocio
+  Promise.all([Q.cur,Q.prev,Q.est,Q.ingR,Q.ingP]).then(([cur,prev,est,ingR,ingP0])=>{
+  const L=cur.fisios||[],P=prev.fisios||[],ingP=ingP0&&ingP0.total!=null?ingP0.total:null;
   const lun=f=>mv(f,-((new Date(f+'T12:00:00Z').getUTCDay()+6)%7)),W=((est&&est.semanas)||[]).filter(w=>w.semana>=lun(d)&&w.semana<=h),WP=((est&&est.semanas)||[]).filter(w=>w.semana<lun(d)).sort((a,b)=>b.semana.localeCompare(a.semana)).slice(0,W.length);
   const sw=(A,q)=>A.reduce((a,w)=>a+(Number(w[q])||0),0),ing=ingR&&ingR.total!=null?ingR.total:null;
   const conv=sw(W,'vinieron')?Math.round(sw(W,'reagendaron')*100/sw(W,'vinieron')):null,convP=sw(WP,'vinieron')?Math.round(sw(WP,'reagendaron')*100/sw(WP,'vinieron')):null;
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
-  const cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal';
   const semTxt=W.length?(W.length===1?'semana del '+fchR(W[0].semana):'semanas del '+fchR(W.map(w=>w.semana).sort()[0])+' en adelante'):'';
-  let html=sec('Cómo va el negocio','Comparado con el periodo anterior',`<div class="pc-g">
+  pon('neg',sec('Cómo va el negocio','Comparado con el periodo anterior',`<div class="pc-g">
    ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
    ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
    ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
@@ -12534,45 +12535,41 @@ async function renderControl(wrap){
    ${tile({t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
    ${tile({t:'Faltas',v:falt,prev:faltP,menos:1,cls:falt?'med':'ok',sub:'no vinieron sin avisar',go:'rend'})}
    ${tile({t:'Cancelaciones',v:canc,prev:cancP,menos:1,go:'rend'})}
-   ${(rep&&rep.sinFacturar)?tile({t:'Sesiones sin facturar',v:rep.sinFacturar.reduce((a,x)=>a+(x.n||0),0),cls:rep.sinFacturar.length?'mal':'ok',go:'agenda'}):''}
-  </div>`);
-  // Fidelización: sin reagendar (con Avisar), llamadas atrasadas, valoraciones
-  const NR=rendNoReag(L,d,h);
-  const atr=(rep&&rep.atrasado)||[];
-  const E=(typeof ENC_UL!=='undefined'&&ENC_UL)||[],En=E.filter(x=>x.tipo!=='mejora'),ok=En.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length;
-  html+=sec('Fidelización','',`${NR.html||'<div class="pc-vac">Nadie sin reagendar en este periodo ✓</div>'}<div class="pc-g">
-   ${tile({t:'Llamadas y tareas atrasadas',v:atr.reduce((a,g)=>a+g.tareas+g.llamadas,0),cls:atr.some(g=>g.maxDias>3)?'mal':atr.length?'med':'ok',sub:atr.length?atr.map(g=>escH(String(g.fisio).split(' ')[0])+' '+(g.tareas+g.llamadas)).join(' · '):'todo al día',go:'rdia'})}
-   ${tile({t:'Encuestas contentos',v:En.length?Math.round(ok*100/En.length):null,suf:'%',cls:cl(En.length?Math.round(ok*100/En.length):null,85,70),sub:En.length+' respuestas · 14 días',go:'val'})}
-   ${tile({t:'Fueron a Google',v:E.filter(x=>x.resena).length,sub:'reseñas · 14 días',go:'val'})}
-  </div>`);
-  // Lo que tienes que resolver tú
-  const H=(buz&&buz.hilos)||[],aus=H.filter(x=>x.puedeAprobar),pend={},sch={};
-  H.filter(x=>x.abierta&&x.modo!=='leer'&&x.tipo!=='Ausencia').forEach(x=>(x.faltan||[]).forEach(p=>{const m=x.tipo==='School'?sch:pend;m[p]=(m[p]||0)+1;}));
-  const noEnv=((rep&&rep.fisios)||[]).filter(f=>!f.enviado&&f.hechas);
-  const porVal={};await Promise.all(L.filter(x=>x.dias).map(async x=>{try{const hz=await (await fetch(`/api/schedule?action=horas&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`)).json();const n=(hz.registros||[]).filter(r=>r.pendiente).length;if(n)porVal[String(x.fisio).split(' ')[0]]=n;}catch(e){}}));
-  if(K!==k||!res.isConnected)return;
-  const lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
-  const nPend=Object.values(pend).reduce((a,b)=>a+b,0),nSch=Object.values(sch).reduce((a,b)=>a+b,0),nVal=Object.values(porVal).reduce((a,b)=>a+b,0);
-  html+=sec('Lo que tienes que resolver','',`<div class="pc-g">
-   ${tile({t:'Vacaciones y horarios por aprobar',v:aus.length,cls:aus.length?'mal':'ok',sub:aus.length?aus.map(x=>escH(x.de)).join(' · '):'nada pendiente',go:'com'})}
-   ${tile({t:'Días por validar',v:nVal,cls:nVal?'med':'ok',sub:lst(porVal)||'control de horas al día',go:'rend'})}
-   ${tile({t:'Comunicaciones sin hacer',v:nPend,cls:nPend?'med':'ok',sub:lst(pend)||'todo hecho',go:'com'})}
-   ${tile({t:'School sin hacer',v:nSch,cls:nSch?'med':'ok',sub:lst(sch)||'todos al día',go:'school'})}
-   ${tile({t:'Check-lists sin enviar',v:noEnv.length,cls:noEnv.length?'mal':'ok',sub:noEnv.length?noEnv.map(f=>escH(String(f.fisio).split(' ')[0])).join(' · ')+' · '+(rep.fecha?fchR(rep.fecha):'ayer'):'todas enviadas',go:'rdia'})}
-  </div>`);
-  // Lo que viene: huecos libres 7 días, reservas por internet, tarjetas regalo
-  const C=(prox&&prox.citas)||[],lib={};C.filter(c=>agEsLibre(c.estado)&&(c.fecha||'')>=hoy).forEach(c=>{const f=agNom(c.fisio||'');if(f)lib[f]=(lib[f]||0)+1;});
-  const nLib=Object.values(lib).reduce((a,b)=>a+b,0);
-  const RO=((onl&&onl.reservas)||[]).filter(x=>x.cuando&&String(x.cuando).slice(0,10)>=d&&String(x.cuando).slice(0,10)<=h);
-  const V=((vales&&vales.vales)||[]).filter(v=>String(v.creado||'').slice(0,10)>=d&&String(v.creado||'').slice(0,10)<=h);
-  html+=sec('Lo que viene','',`<div class="pc-g">
-   ${tile({t:'Huecos libres · 7 días',v:nLib,cls:nLib>12?'mal':nLib>5?'med':'ok',sub:lst(lib)||'agenda llena',go:'agenda'})}
-   ${tile({t:'Reservas por internet',v:RO.length,sub:RO.length?RO.filter(x=>x.origen==='App').length+' por la app · '+RO.filter(x=>x.origen!=='App').length+' por la web':'en el periodo',go:'agenda'})}
-   ${tile({t:'Tarjetas regalo',v:V.length,sub:V.length?eur(V.reduce((a,v)=>a+(Number(v.importe)||0),0))+' en el periodo':'en el periodo',go:'admin'})}
-  </div>`);
-  res.innerHTML=html+`<p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas comparan con los ${n} días anteriores. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
-  res.querySelectorAll('.pc-t[data-go]').forEach(b=>b.onclick=()=>{showSection(b.dataset.go);window.scrollTo(0,0);});
-  res.querySelectorAll('.rnr-av').forEach(b=>b.onclick=()=>rendAvisar(NR.F[+b.dataset.i],NR.per));
+  </div>`));});
+  // 2 · Fidelización
+  Promise.all([Q.cur,Q.aux]).then(([cur])=>{const NR=rendNoReag(cur.fisios||[],d,h);
+   const E=(typeof ENC_UL!=='undefined'&&ENC_UL)||[],En=E.filter(x=>x.tipo!=='mejora'),ok=En.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length;
+   const pinta=atr=>pon('fid',sec('Fidelización','',`${NR.html||'<div class="pc-vac">Nadie sin reagendar en este periodo ✓</div>'}<div class="pc-g">
+    ${atr?tile({t:'Llamadas y tareas atrasadas',v:atr.reduce((a,g)=>a+g.tareas+g.llamadas,0),cls:atr.some(g=>g.maxDias>3)?'mal':atr.length?'med':'ok',sub:atr.length?atr.map(g=>escH(String(g.fisio).split(' ')[0])+' '+(g.tareas+g.llamadas)).join(' · '):'todo al día',go:'rdia'}):'<div class="pc-t pc-sk"></div>'}
+    ${tile({t:'Encuestas contentos',v:En.length?Math.round(ok*100/En.length):null,suf:'%',cls:cl(En.length?Math.round(ok*100/En.length):null,85,70),sub:En.length+' respuestas · 14 días',go:'val'})}
+    ${tile({t:'Fueron a Google',v:E.filter(x=>x.resena).length,sub:'reseñas · 14 días',go:'val'})}
+   </div>`),el=>el.querySelectorAll('.rnr-av').forEach(b=>b.onclick=()=>rendAvisar(NR.F[+b.dataset.i],NR.per)));
+   pinta(null);Q.rep.then(rep=>pinta((rep&&rep.atrasado)||[]));});
+  // 3 · Lo que tienes que resolver
+  Promise.all([Q.buz,Q.rep,Q.horas]).then(([buz,rep,hz])=>{
+   const H=(buz&&buz.hilos)||[],aus=H.filter(x=>x.puedeAprobar),pend={},sch={},porVal={};(hz||[]).forEach(([f,n])=>{if(n)porVal[f]=n;});
+   H.filter(x=>x.abierta&&x.modo!=='leer'&&x.tipo!=='Ausencia').forEach(x=>(x.faltan||[]).forEach(p=>{const m=x.tipo==='School'?sch:pend;m[p]=(m[p]||0)+1;}));
+   const noEnv=((rep&&rep.fisios)||[]).filter(f=>!f.enviado&&f.hechas),sf=(rep&&rep.sinFacturar)||null;
+   const nPend=Object.values(pend).reduce((a,b)=>a+b,0),nSch=Object.values(sch).reduce((a,b)=>a+b,0),nVal=Object.values(porVal).reduce((a,b)=>a+b,0);
+   pon('res',sec('Lo que tienes que resolver','',`<div class="pc-g">
+    ${tile({t:'Vacaciones y horarios por aprobar',v:aus.length,cls:aus.length?'mal':'ok',sub:aus.length?aus.map(x=>escH(x.de)).join(' · '):'nada pendiente',go:'com'})}
+    ${tile({t:'Días por validar',v:nVal,cls:nVal?'med':'ok',sub:lst(porVal)||'control de horas al día',go:'rend'})}
+    ${tile({t:'Comunicaciones sin hacer',v:nPend,cls:nPend?'med':'ok',sub:lst(pend)||'todo hecho',go:'com'})}
+    ${tile({t:'School sin hacer',v:nSch,cls:nSch?'med':'ok',sub:lst(sch)||'todos al día',go:'school'})}
+    ${tile({t:'Check-lists sin enviar',v:noEnv.length,cls:noEnv.length?'mal':'ok',sub:noEnv.length?noEnv.map(f=>escH(String(f.fisio).split(' ')[0])).join(' · ')+' · '+(rep.fecha?fchR(rep.fecha):'ayer'):'todas enviadas',go:'rdia'})}
+    ${sf?tile({t:'Sesiones sin facturar',v:sf.reduce((a,x)=>a+(x.n||0),0),cls:sf.length?'mal':'ok',sub:sf.length?'hasta ayer':'todo facturado',go:'agenda'}):''}
+   </div>`));});
+  // 4 · Lo que viene
+  Promise.all([Q.prox,Q.onl,Q.vales]).then(([prox,onl,vales])=>{
+   const C=(prox&&prox.citas)||[],lib={};C.filter(c=>agEsLibre(c.estado)&&(c.fecha||'')>=hoy).forEach(c=>{const f=agNom(c.fisio||'');if(f)lib[f]=(lib[f]||0)+1;});
+   const nLib=Object.values(lib).reduce((a,b)=>a+b,0);
+   const RO=((onl&&onl.reservas)||[]).filter(x=>x.cuando&&String(x.cuando).slice(0,10)>=d&&String(x.cuando).slice(0,10)<=h);
+   const V=((vales&&vales.vales)||[]).filter(v=>String(v.creado||'').slice(0,10)>=d&&String(v.creado||'').slice(0,10)<=h);
+   pon('vie',sec('Lo que viene','',`<div class="pc-g">
+    ${tile({t:'Huecos libres · 7 días',v:nLib,cls:nLib>12?'mal':nLib>5?'med':'ok',sub:lst(lib)||'agenda llena',go:'agenda'})}
+    ${tile({t:'Reservas por internet',v:RO.length,sub:RO.length?RO.filter(x=>x.origen==='App').length+' por la app · '+RO.filter(x=>x.origen!=='App').length+' por la web':'en el periodo',go:'agenda'})}
+    ${tile({t:'Tarjetas regalo',v:V.length,sub:V.length?eur(V.reduce((a,v)=>a+(Number(v.importe)||0),0))+' en el periodo':'en el periodo',go:'admin'})}
+   </div>`));});
  };
  box.querySelectorAll('.pc-chips button').forEach(b=>b.onclick=()=>{if(b.dataset.k!=='rango')return cargar(b.dataset.k);
   const [d0]=rangoRend('rango');miniCal(b,d0,d=>{toast('Ahora elige el último día',true);setTimeout(()=>miniCal(b,d,h=>{if(h<d)[d,h]=[h,d];try{sessionStorage.setItem('f365_rend_rango',d+'|'+h);}catch(e){}b.textContent=fchR(d)+' – '+fchR(h);cargar('rango');}),60);});});
