@@ -2851,6 +2851,11 @@ const orIds = (ids, campo) => 'OR(' + ids.map(id => `FIND('${id}',ARRAYJOIN({${c
 async function lotes(ids, fn, n = 15) { const out = []; for (let i = 0; i < ids.length; i += n) out.push(...await fn(ids.slice(i, i + n))); return out; }
 // Pacientes que no llevan ejercicios en la app por un motivo (mayores, sin móvil…): { pid: { motivo, por, fecha, nombre } }
 async function sinEjercicios() { const v = await ajuste('sin_ejercicios', null); return v && typeof v === 'object' ? v : {}; }
+// Tareas del check-list cerradas con un motivo (no aplica, no es su paciente…): k|paciente|fecha (fecha '*' = siempre para ese paciente)
+let _resC = { t: 0, v: null };
+async function resDb() { const D = await FACX.db(); if (!resDb.ok) { await D.query(`create table if not exists pend_resueltos (k text not null, pac text not null, fecha text not null, motivo text, para text, por text, nombre text, creado timestamptz not null default now(), primary key (k, pac, fecha))`); resDb.ok = 1; } return D; }
+async function resueltos() { if (_resC.v && Date.now() - _resC.t < 30e3) return _resC.v; const M = new Map(); try { (await (await resDb()).query(`select * from pend_resueltos where fecha='*' or creado > now() - interval '60 days'`)).rows.forEach(r => M.set(r.k + '|' + r.pac + '|' + r.fecha, r)); } catch (e) {} _resC = { t: Date.now(), v: M }; return M; }
+const resDe = (M, k, id, f) => id && (M.get(k + '|' + id + '|' + f) || M.get(k + '|' + id + '|*'));
 async function cierreDia(fecha, soloFisio) {
   const citas = await capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`DATETIME_FORMAT({FECHA},'YYYY-MM-DD')='${fecha}'`)}&fields[]=ESTADO&fields[]=HORA&fields[]=PREF.&fields[]=RELACIÓN - CITA&fields[]=your-name`);
   const conPac = citas.filter(c => (c.fields['RELACIÓN - CITA'] || []).length && nmSel(c.fields['PREF.']) && (!soloFisio || fisioKey(nmSel(c.fields['PREF.'])) === fisioKey(soloFisio)));
@@ -2915,6 +2920,7 @@ async function cierreDia(fecha, soloFisio) {
       { k: 'proxima', t: 'Próxima cita o seguimiento', d: 'Quien no reagenda, pasa a seguimiento con el motivo', items: uni(hs.filter(c => !conFutura.has(c.fields['RELACIÓN - CITA'][0])).map(c => it(c, 'sin cita ni seguimiento'))) },
     ];
     const ultima = cs.map(c => String(c.fields['HORA'] || '').slice(0, 5)).filter(h => /^\d{1,2}:\d{2}$/.test(h)).map(h => h.padStart(5, '0')).sort().pop() || ''; // hora de su última cita del día
+    { const RS = await resueltos(); checks.forEach(c => { if (!['llamadas', 'tareas', 'chat'].includes(c.k)) c.items = c.items.filter(i => { const r = resDe(RS, c.k, i.id, fecha); if (r && r.para && r.fecha !== '*') { i.para = r.para; i.paraPor = r.por || ''; return true; } return !r; }); }); }
     out[fisio] = { citas: cs.length, hechas: hs.length, ultima, checks, pendientes: checks.filter(x => !x.aviso).reduce((t, x) => t + x.items.length, 0) };
   }
   return out;
@@ -6616,15 +6622,28 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const prox = F.find(d => d >= h); out.trimestre = { fecha: prox.toISOString().slice(0, 10), dias: Math.round((prox - h) / 864e5) };
         return res.status(200).json({ ok: true, ...out });
       }
+      if (action === 'seg-pend-resolver') { // cerrar una tarea del check-list con su motivo, o pasársela a otro fisio
+        const k = String(q.k || ''), pac = String(q.pacienteId || ''), fecha = q.siempre ? '*' : String(q.fecha || '');
+        if (!/^[a-z]{2,12}$/.test(k) || !/^rec[A-Za-z0-9]{14}$/.test(pac) || !(fecha === '*' || /^\d{4}-\d{2}-\d{2}$/.test(fecha))) return res.status(400).json({ ok: false, error: 'Faltan datos' });
+        const motivo = String(q.motivo || '').trim().slice(0, 200); if (!motivo) return res.status(400).json({ ok: false, error: 'Escribe el motivo' });
+        const D = await resDb();
+        if (q.quitar) await D.query(`delete from pend_resueltos where k=$1 and pac=$2 and fecha=$3`, [k, pac, fecha]);
+        else await D.query(`insert into pend_resueltos (k, pac, fecha, motivo, para, por, nombre) values ($1,$2,$3,$4,$5,$6,$7) on conflict (k, pac, fecha) do update set motivo=excluded.motivo, para=excluded.para, por=excluded.por, nombre=excluded.nombre, creado=now()`, [k, pac, fecha, motivo, String(q.para || '').slice(0, 40) || null, String(q.quien || '').slice(0, 40), String(q.nombre || '').slice(0, 80)]);
+        _resC = { t: 0, v: null }; return res.status(200).json({ ok: true });
+      }
+      if (action === 'seg-pend-resueltos') { // dirección: lo cerrado con motivo en los últimos días
+        const R = (await (await resDb()).query(`select k, pac, fecha, motivo, para, por, nombre, creado from pend_resueltos where creado > now() - interval '30 days' order by creado desc limit 200`)).rows;
+        return res.status(200).json({ ok: true, items: R });
+      }
       if (action === 'seg-pend-ahora') { // Panel de control: lo que sigue sin hacer AHORA de los check-lists de los últimos días (historias, ejercicios, app, cobros, citas sin marcar, sin reagendar…)
         const nd = Math.min(30, Math.max(1, Number(q.dias) || 14)), dias = [];
         for (let i = 1; i <= nd; i++) { const t = new Date(hoyF + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() - i); if (t.getUTCDay() !== 0) dias.push(t.toISOString().slice(0, 10)); }
-        const SKIP = new Set(['llamadas', 'tareas', 'chat']), M = new Map();
+        const SKIP = new Set(['llamadas', 'tareas', 'chat']), M = new Map(), RS = await resueltos();
         for (let i = 0; i < dias.length; i += 6) {
           const R = await Promise.all(dias.slice(i, i + 6).map(f => cierreDia(f).then(o => [f, o]).catch(() => [f, {}])));
           R.forEach(([f, o]) => Object.entries(o || {}).forEach(([fisio, x]) => (x.checks || []).filter(c => !c.aviso && !SKIP.has(c.k)).forEach(c => (c.items || []).forEach(it => {
-            const key = fisioKey(fisio) + '|' + c.k + '|' + (it.id || it.nombre); const ya = M.get(key);
-            if (!ya || f < ya.fecha) M.set(key, { fisio, k: c.k, t: c.t, id: it.id || '', nombre: it.nombre || '', extra: it.extra || '', fecha: f });
+            const fz = it.para || fisio, key = fisioKey(fz) + '|' + c.k + '|' + (it.id || it.nombre); const ya = M.get(key);
+            if (!ya || f < ya.fecha) M.set(key, { fisio: fz, k: c.k, t: c.t, id: it.id || '', nombre: it.nombre || '', extra: it.para ? 'te lo pasó ' + (it.paraPor || 'un compañero') : (it.extra || ''), fecha: f });
           }))));
         }
         return res.status(200).json({ ok: true, dias: nd, items: [...M.values()] });
