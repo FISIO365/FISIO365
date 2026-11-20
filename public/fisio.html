@@ -12503,7 +12503,7 @@ async function renderControl(wrap){
   res.innerHTML='<div class="fac-vacio">Calculando…</div>';
   const [d,h]=rangoRend(k),n=dias(d,h),pd=mv(d,-n),ph=mv(d,-1),hoy=isoMadrid(new Date());
   const get=u=>fetch(u).then(x=>x.json()).catch(()=>({}));
-  const [cur,prev,est,rep,buz,onl,vales,prox]=await Promise.all([
+  const [cur,prev,est,rep,buz,onl,vales,prox,ingR]=await Promise.all([
    get(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`),
    get(`/api/schedule?action=rendimiento&pwd=${encodeURIComponent(apiPwd)}&desde=${pd}&hasta=${ph}`),
    get(`/api/schedule?action=seg-estadisticas&pwd=${encodeURIComponent(apiPwd)}&semanas=10`),
@@ -12511,20 +12511,23 @@ async function renderControl(wrap){
    get(`/api/schedule?action=seg-agenda-online&pwd=${encodeURIComponent(apiPwd)}`),
    get(`/api/schedule?action=seg-vales&pwd=${encodeURIComponent(apiPwd)}`),
    get(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&desde=${hoy}&hasta=${mv(hoy,6)}`),
+   get(`/api/schedule?action=seg-ingresos-rango&pwd=${encodeURIComponent(apiPwd)}&desde=${d}&hasta=${h}`),
    cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]);
+  if(K!==k||!res.isConnected)return;
+  let ingP=null;try{const r2=await get(`/api/schedule?action=seg-ingresos-rango&pwd=${encodeURIComponent(apiPwd)}&desde=${pd}&hasta=${ph}`);ingP=r2&&r2.total!=null?r2.total:null;}catch(e){}
   if(K!==k||!res.isConnected)return;
   const L=cur.fisios||[],P=prev.fisios||[];
   // Semanas (lunes) del periodo, para nuevos, conversión e ingresos
-  const lun=f=>mv(f,-((new Date(f+'T12:00:00Z').getUTCDay()+6)%7)),W=((est&&est.semanas)||[]).filter(w=>w.semana>=lun(d)&&w.semana<=h),WP=((est&&est.semanas)||[]).filter(w=>w.semana>=lun(pd)&&w.semana<=ph&&w.semana<lun(d));
-  const sw=(A,q)=>A.reduce((a,w)=>a+(Number(w[q])||0),0),ing=W.some(w=>w.ingresos!=null)?sw(W,'ingresos'):null,ingP=WP.some(w=>w.ingresos!=null)?sw(WP,'ingresos'):null;
+  const lun=f=>mv(f,-((new Date(f+'T12:00:00Z').getUTCDay()+6)%7)),W=((est&&est.semanas)||[]).filter(w=>w.semana>=lun(d)&&w.semana<=h),WP=((est&&est.semanas)||[]).filter(w=>w.semana<lun(d)).sort((a,b)=>b.semana.localeCompare(a.semana)).slice(0,W.length);
+  const sw=(A,q)=>A.reduce((a,w)=>a+(Number(w[q])||0),0),ing=ingR&&ingR.total!=null?ingR.total:null;
   const conv=sw(W,'vinieron')?Math.round(sw(W,'reagendaron')*100/sw(W,'vinieron')):null,convP=sw(WP,'vinieron')?Math.round(sw(WP,'reagendaron')*100/sw(WP,'vinieron')):null;
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
   const cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal';
-  const semTxt=W.length?(W.length===1?'semana del '+fchR(W[0].semana):W.length+' semanas'):'';
+  const semTxt=W.length?(W.length===1?'semana del '+fchR(W[0].semana):'semanas del '+fchR(W.map(w=>w.semana).sort()[0])+' en adelante'):'';
   let html=sec('Cómo va el negocio','Comparado con el periodo anterior',`<div class="pc-g">
    ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
-   ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:semTxt||'por semanas',go:'stats'})}
+   ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
    ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
    ${tile({t:'Pacientes nuevos',v:W.length?sw(W,'nuevos'):null,prev:WP.length?sw(WP,'nuevos'):null,sub:semTxt,go:'stats'})}
    ${tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:'conversión · '+(semTxt||'—'),go:'stats'})}

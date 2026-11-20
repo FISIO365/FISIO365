@@ -6604,6 +6604,12 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-ingresos-rango') { // Panel de control: ingresos de días exactos (lo mismo que cuenta Estadísticas: tickets de Holded + facturas del panel + packs)
+        const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
+        if (!HOLDED_KEY || q.desde < HOLDED_DESDE) return res.status(200).json({ ok: true, total: null });
+        const dias = await ingresosHoldedDias(q.desde, q.hasta);
+        return res.status(200).json({ ok: true, total: Math.round(Object.values(dias || {}).reduce((a, v) => a + v, 0) * 100) / 100, dias });
+      }
       if (action === 'seg-ingresos-detalle') {
         // Desglose de los tickets de Holded de un periodo: cuáles cuentan en Estadísticas y cuáles no (y por qué)
         if (!HOLDED_KEY) return res.status(200).json({ ok: false, error: 'Holded no está conectado' });
