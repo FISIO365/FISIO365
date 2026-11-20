@@ -1264,9 +1264,9 @@
 "Declaro que conec i accepto que els bons de tractament s'ofereixen a un preu reduït respecte a la tarifa de sessió individual, no tenen data de caducitat i, un cop contractats, no són reemborsables.",
 "I declare that I know and accept that treatment packs are offered at a reduced price compared to the single-session rate, have no expiry date and, once purchased, are non-refundable."
 ],
-"Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas o magnéticas.": [
-"Declaro que he rebut l'alta mèdica a la unitat oncològica corresponent, que no estic actualment sota tractament actiu contra el càncer (quimioteràpia, radioteràpia, immunoteràpia o altres) i que no hi ha cap contraindicació mèdica actual per a l'aplicació de teràpies físiques o magnètiques.",
-"I declare that I have been medically discharged by the relevant oncology unit, that I am not currently under active cancer treatment (chemotherapy, radiotherapy, immunotherapy or other), and that there is no current medical contraindication to the application of physical or magnetic therapies."
+"Declaro haber recibido el alta médica en la unidad oncológica correspondiente, no estar actualmente bajo tratamiento activo contra el cáncer (quimioterapia, radioterapia, inmunoterapia u otros), y que no existe contraindicación médica actual para la aplicación de terapias físicas (como la electroterapia o la radiofrecuencia) o magnéticas.": [
+"Declaro que he rebut l'alta mèdica a la unitat oncològica corresponent, que no estic actualment sota tractament actiu contra el càncer (quimioteràpia, radioteràpia, immunoteràpia o altres) i que no hi ha cap contraindicació mèdica actual per a l'aplicació de teràpies físiques (com l'electroteràpia o la radiofreqüència) o magnètiques.",
+"I declare that I have been medically discharged by the relevant oncology unit, that I am not currently under active cancer treatment (chemotherapy, radiotherapy, immunotherapy or other), and that there is no current medical contraindication to the application of physical therapies (such as electrotherapy or radiofrequency) or magnetic therapies."
 ],
 "Declaro que": [
 "Declaro que",
@@ -1880,9 +1880,9 @@
 "La fisioteràpia de sòl pelvià té com a objectiu la valoració i el tractament de disfuncions relacionades amb la regió abdominopelviana, com ara la incontinència urinària o fecal, el dolor pelvià, el postpart, els prolapses o les disfuncions sexuals, entre d'altres.",
 "Pelvic floor physiotherapy aims to assess and treat dysfunctions related to the abdominopelvic region, such as urinary or faecal incontinence, pelvic pain, postpartum issues, prolapses or sexual dysfunctions, among others."
 ],
-"Las terapias físicas y magnéticas (como la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.": [
-"Les teràpies físiques i magnètiques (com la bomba diamagnètica) són tractaments no invasius: no impliquen cirurgia, injeccions ni radiació ionitzant. El seu objectiu és afavorir la recuperació dels teixits, reduir el dolor i millorar la circulació.",
-"Physical and magnetic therapies (such as the diamagnetic pump) are non-invasive treatments: they involve no surgery, injections or ionising radiation. Their aim is to support tissue recovery, reduce pain and improve circulation."
+"Las terapias físicas y magnéticas (como la electroterapia, la radiofrecuencia o la bomba diamagnética) son tratamientos no invasivos: no implican cirugía, inyecciones ni radiación ionizante. Su objetivo es favorecer la recuperación de los tejidos, reducir el dolor y mejorar la circulación.": [
+"Les teràpies físiques i magnètiques (com l'electroteràpia, la radiofreqüència o la bomba diamagnètica) són tractaments no invasius: no impliquen cirurgia, injeccions ni radiació ionitzant. El seu objectiu és afavorir la recuperació dels teixits, reduir el dolor i millorar la circulació.",
+"Physical and magnetic therapies (such as electrotherapy, radiofrequency or the diamagnetic pump) are non-invasive treatments: they involve no surgery, injections or ionising radiation. Their aim is to support tissue recovery, reduce pain and improve circulation."
 ],
 "Las técnicas utilizadas no deben ser dolorosas. No obstante, en algunos casos puede aparecer una ligera molestia o sensación de irritación tras la sesión. De forma poco frecuente, pueden aparecer molestias derivadas de la sensibilidad de la zona o del uso de dispositivos terapéuticos.": [
 "Les tècniques utilitzades no han de ser doloroses. No obstant això, en alguns casos pot aparèixer una lleugera molèstia o sensació d'irritació després de la sessió. De manera poc freqüent, poden aparèixer molèsties derivades de la sensibilitat de la zona o de l'ús de dispositius terapèutics.",
