@@ -13,26 +13,38 @@ video{position:fixed;inset:0;width:100vw;height:100vh;object-fit:contain;backgro
 #s{position:fixed;right:28px;bottom:24px;font:600 18px Poppins,system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.45);border-radius:99px;padding:10px 18px;opacity:0;transition:opacity .4s}
 #s.on{opacity:1}
 </style></head><body>
-<video id="v" muted playsinline loop preload="auto"></video>
+<video id="v" muted playsinline preload="auto"></video>
 <div id="c"><b>FISIO<span>365</span></b><p id="t">Cargando el vídeo…</p><i><u id="b"></u></i></div>
 <div id="s"></div>
 <script>
 // Vídeo de la TV de recepción: se descarga una sola vez (se guarda en la memoria de la tele) y se repite sin parar, sin anuncios.
 // Botón OK del mando (o un clic): sonido sí / no.
 var v=document.getElementById('v'),c=document.getElementById('c'),t=document.getElementById('t'),b=document.getElementById('b'),s=document.getElementById('s');
-var SRC='/tv/fisio365-tv.mp4';
+// Programación (fecha de la tele):
+//  · hasta el 27/11/2026: alterna Navidad y el vídeo normal
+//  · del 28/11/2026 al 6/1/2027: solo Navidad
+//  · desde el 7/1/2027: solo el vídeo normal
+var NORMAL='/tv/fisio365-tv-2.mp4',NAVIDAD='/tv/navidad-2026.mp4';
+function hoy(){var d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function lista(){var h=hoy();if(h<=20261127)return[NAVIDAD,NORMAL];if(h<=20270106)return[NAVIDAD];return[NORMAL];}
+var blobs={},cargando={},actual=null,pos=0;
 function aviso(x){s.textContent=x;s.classList.add('on');clearTimeout(aviso.t);aviso.t=setTimeout(function(){s.classList.remove('on');},2500);}
-function empieza(url){v.src=url;var p=v.play();if(p&&p.catch)p.catch(function(){});v.addEventListener('playing',function(){c.classList.add('fuera');},{once:true});}
-function directo(){t.textContent='Cargando el vídeo…';empieza(SRC);}
-// Descarga entera con progreso; si la tele no deja, se reproduce directamente
-try{
- var x=new XMLHttpRequest();x.open('GET',SRC,true);x.responseType='blob';
- x.onprogress=function(e){if(e.lengthComputable){var p=Math.round(e.loaded*100/e.total);b.style.width=p+'%';t.textContent='Cargando el vídeo… '+p+' %';}};
- x.onload=function(){if(x.status===200&&x.response&&x.response.size>1e6){b.style.width='100%';empieza(URL.createObjectURL(x.response));}else directo();};
- x.onerror=directo;x.send();
-}catch(e){directo();}
-// Si por lo que sea se para, vuelve a arrancar
-v.addEventListener('ended',function(){v.currentTime=0;v.play();});
+function pon(url){actual=url;v.src=blobs[url]||url;var p=v.play();if(p&&p.catch)p.catch(function(){});}
+v.addEventListener('playing',function(){c.classList.add('fuera');});
+// Descarga entera (se guarda en la memoria de la tele); si no deja, se reproduce directamente
+function baja(url,conBarra,listo){if(blobs[url]){listo();return}if(cargando[url])return;cargando[url]=1;
+ try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='blob';
+  if(conBarra)x.onprogress=function(e){if(e.lengthComputable){var p=Math.round(e.loaded*100/e.total);b.style.width=p+'%';t.textContent='Cargando el vídeo… '+p+' %';}};
+  x.onload=function(){cargando[url]=0;if(x.status===200&&x.response&&x.response.size>1e6)blobs[url]=URL.createObjectURL(x.response);listo();};
+  x.onerror=function(){cargando[url]=0;listo();};x.send();
+ }catch(e){cargando[url]=0;listo();}}
+function siguiente(){var L=lista();pos=(pos+1)%L.length;var url=L[pos];
+ if(blobs[url]||L.length===1)pon(url);else{pon(L[(pos+1)%L.length]);}
+ L.forEach(function(u){baja(u,false,function(){});});}
+// Arranque: el primero de la lista con barra; los demás se bajan detrás
+(function(){var L=lista();pos=0;baja(L[0],true,function(){b.style.width='100%';pon(L[0]);L.slice(1).forEach(function(u){baja(u,false,function(){});});});})();
+// Al acabar un vídeo pasa al siguiente (y mira la fecha cada vez)
+v.addEventListener('ended',siguiente);
 setInterval(function(){if(v.src&&v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){});}},5000);
 v.addEventListener('error',function(){setTimeout(function(){location.reload();},10000);});
 // Sonido con OK / clic; pantalla completa si la tele lo permite
