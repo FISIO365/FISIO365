@@ -12459,10 +12459,10 @@ function rendNoReag(L,d,h){
  const F=L.filter(x=>x.lista&&x.lista.length).map(x=>{const P=x.lista.map(p=>Object.assign({},p,cls(p)));return {x,P,altas:P.filter(p=>p.alta),seg:P.filter(p=>!p.alta&&p.seg),rev:P.filter(p=>p.rev),sinExp:P.filter(p=>!p.alta&&!p.exp)};});
  if(!F.length)return {html:'',F};
  const html=`<div class="rend-card rnr"><div class="rend-top"><b>Pacientes sin reagendar</b><span class="rnr-per">${escH(per)}</span></div>
-  <div class="rnr-h"><span></span><span>Total</span><span>Altas</span><span>Seguim.</span><span>Cancel.</span><span>Revisar</span><span>Sin expl.</span><span class="rnr-av rnr-ph" aria-hidden="true">Avisar</span></div>
+  <div class="rnr-h"><span></span><span>Tot.</span><span>Altas</span><span>Seg.</span><span>Canc.</span><span>Rev.</span><span>S/expl.</span><span class="rnr-av rnr-ph" aria-hidden="true">Avisar</span></div>
   ${F.map((f,i)=>`<div class="rnr-f"><b>${escH(String(f.x.fisio).split(' ')[0])}</b><span>${f.P.length}</span><span class="ok">${f.altas.length}</span><span class="ok">${f.seg.length}</span><span class="${f.P.filter(p=>p.canc).length?'med':'ok'}">${f.P.filter(p=>p.canc).length}</span><span class="${f.rev.length?'mal':'ok'}">${f.rev.length}</span><span class="${f.sinExp.length?'mal':'ok'}">${f.sinExp.length}</span>
    <button type="button" class="rnr-av" data-i="${i}">Avisar</button></div>`).join('')}
-  <p class="rnr-n">«Cancel.» = reservaron otra cita y luego la cancelaron (ya está explicado solo). «Revisar» = ni de alta ni en seguimiento. Las altas están bien. «Avisar» le escribe a cada fisio con sus pacientes enlazados.</p></div>`;
+  <p class="rnr-n">«Seg.» = en seguimiento. «Canc.» = reservaron otra cita y luego la cancelaron (ya está explicado solo). «Rev.» = por revisar: ni de alta ni en seguimiento. «S/expl.» = sin explicar. Las altas están bien. «Avisar» le escribe a cada fisio con sus pacientes enlazados.</p></div>`;
  return {html,F,per};
 }
 function rendAvisoTxt(f,per){
@@ -12495,14 +12495,22 @@ async function renderControl(wrap){
  const eur=n=>n==null?'—':Math.round(n).toLocaleString('es-ES')+' €',pct=(a,b)=>b?Math.round(a*100/b):null;
  const sec=(t,sub,html)=>`<div class="pc-sec"><div class="pc-st"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</div>${html}</div>`;
  // Tarjeta: valor grande, color (ok/med/mal), comparación con el periodo anterior y a dónde lleva
- const tile=o=>{const dl=o.prev==null||o.v==null||o.v===o.prev?'':(()=>{const up=o.v>o.prev,bien=o.menos?!up:up;return `<em class="pc-d ${bien?'ok':'mal'}">${up?'↑':'↓'} ${o.fmt?o.fmt(Math.abs(o.v-o.prev)):Math.abs(o.v-o.prev)}${o.suf||''}</em>`;})();
+ const tile=o=>{const dl=o.prev==null||o.v==null||o.v===o.prev?'':(()=>{const up=o.v>o.prev,bien=o.menos?!up:up;return `<em class="pc-d ${bien?'ok':'mal'}" title="${o.prev==null?'':'Antes: '+(o.fmt?o.fmt(o.prev):o.prev)+(o.suf||'')}">${up?'↑':'↓'} ${o.fmt?o.fmt(Math.abs(o.v-o.prev)):Math.abs(o.v-o.prev)}${o.suf==='%'?' pts':(o.suf||'')}</em>`;})();
   return `<button type="button" class="pc-t ${o.cls||''}"${o.go?` data-go="${o.go}"`:''}><span class="pc-l">${o.t}</span><b>${o.v==null?'—':(o.fmt?o.fmt(o.v):o.v)}${o.v!=null&&o.suf?o.suf:''}</b><span class="pc-s">${o.sub||''}${dl}</span></button>`;};
  const ocup=L=>{const F=(L||[]).filter(x=>!x.sinHoras);const r=F.reduce((a,x)=>a+x.realizadas,0),h=F.reduce((a,x)=>a+x.huecos,0);return h?Math.round(r*100/h):null;};
  const sum=(L,k)=>(L||[]).reduce((a,x)=>a+(x[k]||0),0);
  const cargar=async k=>{K=k;try{sessionStorage.setItem('f365_pc_per',k);}catch(e){}
   box.querySelectorAll('.pc-chips button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   res.innerHTML='<div class="fac-vacio">Calculando…</div>';
-  const [d,h]=rangoRend(k),n=dias(d,h),pd=mv(d,-n),ph=mv(d,-1),hoy=isoMadrid(new Date());
+  const [d,h]=rangoRend(k),n=dias(d,h),hoy=isoMadrid(new Date()),MN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  // Con qué se compara: el mismo trozo del periodo anterior (ayer con anteayer, este mes con los mismos días del mes pasado…)
+  const mesAnt=(f,dia)=>{const x=new Date(f.slice(0,8)+'01T12:00:00Z');x.setUTCDate(0);const fin=x.toISOString().slice(0,10);return dia?fin.slice(0,8)+String(Math.min(+dia,+fin.slice(8))).padStart(2,'0'):fin;};
+  let pd,ph,vs;
+  if(k==='hoy'||k==='ayer'){pd=ph=mv(d,-1);vs=k==='hoy'?'que ayer':'que anteayer';}
+  else if(k==='semana'||k==='semanaPasada'){pd=mv(d,-7);ph=mv(h,-7);vs=k==='semana'?'que los mismos días de la semana pasada':'que la semana anterior';}
+  else if(k==='mes'){pd=mesAnt(d).slice(0,8)+'01';ph=mesAnt(d,h.slice(8));vs='que del 1 al '+(+ph.slice(8))+' de '+MN[+pd.slice(5,7)-1];}
+  else if(k==='mesPasado'){ph=mesAnt(d);pd=ph.slice(0,8)+'01';vs='que '+MN[+pd.slice(5,7)-1];}
+  else{pd=mv(d,-n);ph=mv(d,-1);vs='que los '+n+' días anteriores';}
   // Todo se pide a la vez y cada bloque se pinta en cuanto llega lo suyo; 3 min de memoria por periodo
   const ck=k+'|'+d+'|'+h;window.__pcC=window.__pcC||{};let Q=window.__pcC[ck];
   if(!Q||Date.now()-Q.t>180000){const get=u=>fetch(u).then(x=>x.json()).catch(()=>({})),A=`pwd=${encodeURIComponent(apiPwd)}`;
@@ -12515,7 +12523,7 @@ async function renderControl(wrap){
     horas:cur.then(r=>Promise.all(((r&&r.fisios)||[]).filter(x=>x.dias).map(x=>get(`/api/schedule?action=horas&${A}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`).then(hz=>[String(x.fisio).split(' ')[0],(hz.registros||[]).filter(r=>r.pendiente).length]))))};}
   const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
   const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
-  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas comparan con los ${n} días anteriores. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas dicen cuánto más (↑) o menos (↓) hay ${vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos y conversión van por semanas completas, así que solo salen en periodos de una semana o más. Toca una tarjeta para ir al detalle.</p>`;
   const pon=(b,html,fn)=>{if(!vivo())return;const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
   // 1 · Negocio
   Promise.all([Q.cur,Q.prev,Q.est,Q.ingR,Q.ingP]).then(([cur,prev,est,ingR,ingP0])=>{
@@ -12526,7 +12534,7 @@ async function renderControl(wrap){
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
   const semTxt=W.length?(W.length===1?'semana del '+fchR(W[0].semana):'semanas del '+fchR(W.map(w=>w.semana).sort()[0])+' en adelante'):'';
-  pon('neg',sec('Cómo va el negocio','Comparado con el periodo anterior',`<div class="pc-g">
+  pon('neg',sec('Cómo va el negocio','Flechas: más o menos '+vs,`<div class="pc-g">
    ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
    ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
    ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
