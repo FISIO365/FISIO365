@@ -12477,7 +12477,7 @@ const fchR=f=>{const [y,m,d]=String(f).split('-');return +d+'/'+ +m;};
 function rendNoReag(L,d,h,o){o=o||{};
  const ML=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],hoyI=isoMadrid(new Date());
  const per=d===h?`El ${fchR(d)}`:(d.slice(8)==='01'&&d.slice(0,7)===h.slice(0,7)&&h===hoyI)?`En lo que va de ${ML[+d.slice(5,7)-1]}`:`Del ${fchR(d)} al ${fchR(h)}`;
- const cls=p=>{const alta=pacEstados(p.id).map(estNom).some(n=>String(n||'').trim().toUpperCase()==='ALTA')||/^\s*reserva por la app/i.test(p.nota||''),seg=!!SEG_PAC[p.id],exp=!!((p.nota&&p.notaFecha>=p.ultima)||p.cancelo);return {alta,seg,exp,canc:!!p.cancelo,rev:!alta&&!seg};};
+ const cls=p=>{const alta=pacEstados(p.id).map(estNom).some(n=>['ALTA','ABANDONO','NO ACUDIÓ'].includes(String(n||'').trim().toUpperCase()))||/^\s*reserva por la app/i.test(p.nota||''),seg=!!SEG_PAC[p.id],exp=!!((p.nota&&p.notaFecha>=p.ultima)||p.cancelo);return {alta,seg,exp,canc:!!p.cancelo,rev:!alta&&!seg};};
  const F0=L.filter(x=>x.lista&&x.lista.length).map(x=>{const P=x.lista.map(p=>Object.assign({},p,cls(p))).filter(p=>!o.soloRev||p.rev);return {x,P,altas:P.filter(p=>p.alta),seg:P.filter(p=>!p.alta&&p.seg),rev:P.filter(p=>p.rev),sinExp:P.filter(p=>!p.alta&&!p.exp)};});
  const F=F0.filter(f=>f.P.length);if(!F.length)return {html:'',F};
  if(o.soloRev){const html=`<div class="rend-card rnr rnr4"><div class="rend-top"><b>${escH(o.tit||'Sin reagendar')}</b><span class="rnr-per">${escH(o.per||per)}</span></div>
@@ -12531,7 +12531,7 @@ function pcAtrasHtml(atr){
   <div class="pca-lh"><span>Quién</span><span>${IC_T}</span><span>${IC_K}</span><span></span></div>`+atr.map((g,i)=>{const sa=/^sin asignar$/i.test(g.fisio),nom=sa?'Sin asignar':escH(String(g.fisio).split(' ')[0]),vj=g.maxDias>3;
   return `<details class="pca-f"><summary><span class="pca-q"><b><i class="pca-fl">›</i>${nom}</b><small class="${vj?'mal':''}">la más antigua, hace ${dd(g.maxDias)}</small></span>${ch(g.llamadas,IC_T,'Llamadas')}${ch(g.tareas,IC_K,'Tareas')}${sa?`<button type="button" class="rnr-av pca-rep">Repartir</button>`:`<button type="button" class="rnr-av" data-g="${i}">Avisar</button>`}</summary>
    <div class="pca-l">${sa?'<p class="pca-nota">Están en «Por llamar» sin nadie asignado, así que nadie las ve como suyas. Repártelas.</p>':''}
-   ${g.items.map(it=>`<div class="pca-i"><i class="pca-ii">${it.tipo==='tarea'?IC_K:IC_T}</i><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}">${escH(capTit(it.paciente))}</button>`:''}<small>${it.tipo==='tarea'?escH(it.texto):'Llamada de seguimiento'}</small></span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em></div>`).join('')}</div></details>`;}).join('')+'<p class="rnr-n">Toca un nombre para ver su lista. Tareas = sus pendientes más lo que le quedó en el check-list (historias, ejercicios, app, sin reagendar…). «Avisar» le manda lo suyo, con los pacientes enlazados.</p></div>';
+   ${g.items.map(it=>`<div class="pca-i"><i class="pca-ii">${it.tipo==='tarea'?IC_K:IC_T}</i><span>${it.paciente?`<button type="button" class="rd-pac" data-p="${escH(it.pacienteId)}" data-n="${escH(it.paciente)}">${escH(capTit(it.paciente))}</button>`:''}<small>${it.tipo==='tarea'?escH(it.texto):'Llamada de seguimiento'}</small></span><em class="${it.dias>3?'mal':''}">hace ${dd(it.dias)}</em></div>`).join('')}</div></details>`;}).join('')+'<p class="rnr-n">Toca un nombre para ver su lista. Tareas = sus pendientes más lo que sigue sin hacer de sus check-lists de las 2 últimas semanas (historias, ejercicios, app, cobros, citas sin marcar…). Los sin reagendar van en la tarjeta de abajo. «Avisar» le manda lo suyo, con los pacientes enlazados.</p></div>';
 }
 // Junta las llamadas/tareas atrasadas con lo que le quedó a cada fisio en su check-list del último día (historias, ejercicios, app, sin reagendar…): también son tareas
 function pcAtrasMezcla(rep,pend){
@@ -12540,7 +12540,7 @@ function pcAtrasMezcla(rep,pend){
  const hoyT=new Date(isoMadrid(new Date())+'T12:00:00Z'),dDe=f=>f?Math.max(0,Math.round((hoyT-new Date(f+'T12:00:00Z'))/864e5)):1;
  const add=(fisio,it)=>{let g=A.find(x=>key(x.fisio)===key(fisio));if(!g){g={fisio,tareas:0,llamadas:0,maxDias:0,items:[]};A.push(g);}g.tareas++;g.maxDias=Math.max(g.maxDias,it.dias);g.items.push(it);};
  // Lo de los check-lists de los últimos 14 días que AÚN sigue sin hacer (si no ha llegado, lo del último día)
- if(pend&&Array.isArray(pend.items)){pend.items.forEach(x=>add(x.fisio,{tipo:'tarea',texto:(TX[x.k]||x.t)+(x.k==='marcar'&&x.extra?'':''),pacienteId:x.id||'',paciente:x.nombre||'',dias:dDe(x.fecha)}));}
+ if(pend&&Array.isArray(pend.items)){pend.items.filter(x=>x.k!=='proxima').forEach(x=>add(x.fisio,{tipo:'tarea',texto:(TX[x.k]||x.t)+(x.k==='marcar'&&x.extra?'':''),pacienteId:x.id||'',paciente:x.nombre||'',dias:dDe(x.fecha)}));}
  else{const f0=rep&&rep.fecha,dias=dDe(f0);
  ((rep&&rep.fisios)||[]).forEach(f=>(f.pendiente||[]).filter(c=>c.k!=='llamadas'&&c.k!=='tareas').forEach(c=>c.items.forEach(it=>{
   let g=A.find(x=>key(x.fisio)===key(f.fisio));if(!g){g={fisio:f.fisio,tareas:0,llamadas:0,maxDias:0,items:[]};A.push(g);}
@@ -12644,7 +12644,7 @@ async function renderControl(wrap){
   </div>`));});
   // 2 · Fidelización
   Promise.all([Q.cur,Q.aux,QA.nr]).then(([cur,_a,nrA])=>{const NR=rendNoReag(cur.fisios||[],d,h);
-   const NRA=rendNoReag((nrA&&nrA.fisios)||[],mv(hoy,-90),hoy,{soloRev:1,tit:'Sin reagendar: sin resolver ahora',per:'últimos 3 meses',nota:'Todos los que no han vuelto a reservar y no están de alta, ni en seguimiento, ni reservan por la app, sean de esta semana o de antes. «Avisar» le manda a cada fisio los suyos, con los pacientes enlazados.'});
+   const NRA=rendNoReag((nrA&&nrA.fisios)||[],mv(hoy,-90),hoy,{soloRev:1,tit:'Sin reagendar: sin resolver ahora',per:'últimos 3 meses',nota:'Todos los que no han vuelto a reservar y no están de alta, ni en seguimiento, ni reservan por la app (ni dejaron el tratamiento o no llegaron a venir), sean de esta semana o de antes. «Avisar» le manda a cada fisio los suyos, con los pacientes enlazados.'});
    const E=(typeof ENC_UL!=='undefined'&&ENC_UL)||[],En=E.filter(x=>x.tipo!=='mejora'),ok=En.filter(x=>/Excelente|Muy buena/.test(x.valoracion)).length;
    const pinta=atr=>pon('fid',sec('Pacientes','Lo pendiente es de ahora mismo, sea de cuando sea',`${pcAtrasHtml(atr)}${NRA.html||'<div class="rend-card"><div class="pc-vac">Sin reagendar: nada sin resolver ✓</div></div>'}
     <details class="pc-per2"><summary>Sin reagendar en el periodo elegido</summary>${NR.html||'<div class="pc-vac">Nadie sin reagendar en este periodo ✓</div>'}</details><div class="pc-g">
