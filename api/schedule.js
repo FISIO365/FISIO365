@@ -6606,6 +6606,19 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           return res.status(200).json(Object.assign({ ok: true }, b, { meses: Object.entries(g).map(([m, x]) => ({ m, v: x })).sort((a, c) => a.m.localeCompare(c.m)), lista })); }
         catch (e) { _gasH = { t: 0, v: null }; return res.status(200).json({ ok: false, error: /40[13]/.test(e.message) ? 'la clave de Holded todavía no tiene permiso para leer las cuentas bancarias' : e.message }); }
       }
+      if (action === 'seg-pend-ahora') { // Panel de control: lo que sigue sin hacer AHORA de los check-lists de los últimos días (historias, ejercicios, app, cobros, citas sin marcar, sin reagendar…)
+        const nd = Math.min(30, Math.max(1, Number(q.dias) || 14)), dias = [];
+        for (let i = 1; i <= nd; i++) { const t = new Date(hoyF + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() - i); if (t.getUTCDay() !== 0) dias.push(t.toISOString().slice(0, 10)); }
+        const SKIP = new Set(['llamadas', 'tareas', 'chat']), M = new Map();
+        for (let i = 0; i < dias.length; i += 3) {
+          const R = await Promise.all(dias.slice(i, i + 3).map(f => cierreDia(f).then(o => [f, o]).catch(() => [f, {}])));
+          R.forEach(([f, o]) => Object.entries(o || {}).forEach(([fisio, x]) => (x.checks || []).filter(c => !c.aviso && !SKIP.has(c.k)).forEach(c => (c.items || []).forEach(it => {
+            const key = fisioKey(fisio) + '|' + c.k + '|' + (it.id || it.nombre); const ya = M.get(key);
+            if (!ya || f < ya.fecha) M.set(key, { fisio, k: c.k, t: c.t, id: it.id || '', nombre: it.nombre || '', extra: it.extra || '', fecha: f });
+          }))));
+        }
+        return res.status(200).json({ ok: true, dias: nd, items: [...M.values()] });
+      }
       if (action === 'seg-checklists-rango') { // Panel de control: check-lists enviadas por fisio frente a los días que trabajó (sesiones hechas)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         const nm = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
