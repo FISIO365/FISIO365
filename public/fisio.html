@@ -206,6 +206,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .pc-d{font-style:normal;font-weight:600;font-size:11.5px;padding:1px 7px;border-radius:99px}.pc-d.ok{color:#2e7d4f;background:#e9f5ee}.pc-d.mal{color:#c2552e;background:#fbeee8}
 .pc-vac{font-size:13px;color:#2e7d4f;background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:10px}.pc .rnr{margin-bottom:10px}
 .pc-sk{min-height:96px;cursor:default;background:linear-gradient(90deg,#fff 0%,#f6f1ec 50%,#fff 100%);background-size:200% 100%;animation:pcsk 1.2s linear infinite}@keyframes pcsk{to{background-position:-200% 0}}
+.pc-c{font-size:12px;color:#4a423c;line-height:1.35}.pc-c b{font-weight:600}.pc-c .pc-fal{color:#c2552e}.pc-c .pc-sup{color:#2e7d4f}.pc-al{font-style:normal;color:var(--muted)}
 .pc-n{font-size:12px;color:var(--muted);margin:4px 2px 30px}
 .rnr .rend-top{align-items:baseline}.rnr-per{font-size:12.5px;color:var(--muted);font-weight:500}
 .rnr-h,.rnr-f{display:grid;grid-template-columns:minmax(60px,1.3fr) repeat(6,minmax(30px,1fr)) auto;gap:6px;align-items:center;text-align:center}
@@ -12496,7 +12497,10 @@ async function renderControl(wrap){
  const sec=(t,sub,html)=>`<div class="pc-sec"><div class="pc-st"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</div>${html}</div>`;
  // Tarjeta: valor grande, color (ok/med/mal), comparación con el periodo anterior y a dónde lleva
  const tile=o=>{const dl=o.prev==null||o.v==null||o.v===o.prev?'':(()=>{const up=o.v>o.prev,bien=o.menos?!up:up;return `<em class="pc-d ${bien?'ok':'mal'}" title="${o.prev==null?'':'Antes: '+(o.fmt?o.fmt(o.prev):o.prev)+(o.suf||'')}">${up?'↑':'↓'} ${o.fmt?o.fmt(Math.abs(o.v-o.prev)):Math.abs(o.v-o.prev)}${o.suf==='%'?' pts':(o.suf||'')}</em>`;})();
-  return `<button type="button" class="pc-t ${o.cls||''}"${o.go?` data-go="${o.go}"`:''}><span class="pc-l">${o.t}</span><b>${o.v==null?'—':(o.fmt?o.fmt(o.v):o.v)}${o.v!=null&&o.suf?o.suf:''}</b><span class="pc-s">${o.sub||''}${dl}</span></button>`;};
+  const F=x=>(o.fmt?o.fmt(x):x)+(o.suf||'');let cmp='';
+  if(o.fullL&&o.full!=null){let r='';if(o.add&&o.v!=null){const q=o.full-o.v;r=o.menos?(q>0?` · margen ${o.fmt?o.fmt(q):q}`:q<0?' · ya lo has pasado':''):(q>0?` · <b class="pc-fal">faltan ${o.fmt?o.fmt(q):q}</b>`:' · <b class="pc-sup">✓ igualado</b>');}
+   cmp=`<span class="pc-c">${o.fullL}: <b>${F(o.full)}</b>${r}</span>`;}
+  return `<button type="button" class="pc-t ${o.cls||''}"${o.go?` data-go="${o.go}"`:''}><span class="pc-l">${o.t}</span><b>${o.v==null?'—':(o.fmt?o.fmt(o.v):o.v)}${o.v!=null&&o.suf?o.suf:''}</b>${o.sub?`<span class="pc-s">${o.sub}</span>`:''}${cmp}${dl?`<span class="pc-s">${dl}${o.altL?` <i class="pc-al">${o.altL}</i>`:''}</span>`:''}</button>`;};
  const ocup=L=>{const F=(L||[]).filter(x=>!x.sinHoras);const r=F.reduce((a,x)=>a+x.realizadas,0),h=F.reduce((a,x)=>a+x.huecos,0);return h?Math.round(r*100/h):null;};
  const sum=(L,k)=>(L||[]).reduce((a,x)=>a+(x[k]||0),0);
  const cargar=async k=>{K=k;try{sessionStorage.setItem('f365_pc_per',k);}catch(e){}
@@ -12511,36 +12515,48 @@ async function renderControl(wrap){
   else if(k==='mes'){pd=mesAnt(d).slice(0,8)+'01';ph=mesAnt(d,h.slice(8));vs='que del 1 al '+(+ph.slice(8))+' de '+MN[+pd.slice(5,7)-1];}
   else if(k==='mesPasado'){ph=mesAnt(d);pd=ph.slice(0,8)+'01';vs='que '+MN[+pd.slice(5,7)-1];}
   else{pd=mv(d,-n);ph=mv(d,-1);vs='que los '+n+' días anteriores';}
+  const DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+  let fd=pd,fh=ph,fullL,altL='';
+  if(k==='semana'){fd=mv(d,-7);fh=mv(d,-1);fullL='Semana pasada';altL=fh===ph?'':'a estas alturas';}
+  else if(k==='mes'){fh=mesAnt(d);fd=fh.slice(0,8)+'01';fullL=cap(MN[+fd.slice(5,7)-1]);altL=fh===ph?'':'a estas alturas';}
+  else if(k==='hoy'||k==='ayer')fullL='El '+DS[new Date(pd+'T12:00:00Z').getUTCDay()]+' pasado';
+  else if(k==='semanaPasada')fullL='Semana anterior';
+  else if(k==='mesPasado')fullL=cap(MN[+pd.slice(5,7)-1]);
+  else fullL='Periodo anterior';
+  const parcial=fd!==pd||fh!==ph;
   // Todo se pide a la vez y cada bloque se pinta en cuanto llega lo suyo; 3 min de memoria por periodo
   const ck=k+'|'+d+'|'+h;window.__pcC=window.__pcC||{};let Q=window.__pcC[ck];
   if(!Q||Date.now()-Q.t>180000){const get=u=>fetch(u).then(x=>x.json()).catch(()=>({})),A=`pwd=${encodeURIComponent(apiPwd)}`;
    const cur=get(`/api/schedule?action=rendimiento&${A}&desde=${d}&hasta=${h}`);
    Q=window.__pcC[ck]={t:Date.now(),cur,prev:get(`/api/schedule?action=rendimiento&${A}&desde=${pd}&hasta=${ph}`),
     ingR:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${d}&hasta=${h}`),ingP:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${pd}&hasta=${ph}`),nv:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${d}&hasta=${h}`),nvP:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${pd}&hasta=${ph}`),
+    ...(parcial?{prevF:get(`/api/schedule?action=rendimiento&${A}&desde=${fd}&hasta=${fh}`),ingF:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${fd}&hasta=${fh}`),nvF:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${fd}&hasta=${fh}`)}:{}),
     rep:comPost('reporte-dia',{fecha:''}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
     onl:get(`/api/schedule?action=seg-agenda-online&${A}`),vales:get(`/api/schedule?action=seg-vales&${A}`),prox:get(`/api/schedule?action=seg-agenda-dia&${A}&desde=${hoy}&hasta=${mv(hoy,6)}`),
     aux:Promise.all([cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]),
     horas:cur.then(r=>Promise.all(((r&&r.fisios)||[]).filter(x=>x.dias).map(x=>get(`/api/schedule?action=horas&${A}&fisio=${encodeURIComponent(x.fisio)}&desde=${d}&hasta=${h}`).then(hz=>[String(x.fisio).split(' ')[0],(hz.registros||[]).filter(r=>r.pendiente).length]))))};}
   const vivo=()=>K===k&&res.isConnected,cl=(v,a,b)=>v==null?'':v>=a?'ok':v>=b?'med':'mal',lst=o=>Object.keys(o).length?Object.entries(o).map(([f,n])=>escH(String(f).split(' ')[0])+' '+n).join(' · '):'';
   const cargando=t=>sec(t,'','<div class="pc-g"><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div><div class="pc-t pc-sk"></div></div>');
-  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Las flechas dicen cuánto más (↑) o menos (↓) hay ${vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
+  res.innerHTML=`<div data-b="neg">${cargando('Cómo va el negocio')}</div><div data-b="fid">${cargando('Fidelización')}</div><div data-b="res">${cargando('Lo que tienes que resolver')}</div><div data-b="vie">${cargando('Lo que viene')}</div><p class="pc-n">Del ${fchR(d)} al ${fchR(h)}. Debajo de cada número: lo que hubo en ${k==='semana'?'la semana pasada entera':fullL.toLowerCase()+(parcial?' entero':'')} y cuánto falta para igualarlo. La flecha dice cuánto más (↑) o menos (↓) vais ${parcial?'a estas alturas ('+vs.replace(/^que /,'comparado con ')+')':vs}; en verde si es bueno, en naranja si no. Ingresos: tickets de Holded y facturas del panel de esos días (los packs cuentan entero el día que se pagan). Pacientes nuevos = fichas creadas esos días; «Vuelven tras la 1ª» = de los que hicieron su primera sesión esos días, cuántos tienen otra cita. Toca una tarjeta para ir al detalle.</p>`;
   const pon=(b,html,fn)=>{if(!vivo())return;const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
   // 1 · Negocio
-  Promise.all([Q.cur,Q.prev,Q.nv,Q.ingR,Q.ingP,Q.nvP]).then(([cur,prev,nv,ingR,ingP0,nvP])=>{
+  Promise.all([Q.cur,Q.prev,Q.nv,Q.ingR,Q.ingP,Q.nvP,Q.prevF||Q.prev,Q.ingF||Q.ingP,Q.nvF||Q.nvP]).then(([cur,prev,nv,ingR,ingP0,nvP,prevF,ingF0,nvF])=>{
+  const PF=prevF.fisios||[],ingF=ingF0&&ingF0.total!=null?ingF0.total:null;
   const L=cur.fisios||[],P=prev.fisios||[],ingP=ingP0&&ingP0.total!=null?ingP0.total:null;
   const ing=ingR&&ingR.total!=null?ingR.total:null,okN=x=>x&&x.ok;
   const conv=okN(nv)?nv.conversion:null,convP=okN(nvP)?nvP.conversion:null;
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
-  pon('neg',sec('Cómo va el negocio','Flechas: más o menos '+vs,`<div class="pc-g">
-   ${tile({t:'Ocupación',v:oc,prev:ocP,suf:'%',cls:cl(oc,85,65),sub:'Sara, Jonathan y Juan',go:'rend'})}
-   ${tile({t:'Ingresos',v:ing,prev:ingP,fmt:eur,sub:'tickets y facturas · del '+fchR(d)+' al '+fchR(h),go:'stats'})}
-   ${tile({t:'Pacientes atendidos',v:at,prev:atP,go:'rend'})}
-   ${tile({t:'Pacientes nuevos',v:okN(nv)?nv.nuevos:null,prev:okN(nvP)?nvP.nuevos:null,sub:'fichas nuevas',go:'stats'})}
-   ${tile({t:'Vuelven tras la 1ª',v:conv,prev:convP,suf:'%',cls:cl(conv,70,50),sub:okN(nv)?nv.reagendaron+' de '+nv.vinieron+' primeras visitas':'',go:'stats'})}
-   ${tile({t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
-   ${tile({t:'Faltas',v:falt,prev:faltP,menos:1,cls:falt?'med':'ok',sub:'no vinieron sin avisar',go:'rend'})}
-   ${tile({t:'Cancelaciones',v:canc,prev:cancP,menos:1,go:'rend'})}
+  const X={fullL,altL};
+  pon('neg',sec('Cómo va el negocio',parcial?(k==='semana'?'Comparado con la semana pasada entera y a estas alturas':'Comparado con '+fullL.toLowerCase()+' entero y a estas alturas'):'Comparado con '+(k==='semanaPasada'?'la semana anterior':k==='rango'?'el periodo anterior':fullL.toLowerCase()),`<div class="pc-g">
+   ${tile({...X,t:'Ocupación',v:oc,prev:ocP,full:ocup(PF),suf:'%',cls:cl(oc,85,65),go:'rend'})}
+   ${tile({...X,t:'Ingresos',v:ing,prev:ingP,full:ingF,add:1,fmt:eur,go:'stats'})}
+   ${tile({...X,t:'Pacientes atendidos',v:at,prev:atP,full:sum(PF,'atendidos'),add:1,go:'rend'})}
+   ${tile({...X,t:'Pacientes nuevos',v:okN(nv)?nv.nuevos:null,prev:okN(nvP)?nvP.nuevos:null,full:okN(nvF)?nvF.nuevos:null,add:1,go:'stats'})}
+   ${tile({...X,t:'Vuelven tras la 1ª',v:conv,prev:convP,full:okN(nvF)?nvF.conversion:null,suf:'%',cls:cl(conv,70,50),sub:okN(nv)?nv.reagendaron+' de '+nv.vinieron+' primeras visitas':'',go:'stats'})}
+   ${tile({...X,t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),full:pct(sum(PF,'reagendan'),sum(PF,'atendidos')),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
+   ${tile({...X,t:'Faltas',v:falt,prev:faltP,full:sum(PF,'noAsistio')+sum(PF,'perdidas'),add:1,menos:1,cls:falt?'med':'ok',go:'rend'})}
+   ${tile({...X,t:'Cancelaciones',v:canc,prev:cancP,full:sum(PF,'canceladas'),add:1,menos:1,go:'rend'})}
   </div>`));});
   // 2 · Fidelización
   Promise.all([Q.cur,Q.aux]).then(([cur])=>{const NR=rendNoReag(cur.fisios||[],d,h);
