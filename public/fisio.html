@@ -12550,7 +12550,7 @@ async function renderControl(wrap){
    Q=window.__pcC[ck]={t:Date.now(),cur,prev:get(`/api/schedule?action=rendimiento&${A}&desde=${pd}&hasta=${ph}`),
     ingR:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${d}&hasta=${h}`),ingP:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${pd}&hasta=${ph}`),nv:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${d}&hasta=${h}`),nvP:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${pd}&hasta=${ph}`),
     ...(parcial?{prevF:get(`/api/schedule?action=rendimiento&${A}&desde=${fd}&hasta=${fh}`),ingF:get(`/api/schedule?action=seg-ingresos-rango&${A}&desde=${fd}&hasta=${fh}`),nvF:get(`/api/schedule?action=seg-nuevos-rango&${A}&desde=${fd}&hasta=${fh}`)}:{}),
-    rep:comPost('reporte-dia',{fecha:''}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
+    rep:comPost('reporte-dia',{fecha:''}).then(r=>(r&&r.reporte)||{}).catch(()=>({})),buz:comPost('seg-com-buzon').catch(()=>({})),
     onl:get(`/api/schedule?action=seg-agenda-online&${A}`),vales:get(`/api/schedule?action=seg-vales&${A}`),prox:get(`/api/schedule?action=seg-agenda-dia&${A}&desde=${hoy}&hasta=${mv(hoy,6)}`),
     chk:get(`/api/schedule?action=seg-checklists-rango&${A}&desde=${d}&hasta=${h<hoy?h:mv(hoy,-1)}`),
     aux:Promise.all([cargarSegPac().catch(()=>{}),(pacs||[]).length?0:loadPacientes().catch(()=>{}),encCarga().catch(()=>{})]),
@@ -12626,7 +12626,6 @@ async function renderControl(wrap){
     ${tile({t:'Días por validar',v:nVal,cls:nVal?'med':'ok',sub:lst(porVal)||'control de horas al día',go:'rend'})}
     ${tile({t:'Comunicaciones sin hacer',v:nPend,cls:nPend?'med':'ok',sub:lst(pend)||'todo hecho',go:'com'})}
     ${tile({t:'School sin hacer',v:nSch,cls:nSch?'med':'ok',sub:lst(sch)||'todos al día',go:'school'})}
-    ${tile({t:'Check-lists sin enviar',v:noEnv.length,cls:noEnv.length?'mal':'ok',sub:noEnv.length?noEnv.map(f=>escH(String(f.fisio).split(' ')[0])).join(' · ')+' · '+(rep.fecha?fchR(rep.fecha):'ayer'):'todas enviadas',go:'rdia'})}
    </div>`));});
   // 4 · Lo que viene
   Promise.all([Q.prox,Q.onl,Q.vales]).then(([prox,onl,vales])=>{
