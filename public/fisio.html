@@ -12563,7 +12563,6 @@ async function renderControl(wrap){
     ${tile({t:'Comunicaciones sin hacer',v:nPend,cls:nPend?'med':'ok',sub:lst(pend)||'todo hecho',go:'com'})}
     ${tile({t:'School sin hacer',v:nSch,cls:nSch?'med':'ok',sub:lst(sch)||'todos al día',go:'school'})}
     ${tile({t:'Check-lists sin enviar',v:noEnv.length,cls:noEnv.length?'mal':'ok',sub:noEnv.length?noEnv.map(f=>escH(String(f.fisio).split(' ')[0])).join(' · ')+' · '+(rep.fecha?fchR(rep.fecha):'ayer'):'todas enviadas',go:'rdia'})}
-    ${tile({t:'Sesiones sin facturar',v:sf?sf.reduce((a,x)=>a+(x.n||0),0):null,cls:sf?(sf.length?'mal':'ok'):'',sub:sf?(sf.length?'hasta ayer':'todo facturado'):'no disponible',go:'agenda'})}
    </div>`));});
   // 4 · Lo que viene
   Promise.all([Q.prox,Q.onl,Q.vales]).then(([prox,onl,vales])=>{
