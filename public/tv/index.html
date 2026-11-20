@@ -24,7 +24,7 @@ var v=document.getElementById('v'),c=document.getElementById('c'),t=document.get
 //  · hasta el 27/11/2026: alterna Navidad y el vídeo normal
 //  · del 28/11/2026 al 6/1/2027: solo Navidad
 //  · desde el 7/1/2027: solo el vídeo normal
-var NORMAL='/tv/fisio365-tv-2.mp4',NAVIDAD='/tv/navidad-2026.mp4';
+var NORMAL='/tv/fisio365-tv-2.mp4',NAVIDAD='/tv/navidad-2026b.mp4';
 function hoy(){var d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 function lista(){var h=hoy();if(h<=20261127)return[NAVIDAD,NORMAL];if(h<=20270106)return[NAVIDAD];return[NORMAL];}
 var blobs={},cargando={},actual=null,pos=0;
