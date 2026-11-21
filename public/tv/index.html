@@ -14,10 +14,10 @@ video{position:fixed;inset:0;width:100vw;height:100vh;object-fit:contain;backgro
 #s.on{opacity:1}
 </style></head><body>
 <video id="v" muted playsinline preload="auto"></video>
-<div id="c"><b>FISIO<span>365</span></b><p id="t">Cargando el vídeo…</p><i><u id="b"></u></i></div>
+<div id="c"><b>FISIO<span>365</span></b><p id="t">Cargando el vídeo…</p></div>
 <div id="s"></div>
 <script>
-// Vídeo de la TV de recepción: se descarga una sola vez (se guarda en la memoria de la tele) y se repite sin parar, sin anuncios.
+// Vídeo de la TV de recepción: se repite sin parar, sin anuncios.
 // Botón OK del mando (o un clic): sonido sí / no.
 var v=document.getElementById('v'),c=document.getElementById('c'),t=document.getElementById('t'),b=document.getElementById('b'),s=document.getElementById('s');
 // Programación (fecha de la tele):
@@ -27,30 +27,19 @@ var v=document.getElementById('v'),c=document.getElementById('c'),t=document.get
 var NORMAL='/tv/fisio365-tv-2.mp4',NAVIDAD='/tv/navidad-2026b.mp4';
 function hoy(){var d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 function lista(){var h=hoy();if(h<=20261127)return[NAVIDAD,NORMAL];if(h<=20270106)return[NAVIDAD];return[NORMAL];}
-var blobs={},cargando={},actual=null,pos=0;
+var actual=null,pos=0;
 function aviso(x){s.textContent=x;s.classList.add('on');clearTimeout(aviso.t);aviso.t=setTimeout(function(){s.classList.remove('on');},2500);}
-function pon(url){actual=url;v.src=blobs[url]||url;var p=v.play();if(p&&p.catch)p.catch(function(){});}
+// Sin descargar el vídeo entero a la memoria (la tele se quedaba sin memoria y el navegador se cerraba):
+// se reproduce directamente y el navegador lo va guardando en su caché
+function pon(url){actual=url;v.src=url;v.load();var p=v.play();if(p&&p.catch)p.catch(function(){});}
 v.addEventListener('playing',function(){c.classList.add('fuera');});
-// Descarga entera (se guarda en la memoria de la tele); si no deja, se reproduce directamente
-function baja(url,conBarra,listo){if(blobs[url]){listo();return}if(cargando[url])return;cargando[url]=1;
- try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='blob';x.timeout=180000;x.ontimeout=function(){cargando[url]=0;listo();};
-  if(conBarra)x.onprogress=function(e){if(e.lengthComputable){var p=Math.round(e.loaded*100/e.total);b.style.width=p+'%';t.textContent='Cargando el vídeo… '+p+' %';}};
-  x.onload=function(){cargando[url]=0;if(x.status===200&&x.response&&x.response.size>1e6)blobs[url]=URL.createObjectURL(x.response);listo();};
-  x.onerror=function(){cargando[url]=0;listo();};x.send();
- }catch(e){cargando[url]=0;listo();}}
-function siguiente(){var L=lista();pos=(pos+1)%L.length;var url=L[pos];
- pon(url); // si aún no está guardado en memoria, lo reproduce directamente desde internet
- L.forEach(function(u){baja(u,false,function(){});});}
-// Arranque: el primero de la lista con barra; los demás se bajan detrás
-(function(){var L=lista();pos=0;baja(L[0],true,function(){b.style.width='100%';pon(L[0]);L.slice(1).forEach(function(u){baja(u,false,function(){});});});})();
-// Si a los 40 s todavía no se ve nada (la tele no termina de descargarlo), lo pone directamente desde internet
-setTimeout(function(){if(!c.classList.contains('fuera')){t.textContent='Poniendo el vídeo…';pon(lista()[0]);}},40000);
-// Y si aun así no arranca en 2 minutos, vuelve a empezar
-setTimeout(function(){if(!c.classList.contains('fuera'))location.reload();},120000);
-// Al acabar un vídeo pasa al siguiente (y mira la fecha cada vez)
+function siguiente(){var L=lista();pos=(pos+1)%L.length;pon(L[pos]);}
+pon(lista()[0]);
 v.addEventListener('ended',siguiente);
-setInterval(function(){if(v.src&&v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){});}},5000);
-v.addEventListener('error',function(){setTimeout(function(){location.reload();},10000);});
+setInterval(function(){if(v.src&&v.paused&&!v.ended){var p=v.play();if(p&&p.catch)p.catch(function(){});}},5000);
+// Si un vídeo falla, a los 5 s prueba con el siguiente; si no arranca nada en 2 minutos, recarga la página
+v.addEventListener('error',function(){setTimeout(siguiente,5000);});
+setTimeout(function(){if(!c.classList.contains('fuera'))location.reload();},120000);
 // Sonido con OK / clic; pantalla completa si la tele lo permite
 function toca(){v.muted=!v.muted;aviso(v.muted?'Sin sonido':'Con sonido');var d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen().catch(function(){});}
 document.addEventListener('click',toca);
