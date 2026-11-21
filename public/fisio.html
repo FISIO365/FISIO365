@@ -12750,11 +12750,11 @@ function pcAtrasOn(el,atr){
 async function pcPacks(d,h){const k=d+'|'+h;window.__pcPk=window.__pcPk||{};const m=window.__pcPk[k];if(m&&Date.now()-m.t<6e5)return m.p;
  const A=`pwd=${encodeURIComponent(apiPwd)}`,mv=(f,n)=>{const x=new Date(f+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10);};
  const T=[];for(let a=d;a<=h;a=mv(a,7)){const b=mv(a,6)<h?mv(a,6):h;T.push([a,b]);}
- const p=Promise.all(T.map(([a,b])=>Promise.all([fetch(`/api/schedule?action=seg-agenda-dia&${A}&desde=${a}&hasta=${b}`).then(x=>x.json()),fetch(`/api/schedule?action=seg-agenda-num&${A}&desde=${a}&hasta=${b}&pago=1`).then(x=>x.json())]))).then(R=>{
-  const at=new Set(),pk=new Set();let ok=true;
-  R.forEach(([ag,nm])=>{if(!ag||!ag.ok||!nm||!nm.ok){ok=false;return;}const pg=nm.pago||{};
-   (ag.citas||[]).forEach(c=>{if(!c.pacienteId||!/^REALIZADA$/.test(String(c.estado).trim()))return;at.add(c.pacienteId);const g=pg[c.id];if(g&&(g.t==='pack'&&!g.vale||g.t==='previo'&&!g.vale||g.t==='fuera'&&/pack|bono/i.test(g.nota||'')))pk.add(c.pacienteId);});});
-  return ok?{at:at.size,pk:pk.size}:null;}).catch(()=>null);
+ const p=(async()=>{const at=new Set(),pk=new Set();
+  for(const [a,b] of T){const nm=await fetch(`/api/schedule?action=seg-agenda-num&${A}&desde=${a}&hasta=${b}&pago=1&lista=1`).then(x=>x.json()).catch(()=>null);
+   if(!nm||!nm.ok||!nm.lista)return null;const pg=nm.pago||{};
+   nm.lista.forEach(c=>{if(!c.p||c.e!=='REALIZADA')return;at.add(c.p);const g=pg[c.id];if(g&&(g.t==='pack'&&!g.vale||g.t==='previo'&&!g.vale||g.t==='fuera'&&/pack|bono/i.test(g.nota||'')))pk.add(c.p);});}
+  return {at:at.size,pk:pk.size};})().catch(()=>null);
  window.__pcPk[k]={t:Date.now(),p};return p;}
 
 // ══ PANEL DE CONTROL (solo dirección): el centro de un vistazo, con el mismo periodo que Rendimiento ══
@@ -12844,7 +12844,7 @@ async function renderControl(wrap){
   </div>`));
   // % de pacientes atendidos con pack: packs cobrados en el panel y bonos pagados fuera del panel (los vales regalo no cuentan)
   // Atendidos = personas distintas (si un paciente lo vieron dos fisios, cuenta una vez), del mismo sitio que los packs para que cuadre
-  Promise.all([pcPacks(d,h),pcPacks(pd,ph),parcial?pcPacks(fd,fh):null]).then(([A,B,F])=>{const el=vivo()&&res.querySelector('[data-b="neg"] .pc-pk');if(!el)return;
+  (async()=>{const A=await pcPacks(d,h),B=await pcPacks(pd,ph),F=parcial?await pcPacks(fd,fh):null;return [A,B,F];})().then(([A,B,F])=>{const el=vivo()&&res.querySelector('[data-b="neg"] .pc-pk');if(!el)return;
    const ea=res.querySelector('[data-b="neg"] .pc-at');if(ea&&!A)ea.innerHTML=tile({...X,t:'Pacientes atendidos',v:at,prev:atP,full:sum(PF,'atendidos'),add:1,go:'rend'});if(ea&&A){const Ff=parcial?F:B;ea.innerHTML=tile({...X,t:'Pacientes atendidos',v:A.at,prev:B?B.at:null,full:Ff?Ff.at:null,add:1,go:'rend'});ea.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});}
    const v=A&&A.at?pct(A.pk,A.at):null,vp=B&&B.at?pct(B.pk,B.at):null;
    el.innerHTML=tile({t:'Pacientes con pack',v,prev:vp,suf:'%',sub:A?A.pk+' de '+A.at+' pacientes atendidos':'No se ha podido calcular',go:'stats'});

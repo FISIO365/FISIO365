@@ -5852,7 +5852,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
                   pago[r.id] = !lo ? { t: 'sin', fut: e === 'PENDIENTE' && k.slice(0, 10) >= hoyF } : lo.previo ? { t: 'previo', i: lo.desde ? a.i : a.i + (lo.off || 0), n: lo.tot || lo.n, vale: !!lo.vale } : lo.n > 1 ? Object.assign({ t: 'pack', i: a.i, n: lo.n, v: Math.round(lo.precio * 100) / 100 }, lo.psF != null ? { ps: lo.fid, psF: lo.psF } : {}) : { t: 'suelta', v: lo.precio }; }
               });
             } } catch (e) { console.log('agenda-num', e.message); }
-          return res.status(200).json({ ok: true, num: numSes, pago, inicio });
+          // lista=1 (Panel de control › Pacientes con pack): las citas con su estado y paciente, para no pedir la agenda entera
+          return res.status(200).json({ ok: true, num: numSes, pago, inicio, ...(q.lista === '1' ? { lista: rows.map(r => ({ id: r.id, e: String(nmA(r.fields.ESTADO)).trim(), p: (r.fields['RELACIÓN - CITA'] || [])[0] || '' })) } : {}) });
         }
         const packDe = async (pid, fecha, hora0) => {
           const inicio = await inicioControl().catch(() => '');
