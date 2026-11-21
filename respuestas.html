@@ -37,7 +37,6 @@ button{font:inherit;font-weight:500;padding:14px 24px;border-radius:999px;border
     <div class="kpis">
       <div class="kpi" style="background:#E6DAF0"><b id="k1">0</b>personas han escrito</div>
       <div class="kpi" style="background:#F5E6B8"><b id="k2">0</b>han contado «otra cosa»</div>
-      <div class="kpi" style="background:#DCEBD2"><b id="k3">0</b>desde la página de TikTok</div>
     </div>
     <div class="card"><span class="lab">Lo que más se marca</span><div id="bars" style="margin-top:14px"></div></div>
     <div class="card" style="background:#F6F6F4"><span class="lab">«Me pasa otra cosa» · ideas para añadir</span><div id="otras" style="margin-top:10px"></div></div>
@@ -60,8 +59,8 @@ async function load(pass) {
   const max = list.length ? list[0][1] : 1;
   $('bars').innerHTML = list.length ? list.map(([s, n]) => '<div class="row"><span class="name">' + esc(s) + '</span><span class="bar" style="width:' + Math.max(4, Math.round(44 * n / max)) + '%"></span><span class="num">' + n + '</span></div>').join('') : '<p style="color:#8A8A8A">Todavía no hay respuestas.</p>';
   const otras = rows.filter((r) => r.otra).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
-  $('otras').innerHTML = otras.length ? otras.map((r) => '<div class="otra">' + esc(r.otra) + '<div class="meta">' + (r.fecha ? new Date(r.fecha).toLocaleString('es-ES') : '') + (r.pagina ? ' · ' + esc(r.pagina) : '') + '</div></div>').join('') : '<p style="color:#8A8A8A">Nadie ha escrito «otra cosa» todavía.</p>';
-  $('k1').textContent = rows.length; $('k2').textContent = otras.length; $('k3').textContent = rows.filter((r) => r.pagina === 'test').length;
+  $('otras').innerHTML = otras.length ? otras.map((r) => '<div class="otra">' + esc(r.otra) + '<div class="meta">' + (r.fecha ? new Date(r.fecha).toLocaleString('es-ES') : '') + '' + '</div></div>').join('') : '<p style="color:#8A8A8A">Nadie ha escrito «otra cosa» todavía.</p>';
+  $('k1').textContent = rows.length; $('k2').textContent = otras.length;
   $('login').style.display = 'none'; $('out').style.display = 'block';
 }
 $('f').addEventListener('submit', (e) => { e.preventDefault(); load($('p').value); });
