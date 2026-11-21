@@ -117,6 +117,54 @@ async function ingresosHoldedDias(desde, hasta) {
     .forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return; dias[x.f] = Math.round(((dias[x.f] || 0) + x.v) * 100) / 100; }); } catch (e) {}
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
+// Dinero que entra en la clínica (lo mismo que «Ingresos») repartido por el fisio que lo vende:
+// el fisio que sale en la factura («Fisioterapeuta: …»); si no sale, el de la cita del paciente ese día,
+// o si no la última antes (o la primera después). Lo que no se puede asignar va a «Sin asignar».
+let _vend = { t: 0, k: '', v: null };
+async function vendidoPorFisio(desde, hasta) {
+  const k = desde + '|' + hasta; if (_vend.k === k && Date.now() - _vend.t < 10 * 60e3) return _vend.v;
+  const nrm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const clave = n => nrm(n).split(' ')[0] || '';
+  const deFact = t => { const m = String(t || '').match(/Fisioterapeuta:\s*([^·\n<]+)/i); return m ? clave(m[1]) : ''; };
+  const mv = (f, n) => { const x = new Date(f + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  const [tk, rn, PS, pacT, cit, cont, fx] = await Promise.all([
+    HOLDED_KEY ? holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40) : [],
+    HOLDED_KEY ? holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(() => []) : [],
+    packsPorSesion(desde, hasta).catch(() => ({ tickets: new Set(), cobros: [], filas: new Set() })),
+    capTodos(PACIENTES, 'fields[]=DNI&fields[]=EMAIL&fields[]=WHATSAPP&fields[]=TELF&fields[]=FULL%20NAME'),
+    capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'${mv(desde, -181)}'),IS_BEFORE({FECHA},'${mv(hasta, 61)}'),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE'))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`),
+    HOLDED_KEY ? (_hCont.v && Date.now() - _hCont.t < 30 * 60e3 ? _hCont.v : holdedTodos('/contacts?limit=200', 40).then(v => { _hCont = { t: Date.now(), v }; return v; }).catch(() => [])) : [],
+    FACX.db().then(D => D.query(`select fecha::text f, total::float v, cobro, cliente, paciente, fisio from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).then(r => r.rows).catch(() => [])
+  ]);
+  // Citas por paciente (para saber quién le atendía)
+  const C = {}; const nombre = {};
+  cit.forEach(r => { const F = r.fields || {}, p = (F['RELACIÓN - CITA'] || [])[0], n = String(nmA(F['PREF.']) || '').trim(); if (!p || !n) return; const kk = clave(n); if (!kk || /^(admin|recep|sala|libre|bloq)/.test(kk)) return;
+    nombre[kk] = nombre[kk] || n.split(/\s+/)[0]; (C[p] = C[p] || []).push({ f: String(F['FECHA'] || '').slice(0, 10), k: kk }); });
+  Object.values(C).forEach(L => L.sort((a, b) => a.f.localeCompare(b.f)));
+  const porCita = (p, f) => { const L = C[p]; if (!L || !L.length) return ''; const mismo = L.find(x => x.f === f); if (mismo) return mismo.k; let ant = null; for (const x of L) { if (x.f < f) ant = x; else break; } return (ant || L.find(x => x.f > f) || {}).k || ''; };
+  // Contactos de Holded → paciente
+  const dni = {}, mail = {}, tel = {}, nom = {};
+  pacT.forEach(p => { const f = p.fields || {}; const d = normDni(f['DNI']); if (d.length >= 8) dni[d] = p.id; const e = String(f['EMAIL'] || '').trim().toLowerCase(); if (e) mail[e] = p.id;
+    const t = soloDigitos(f['WHATSAPP'] || f['TELF']); if (t.length === 9) tel[t] = p.id; const n = nrm(f['FULL NAME']); if (n) (nom[n] = nom[n] || []).push(p.id); });
+  const porNom = n => { const l = nom[nrm(n)]; return l && l.length === 1 ? l[0] : ''; };
+  const contPac = {}; cont.forEach(c => { const id = dni[normDni(c.code || c.vatnumber || c.tax_id || c.nif)] || mail[String(c.email || '').trim().toLowerCase()] || tel[soloDigitos(c.mobile)] || tel[soloDigitos(c.phone)] || porNom(c.name); if (id) contPac[c.id] = id; });
+  const R = {}; const suma = (kk, v, como) => { kk = kk || 'sin'; const x = R[kk] = R[kk] || { k: kk, v: 0, n: 0, fact: 0, cita: 0 }; x.v = Math.round((x.v + v) * 100) / 100; x.n++; if (como) x[como]++; };
+  const vistos = new Set(PS.tickets);
+  const doc = (d, sg) => { if (!d || !d.id || vistos.has(String(d.id))) return; vistos.add(String(d.id));
+    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
+    const v = sg * importeAbs(d); if (!v) return;
+    const kf = deFact(d.notes || d.desc || ''); if (kf) return suma(kf, v, 'fact');
+    const cid = d.contact_id || (d.contact && typeof d.contact === 'object' ? d.contact.id : d.contact), pid = contPac[cid] || porNom(d.contact_name || d.contactName);
+    const kc = pid ? porCita(pid, f) : ''; suma(kc, v, kc ? 'cita' : ''); };
+  tk.forEach(d => doc(d, 1)); rn.forEach(d => doc(d, -1));
+  const facDeCobro = {}; fx.forEach(x => { if (x.cobro) facDeCobro[x.cobro] = x.fisio; });
+  PS.cobros.forEach(c => { const kf = deFact(facDeCobro[c.id]); if (kf) return suma(kf, c.v, 'fact'); const kc = porCita(c.pac, c.f); suma(kc, c.v, kc ? 'cita' : ''); });
+  fx.forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return;
+    const kf = deFact(x.fisio); if (kf) return suma(kf, x.v, 'fact'); const kc = x.paciente ? porCita(x.paciente, x.f) : ''; suma(kc, x.v, kc ? 'cita' : ''); });
+  const v = { fisios: Object.values(R).map(x => ({ ...x, fisio: x.k === 'sin' ? 'Sin asignar' : (nombre[x.k] || x.k).charAt(0).toUpperCase() + (nombre[x.k] || x.k).slice(1).toLowerCase() })).sort((a, b) => b.v - a.v),
+    total: Math.round(Object.values(R).reduce((t, x) => t + x.v, 0) * 100) / 100 };
+  _vend = { t: Date.now(), k, v }; return v;
+}
 // Packs «con factura por sesión»: ids de Holded de los tickets de cada sesión y los cobros del pack (día y total)
 async function packsPorSesion(desde, hasta) {
   const T0 = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{POR SESION}`)}`);
@@ -4453,6 +4501,12 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
   }
 
   // ── PANEL: rendimiento de los fisios ──
+  if (action === 'vendido-fisios') { // Panel de control › Equipo: dinero que entra, por el fisio que lo vende
+    if (!process.env.FISIO_PASSWORD || String(req.query.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const { desde, hasta } = req.query;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(desde || '') || !/^\d{4}-\d{2}-\d{2}$/.test(hasta || '')) return res.status(400).json({ ok: false, error: 'Fechas no válidas' });
+    try { return res.status(200).json({ ok: true, ...(await vendidoPorFisio(desde, hasta)) }); } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  }
   if (action === 'rendimiento') {
     if (!process.env.FISIO_PASSWORD || String(req.query.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     const { desde, hasta } = req.query;
