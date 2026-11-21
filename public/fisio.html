@@ -12743,6 +12743,20 @@ function pcAtrasOn(el,atr){
   pcAvisar(pf,'Tus llamadas y tareas atrasadas',t);});
 }
 
+// Pacientes con pack en un periodo: de los que tienen alguna cita «Realizada», cuántos la tienen cubierta por un pack
+// cobrado en el panel (t='pack'), bono pagado fuera del panel («Tiene pack», t='previo') o sesión marcada «Facturada fuera»
+// con «pack»/«bono» en la nota. Los vales regalo no cuentan.
+// Se pide por semanas para no pasar del límite de pacientes por consulta. 10 min de memoria.
+async function pcPacks(d,h){const k=d+'|'+h;window.__pcPk=window.__pcPk||{};const m=window.__pcPk[k];if(m&&Date.now()-m.t<6e5)return m.p;
+ const A=`pwd=${encodeURIComponent(apiPwd)}`,mv=(f,n)=>{const x=new Date(f+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10);};
+ const T=[];for(let a=d;a<=h;a=mv(a,7)){const b=mv(a,6)<h?mv(a,6):h;T.push([a,b]);}
+ const p=Promise.all(T.map(([a,b])=>Promise.all([fetch(`/api/schedule?action=seg-agenda-dia&${A}&desde=${a}&hasta=${b}`).then(x=>x.json()),fetch(`/api/schedule?action=seg-agenda-num&${A}&desde=${a}&hasta=${b}&pago=1`).then(x=>x.json())]))).then(R=>{
+  const at=new Set(),pk=new Set();let ok=true;
+  R.forEach(([ag,nm])=>{if(!ag||!ag.ok||!nm||!nm.ok){ok=false;return;}const pg=nm.pago||{};
+   (ag.citas||[]).forEach(c=>{if(!c.pacienteId||!/^REALIZADA$/.test(String(c.estado).trim()))return;at.add(c.pacienteId);const g=pg[c.id];if(g&&(g.t==='pack'&&!g.vale||g.t==='previo'&&!g.vale||g.t==='fuera'&&/pack|bono/i.test(g.nota||'')))pk.add(c.pacienteId);});});
+  return ok?{at:at.size,pk:pk.size}:null;}).catch(()=>null);
+ window.__pcPk[k]={t:Date.now(),p};return p;}
+
 // ══ PANEL DE CONTROL (solo dirección): el centro de un vistazo, con el mismo periodo que Rendimiento ══
 async function renderControl(wrap){
  if(!esDireccion()){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección.</div></div>';return;}
@@ -12819,13 +12833,20 @@ async function renderControl(wrap){
   pon('neg',sec('Cómo va el negocio',`<span class="pc-ley"><i class="pc-lb"></i>${parcial?'barra: lo que llevas de '+(k==='semana'?'la semana pasada':fullL.toLowerCase()):'barra: comparado con '+fullL.toLowerCase()} · <em>↑↓</em> ${parcial?'a estas alturas':'diferencia'}</span>`,`<div class="pc-g">
    ${tile({...X,t:'Ocupación',v:oc,prev:ocP,full:ocup(PF),suf:'%',cls:cl(oc,85,65),go:'rend'})}
    ${tile({...X,t:'Ingresos',v:ing,prev:ingP,full:ingF,add:1,fmt:eur,go:'stats'})}
+   ${tile({...X,t:'Citas hechas',v:sum(L,'realizadas'),prev:sum(P,'realizadas'),full:sum(PF,'realizadas'),add:1,go:'stats'})}
    ${tile({...X,t:'Pacientes atendidos',v:at,prev:atP,full:sum(PF,'atendidos'),add:1,go:'rend'})}
+   <div class="pc-pk" style="display:contents">${tile({t:'Pacientes con pack',v:null,sub:'Calculando…'})}</div>
    ${tile({...X,t:'Pacientes nuevos',v:okN(nv)?nv.nuevos:null,prev:okN(nvP)?nvP.nuevos:null,full:okN(nvF)?nvF.nuevos:null,add:1,go:'stats'})}
    ${tile({...X,t:'Vuelven tras la 1ª',v:conv,prev:convP,full:okN(nvF)?nvF.conversion:null,suf:'%',cls:cl(conv,70,50),sub:okN(nv)?nv.reagendaron+' de '+nv.vinieron+' primeras visitas':'',go:'stats'})}
    ${tile({...X,t:'Reagendan',v:pct(re,at),prev:pct(reP,atP),full:pct(sum(PF,'reagendan'),sum(PF,'atendidos')),suf:'%',cls:cl(pct(re,at),75,60),go:'rend'})}
    ${tile({...X,t:'Faltas',v:falt,prev:faltP,full:sum(PF,'noAsistio')+sum(PF,'perdidas'),add:1,menos:1,cls:falt?'med':'ok',go:'rend'})}
    ${tile({...X,t:'Cancelaciones',v:canc,prev:cancP,full:sum(PF,'canceladas'),add:1,menos:1,go:'rend'})}
-  </div>`));});
+  </div>`));
+  // % de pacientes atendidos con pack: packs cobrados en el panel y bonos pagados fuera del panel (los vales regalo no cuentan)
+  Promise.all([pcPacks(d,h),pcPacks(pd,ph)]).then(([A,B])=>{const el=vivo()&&res.querySelector('[data-b="neg"] .pc-pk');if(!el)return;
+   const v=A&&A.at?pct(A.pk,A.at):null,vp=B&&B.at?pct(B.pk,B.at):null;
+   el.innerHTML=tile({t:'Pacientes con pack',v,prev:vp,suf:'%',sub:A?A.pk+' de '+A.at+' pacientes atendidos':'No se ha podido calcular',go:'stats'});
+   el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});});});
   // 2 · Fidelización
   // «Ahora mismo» (no depende del periodo): se pinta al momento con lo último guardado y se refresca por detrás
   const ahora=(k,url,cb)=>{let c=null;try{c=JSON.parse(localStorage.getItem('f365_pca_'+k)||'null');}catch(e){}
@@ -14175,6 +14196,7 @@ const NOVEDADES=[
  {f:'2026-11-20',t:'Mi día › Pendientes: la tarjeta «Lo que te queda» tiene nuevo diseño. Arriba puedes filtrar por tipo (sin próxima cita, ejercicios, app…) y cada bloque lleva su icono y qué hacer.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes › Tareas: todo lo que te queda de tus pacientes está en una sola tarjeta, ordenado por tipo: llamadas, sin próxima cita (con Alta, Seguimiento, App y Explicar), historias, ejercicios, app (con Enviar app), consentimientos, cobros y citas sin marcar.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes › Tareas: arriba, «Lo que quedó sin hacer» de tus check-lists del último mes, por tipo (historias, ejercicios, app, consentimientos, cobros, citas sin marcar). Toca el paciente para arreglarlo en su ficha, o «Resolver» si no hace falta y dinos por qué.'},
+ {f:'2026-11-21',dir:1,t:'Panel de control › Negocio: nuevas tarjetas «Citas hechas» (como en Estadísticas) y «Pacientes con pack»: qué % de los pacientes que vinieron tenían pack, cobrado en el panel o pagado fuera.',ver:{sec:'ctrl',pasos:[{el:'.pc-pk',txt:'Pacientes con pack del periodo.'}]}},
  {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes › «Cerradas con motivo»: todo lo que el equipo ha cerrado con «Resolver» (quién, por qué y cuándo). Si algo no te convence, «Deshacer» y vuelve a salir como pendiente.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes: en «Historia por actualizar», «Sin plan de ejercicios» y «Sin la app» tienes «Resolver»: si no hace falta, dinos por qué (no es tu paciente y se lo pasas a quien sea, está de alta, su tratamiento no lleva ejercicios, no usa la app…) y desaparece. Queda apuntado quién lo cerró y por qué.'},
  {f:'2026-11-20',aviso:1,t:'Tareas atrasadas: cuando dirección te avise, cada paciente lleva un botón «Resolver». Ahí lo haces (se abre su ficha donde toca) o nos dices por qué no hace falta: no es tu paciente (se lo pasas a quien sea), está de alta, su tratamiento no lleva ejercicios, no usa la app, firmó en papel, ya estaba cobrado… Y en las llamadas: no contesta, volver a llamar, ha cogido cita o dejar de llamar.'},
@@ -16762,7 +16784,7 @@ function renderFormacion(wrap, ruta){
  cards:[
  {ti:'Cómo va el equipo',shot:'/img/school/panel-c-rend.jpg',body:`En <b>Rendimiento</b> ves lo mismo que cada fisio en Mis estadísticas, pero de <b>todo el equipo</b>, con el <b>total del centro</b> arriba.<br><br>En cada fisio, su control de horas y <b>Informe</b>.`,ver:{sec:'rend',pasos:[{el:'.rend-card',txt:'El total del centro y cada fisio.'},{el:'.rc-inf',txt:'El informe de cada uno.'}]}},
  {ti:'Un fisio explica un día',body:`Los días que explica un fisio salen <b>por validar</b>. Revisa qué pasó y cuántas horas cuentan y <b>Validar</b>.<br><br>Si tiene banco de horas, eliges <b>sumar o restar del banco</b>.`,ver:{sec:'rend',pasos:[{el:'.rc-clas || .rend-card',txt:'Toca el día para validarlo.'}]}},
- {ti:'Panel de control',body:`En <b>Panel de control</b> (Gestión) ves el centro de un vistazo para el periodo que elijas: <b>cómo va el negocio</b> (ocupación, ingresos, nuevos, conversión, faltas), <b>fidelización</b>, <b>lo que tienes que resolver</b> (aprobar, validar, comunicaciones y check-lists) y <b>lo que viene</b> (huecos libres, reservas, tarjetas regalo).<br><br>Arriba a la izquierda eliges el periodo (por defecto, esta semana). Las flechas comparan con el mismo punto del periodo anterior. En <b>Pacientes</b> tienes las llamadas y tareas atrasadas de cada fisio, con «Avisar». Si tocas algo y sales, abajo tienes <b>Volver al panel de control</b> para seguir donde estabas.`,ver:{sec:'ctrl',el:'.pc-sec',txt:'El centro de un vistazo.'}},
+ {ti:'Panel de control',body:`En <b>Panel de control</b> (Gestión) ves el centro de un vistazo para el periodo que elijas: <b>cómo va el negocio</b> (ocupación, ingresos, citas hechas, % de pacientes con pack, nuevos, conversión, faltas), <b>fidelización</b>, <b>lo que tienes que resolver</b> (aprobar, validar, comunicaciones y check-lists) y <b>lo que viene</b> (huecos libres, reservas, tarjetas regalo).<br><br>Arriba a la izquierda eliges el periodo (por defecto, esta semana). Las flechas comparan con el mismo punto del periodo anterior. En <b>Pacientes</b> tienes las llamadas y tareas atrasadas de cada fisio, con «Avisar». Si tocas algo y sales, abajo tienes <b>Volver al panel de control</b> para seguir donde estabas.`,ver:{sec:'ctrl',el:'.pc-sec',txt:'El centro de un vistazo.'}},
  {ti:'Pacientes sin reagendar',body:`En <b>Rendimiento</b>, la tarjeta <b>Pacientes sin reagendar</b> te dice de cada fisio cuántos no han vuelto a reservar: <b>altas</b> (están bien), <b>en seguimiento</b>, <b>por revisar</b> y <b>sin explicar</b>.<br><br>Elige el periodo (hoy, semana, mes, mes pasado o <b>Elegir fechas</b>) y con <b>Avisar</b> le envías a cada fisio su lista, con cada paciente enlazado a su ficha.`,ver:{sec:'rend',el:'.rnr',txt:'Pacientes sin reagendar.'}},
  {ti:'Verificar lo que pagó cada paciente',body:`En el <b>Informe</b> de cada fisio, <b>Lo que pagó cada paciente</b>: cada sesión con su importe. Filtra <b>Por verificar</b> y toca un importe para corregirlo.<br><br><b>Para qué:</b> es lo que el autónomo ve como «Verificado por dirección» y lo que va en su factura.`,ver:{sec:'rend',pasos:[{el:'.rc-inf',txt:'Abre su informe.'}]}},
  {ti:'El reparto',body:`Con el contrato puesto en Equipo: si es <b>autónomo</b>, lo que le toca con su % y lo que queda a la clínica; si es <b>nómina</b>, lo que cuesta y lo que deja.`}
