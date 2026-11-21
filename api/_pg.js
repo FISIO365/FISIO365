@@ -36,7 +36,10 @@ function crearDb() {
   const { Pool } = require('pg');
   // En Cloudflare se entra por Hyperdrive (DB_URL_HD, lo pone cloudflare/entry.js): conexión local sin TLS. En Vercel no existe.
   const HD = process.env.DB_URL_HD || '';
-  const pool = new Pool({ connectionString: HD || DB_URL, max: +process.env.PG_MAX || 3, idleTimeoutMillis: 10000, ssl: HD || /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
+  const pool = new Pool({ connectionString: HD || DB_URL, max: +process.env.PG_MAX || 3, idleTimeoutMillis: 5000, ssl: HD || /localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false } });
+  // En Vercel: suelta las conexiones que se quedan libres antes de que la instancia se congele (si no, cada instancia
+  // dormida se queda con las suyas abiertas y con muchas a la vez se llega al límite de 200 de la base de datos)
+  if (process.env.VERCEL && !HD) { try { require('@vercel/functions').attachDatabasePool(pool); } catch (e) {} }
   return { query: (q, p) => pool.query(q, p), tx: async fn => { const c = await pool.connect(); try { await c.query('BEGIN'); const r = await fn(c); await c.query('COMMIT'); return r; } catch (e) { try { await c.query('ROLLBACK'); } catch (_) {} throw e; } finally { c.release(); } }, cerrar: () => pool.end() };
 }
 function db() {
