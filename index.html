@@ -246,6 +246,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
               <button type="button" @click="o.pick" class="btn tchip" style="font:inherit;font-size:15px;cursor:pointer;min-width:120px;padding:13px 24px;border-radius:999px">{{o.label}}</button>
             </template>
           </div>
+          <button type="button" @click="goBack" style="font:inherit;font-size:14px;background:none;border:none;color:#B5B5B3;cursor:pointer;padding:8px 12px">← Atrás</button>
         </div>
       </template>
       <template v-if="qDone">
@@ -257,7 +258,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
             <a :href="waRec" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;background:#FFFFFF;color:#111111;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Quiero este curso</a>
             <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-line" style="padding:16px 26px;border-radius:999px;border:1.5px solid #6B6B6B;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Prefiero un café antes</a>
           </div>
-          <button type="button" @click="resetQuiz" style="font:inherit;font-size:13px;background:none;border:none;color:#B5B5B3;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Repetir el test</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"><button type="button" @click="goBack" style="font:inherit;font-size:14px;background:none;border:none;color:#B5B5B3;cursor:pointer;padding:8px 12px">← Atrás</button><button type="button" @click="resetQuiz" style="font:inherit;font-size:14px;background:none;border:none;color:#B5B5B3;cursor:pointer;padding:8px 12px">Empezar de nuevo</button></div>
         </div>
       </template>
     </div>
@@ -415,6 +416,7 @@ class Component extends DCLogic {
       recCourse: rec,
       recText: g.why + ' Es corto, práctico y sin compromiso de seguir después.',
       resetQuiz: () => this.setState({ q: 0, goal: -1, answers: [] }),
+      goBack: () => this.setState(s.q <= 1 ? { q: 0, answers: [] } : { q: s.q - 1, answers: s.answers.slice(0, -1) }),
       cursos: cursos,
       cursoSel: CURSOS[s.course]
     };
