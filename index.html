@@ -150,6 +150,16 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
 .dark .rec{color:#111111 !important}
 .tchip{background:transparent !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF;border:1.5px solid #FFFFFF !important;transition:background .2s ease,color .2s ease}
 .tchip:hover,.tchip:active{background:#FFFFFF !important;color:#111111 !important;-webkit-text-fill-color:#111111}
+.sit{transition:background .25s ease,transform .2s ease}
+.sit:active{transform:scale(.98)}
+.sit-off{background:#FFFFFF;color:#111111}.sit-off:hover{background:#F6F2FA}
+.sit-on{background:#E6DAF0;color:#111111}
+.sit-off .sitcheck{background:#FFFFFF}.sit-on .sitcheck{background:#111111}
+.sit-off .sitcheck svg{opacity:0}.sit-on .sitcheck svg{opacity:1}
+.tchip.sug{background:#FFFFFF !important;color:#111111 !important;-webkit-text-fill-color:#111111}
+@keyframes cnt1{0%{transform:scale(.9);opacity:.4}100%{transform:none;opacity:1}}@keyframes cnt2{0%{transform:scale(.9);opacity:.4}100%{transform:none;opacity:1}}
+.cA{display:inline-block;animation:cnt1 .4s cubic-bezier(.2,1.5,.4,1)}.cB{display:inline-block;animation:cnt2 .4s cubic-bezier(.2,1.5,.4,1)}
+@media (max-width:720px){.m-sitres{padding:22px 20px !important}.sit{min-height:0 !important;padding:16px !important}}
 .trust{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#333333}
 .wa-bar{display:none}
 .offer{transition:transform .3s ease}.offer:hover{transform:translateY(-4px)}
@@ -217,9 +227,40 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
   </div>
 
   
+  <div id="tesuena" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
+    <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:780px;margin-bottom:48px">
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">01 — Sé sincero</span>
+      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">¿Te suena <span class="acc mk4" style="font-weight:400">alguna de estas?</span></h2>
+      <p style="margin:0;font-size:17px;line-height:1.6;color:#4A4A4A">Toca las que te pasen. Nadie lo ve, es solo para ti.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+      <template v-for="x in sits">
+        <button type="button" @click="x.pick" :class="`btn sit ${x.cls}`" style="font:inherit;text-align:left;cursor:pointer;padding:20px 20px;border-radius:20px;border:1.5px solid #111111;display:flex;gap:14px;align-items:flex-start;min-height:96px">
+          <span class="sitcheck" style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:1.5px solid #111111;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="font-size:16px;line-height:1.4">{{x.t}}</span>
+        </button>
+      </template>
+    </div>
+    <div class="m-sitres" style="margin-top:20px;border:1.5px solid #111111;border-radius:24px;background:#E6DAF0;padding:28px 30px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+      <div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:6px">
+        <span :class="sitAnim" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:28px;line-height:1.15;letter-spacing:-.025em">{{sitTitle}}</span>
+        <span style="font-size:15px;line-height:1.55;color:#333333">{{sitText}}</span>
+      </div>
+      <template v-if="hasSel">
+        <div class="swap" style="display:flex;flex-wrap:wrap;gap:10px">
+          <a :href="waSit" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg><span>Cuéntaselo a Ramiro</span></a>
+          <a href="#test" class="btn btn-line" style="padding:15px 22px;border-radius:999px;border:1.5px solid #111111;color:#111111;text-decoration:none;font-weight:500;font-size:15px;background:#FFFFFF">Ver qué me iría mejor</a>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  
   <div id="test" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
     <div class="reveal m-test dark" style="border-radius:32px;padding:64px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:24px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase">01 — Test de 1 minuto</span>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase">02 — Test de 1 minuto</span>
       <span class="h2" style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:44px;line-height:1.1;letter-spacing:-.035em;max-width:720px">Descubre qué curso te iría mejor</span>
       <div style="display:flex;gap:8px">
         <template v-for="st in steps">
@@ -229,9 +270,12 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
       <template v-if="qGoal">
         <div class="swap" style="display:flex;flex-direction:column;align-items:center;gap:24px;max-width:720px">
           <span style="font-size:20px">¿Qué te gustaría mejorar?</span>
+          <template v-if="hasSel">
+            <span style="font-size:15px;color:#CFCFCD">Por lo que has marcado, te sugiero: <span style="color:#FFFFFF;font-weight:500">{{sugGoal}}</span></span>
+          </template>
           <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
             <template v-for="g in goals">
-              <button type="button" @click="g.pick" class="btn tchip" style="font:inherit;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px">{{g.label}}</button>
+              <button type="button" @click="g.pick" :class="`btn tchip ${g.cls}`" style="font:inherit;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px">{{g.label}}</button>
             </template>
           </div>
         </div>
@@ -266,7 +310,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
   
   <div id="empezar" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
     <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:780px;margin-bottom:56px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">02 — Así puedes empezar</span>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">03 — Así puedes empezar</span>
       <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Elige cómo quieres <span class="acc mk3" style="font-weight:400">dar el primer paso.</span></h2>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
@@ -301,7 +345,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
   <div class="blue m-bluesec" style="padding:110px 0;margin-bottom:120px;border-top:1.5px solid #111111">
   <div id="dudas" class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px">
     <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:780px;margin-bottom:56px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">03 — Lo que seguramente has oído</span>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">04 — Lo que seguramente has oído</span>
       <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Pregúntame lo que quieras. <span class="acc mkw" style="font-weight:400">De verdad.</span></h2>
       <p style="margin:0;font-size:16px">Toca una tarjeta para ver la respuesta.</p>
     </div>
@@ -336,7 +380,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
   <div id="contacto" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
     <div class="reveal m-contact blue" style="border-radius:32px;padding:72px 48px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:24px">
       <h2 class="h2" style="margin:0;max-width:760px;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">El primer paso es <span class="acc mkw" style="font-weight:400">hablar.</span></h2>
-      <p style="margin:0;max-width:520px;font-size:18px;line-height:1.65">Escríbeme y te llamo, o quedamos para un café, cuando te venga bien. Me preguntas todo lo que quieras, sin compromiso.</p>
+      <p style="margin:0;max-width:540px;font-size:18px;line-height:1.65">{{closeText}}</p>
       <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:12px;padding:18px 34px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:17px;margin-top:8px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Hablemos: llamada o café</a>
     </div>
   </div>
@@ -359,7 +403,7 @@ class DCLogic { constructor(props) { this.props = props || {}; } setState(p) { O
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { open: {}, q: 0, goal: -1, answers: [], course: 0 };
+    this.state = { open: {}, q: 0, goal: -1, answers: [], course: 0, coursePicked: false, sel: [], tick: 0 };
   }
   renderVals() {
     const s = this.state;
@@ -392,17 +436,51 @@ class Component extends DCLogic {
       '¿Te pasa que repites los mismos problemas con la gente?',
       '¿Te gustaría sentirte más tranquilo y seguro de ti mismo?'
     ];
-    const goals = GOALS.map((g, i) => ({ label: g.label, pick: () => this.setState({ goal: i, q: 1, answers: [] }) }));
+    const SITS = [
+      ['Discuto con mi pareja por tonterías', 0],
+      ['Llego a casa agotado y sin ganas de nada', 1],
+      ['Repito los mismos errores una y otra vez', 5],
+      ['Me cuesta decir lo que pienso', 2],
+      ['Siento que podría dar mucho más de mí', 5],
+      ['Mis hijos no me cuentan nada', 4],
+      ['Tengo roces en el trabajo', 3],
+      ['Me agobio con facilidad', 1]
+    ];
+    const sel = s.sel;
+    const sits = SITS.map((x, i) => {
+      const on = sel.indexOf(i) >= 0;
+      return { t: x[0], cls: on ? 'sit-on' : 'sit-off',
+        pick: () => this.setState({ sel: on ? sel.filter((k) => k !== i) : sel.concat([i]), tick: s.tick + 1 }) };
+    });
+    const n = sel.length;
+    const tally = {};
+    sel.forEach((i) => { const g = SITS[i][1]; tally[g] = (tally[g] || 0) + 1; });
+    let sug = -1, best = 0;
+    sel.forEach((i) => { const g = SITS[i][1]; if (tally[g] > best) { best = tally[g]; sug = g; } });
+    const sitList = sel.map((i) => SITS[i][0].charAt(0).toLowerCase() + SITS[i][0].slice(1));
+    const joined = sitList.length > 1 ? sitList.slice(0, -1).join(', ') + ' y ' + sitList[sitList.length - 1] : (sitList[0] || '');
+    const myLine = n ? ' Me pasa que ' + joined + '.' : '';
+    const goals = GOALS.map((g, i) => ({ label: g.label, cls: i === sug ? 'sug' : '', pick: () => this.setState({ goal: i, q: 1, answers: [] }) }));
     const ans = (v) => () => this.setState({ answers: s.answers.concat([v]), q: s.q + 1 });
     const done = s.q > QS.length;
-    const g = s.goal >= 0 ? GOALS[s.goal] : GOALS[0];
+    const g = s.goal >= 0 ? GOALS[s.goal] : (sug >= 0 ? GOALS[sug] : GOALS[0]);
     const rec = CURSOS[g.c];
-    const cursos = CURSOS.map((t, i) => ({ t: t, cls: i === s.course ? 'chip-on' : 'chip-off', pick: () => this.setState({ course: i }) }));
+    const autoCourse = s.goal >= 0 ? GOALS[s.goal].c : (sug >= 0 ? GOALS[sug].c : 0);
+    const ci = s.coursePicked ? s.course : autoCourse;
+    const cursos = CURSOS.map((t, i) => ({ t: t, cls: i === ci ? 'chip-on' : 'chip-off', pick: () => this.setState({ course: i, coursePicked: true }) }));
     return {
-      waCafe: wa('Hola Ramiro, he visto tu web y me gustaría hablar contigo (por llamada o con un café).'),
+      waCafe: wa('Hola Ramiro, he visto tu web y me gustaría hablar contigo (por llamada o con un café).' + myLine),
       waDuda: wa('Hola Ramiro, he visto tu web y tengo una duda: '),
-      waCurso: wa('Hola Ramiro, quiero apuntarme al curso «' + CURSOS[s.course] + '». ¿Cómo lo hago?'),
-      waRec: wa('Hola Ramiro, he hecho el test de tu web y me recomienda el curso «' + rec + '». ¿Cómo me apunto?'),
+      waCurso: wa('Hola Ramiro, quiero apuntarme al curso «' + CURSOS[ci] + '». ¿Cómo lo hago?'),
+      waRec: wa('Hola Ramiro, he hecho el test de tu web y me recomienda el curso «' + rec + '».' + myLine + ' ¿Cómo me apunto?'),
+      sits: sits,
+      hasSel: n > 0,
+      sugGoal: sug >= 0 ? GOALS[sug].label.toLowerCase() : '',
+      sitAnim: s.tick % 2 ? 'cA' : 'cB',
+      sitTitle: n === 0 ? 'Toca las que te pasen' : (n === 1 ? 'Te pasa 1 de estas.' : 'Te pasan ' + n + ' de estas.'),
+      sitText: n === 0 ? 'Verás que no eres el único, y que tiene solución.' : (n < 3 ? 'Tiene solución, y es más sencillo de lo que crees. Cuéntamelo y lo vemos juntos.' : 'No eres el único: le pasa a mucha gente, y se puede cambiar. Cuéntamelo y te digo por dónde empezar.'),
+      waSit: wa('Hola Ramiro, he visto tu web.' + (myLine || ' ') + ' ¿Me ayudas?'),
+      closeText: n ? 'Me has contado ' + n + (n === 1 ? ' cosa que te pasa' : ' cosas que te pasan') + '. Tiene solución. Escríbeme y te llamo, o quedamos para un café, cuando te venga bien.' : 'Escríbeme y te llamo, o quedamos para un café, cuando te venga bien. Me preguntas todo lo que quieras, sin compromiso.',
       dudas: dudas,
       steps: [0, 1, 2, 3].map((i) => ({ cls: i < s.q ? 'seg-on' : 'seg-off' })),
       qGoal: s.q === 0,
@@ -417,7 +495,7 @@ class Component extends DCLogic {
       resetQuiz: () => this.setState({ q: 0, goal: -1, answers: [] }),
       goBack: () => this.setState(s.q <= 1 ? { q: 0, answers: [] } : { q: s.q - 1, answers: s.answers.slice(0, -1) }),
       cursos: cursos,
-      cursoSel: CURSOS[s.course]
+      cursoSel: CURSOS[ci]
     };
   }
 }
