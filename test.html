@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Te suena alguna de estas? — Descúbrete</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&amp;family=Inter:wght@400;500&amp;family=Instrument+Serif&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#333333}
+*{box-sizing:border-box}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 3s ease-in-out infinite}.b2{animation-delay:.8s}.b3{animation-delay:1.6s}
+.spinr{animation:spin 80s linear infinite;transform-origin:150px 150px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popin{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
+@keyframes popin2{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
+.popA{animation:popin .45s cubic-bezier(.2,1.6,.4,1) both;transform-origin:center bottom}.popB{animation:popin2 .45s cubic-bezier(.2,1.6,.4,1) both;transform-origin:center bottom}.d-late{animation-delay:.45s}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.25)}}
+@keyframes hint{0%,100%{opacity:.45}50%{opacity:1}}
+.fade{animation:fadeUp .9s cubic-bezier(.2,.7,.2,1) both}
+.d1{animation-delay:.15s}.d2{animation-delay:.35s}.d3{animation-delay:.55s}
+.track{display:flex;width:max-content;animation:marquee 40s linear infinite}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+.hint{animation:hint 2.4s ease-in-out infinite}
+.reveal{animation:fadeUp linear both;animation-timeline:view();animation-range:entry 0% cover 25%}
+.btn{transition:background .25s ease,color .25s ease,border-color .25s ease,transform .25s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-main:hover{background:#333333 !important;color:#FFFFFF !important}
+.btn-line:hover{border-color:#B5B5B3 !important;background:rgba(0,0,0,.025) !important}
+.card{transition:border-color .3s ease,background .3s ease,transform .3s ease}
+.card:hover{border-color:rgba(17,17,17,.35) !important;background:#FAFAF9 !important;transform:translateY(-2px)}
+.swap{animation:fadeUp .5s ease both}
+.chip-on{background:#111111;color:#FFFFFF;border-color:#111111 !important}
+.chip-off{background:#FFFFFF;color:#111111}
+.chip-off:hover{border-color:#111111 !important}
+.band{fill:none;stroke-width:16;transition:stroke .45s ease}
+.b-neutral{stroke:#F0F0EE}.b-help{stroke:#A8CF97}.b-harm{stroke:#F2C4C4}
+.ldot{transition:background .45s ease}.ldot.b-neutral{background:#E6E6E4}.ldot.b-help{background:#A8CF97}.ldot.b-harm{background:#F2C4C4}
+.chip-best{background:#DCEBD2;color:#111111;border-color:#111111 !important}.chip-tried{background:#F5F5F3;color:#8A8A8A}
+.selring{transition:r .45s cubic-bezier(.3,1.3,.5,1)}
+.vdot{fill:#FFFFFF;stroke:#111111;stroke-width:1.5;transition:fill .3s ease}.vdot.v-hit{fill:#111111}
+.k-on{background:#DCEBD2;border-color:#111111 !important;color:#111111}.k-on .kletter{background:#111111;color:#FFFFFF}
+.k-off{background:#FFFFFF;color:#111111}.k-off .kletter{border:1px solid #D6D6D4;color:#4A4A4A}.k-off:hover{border-color:#111111 !important}
+@keyframes shakeA{0%,100%{transform:none}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes shakeB{0%,100%{transform:none}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.shakeA{animation:shakeA .45s ease}.shakeB{animation:shakeB .45s ease}
+.tab-on{background:#111111;color:#FFFFFF;border-color:#111111 !important}
+.tab-on .tabnum{background:#111111;color:#FFFFFF}
+.tab-off{background:#FFFFFF;color:#111111}
+.tab-off .tabnum{border:1px solid #D6D6D4;color:#4A4A4A}
+.tab-off:hover{border-color:#111111 !important}
+.msg-ok{background:#EEF4EA;color:#2F4A26}
+.msg-bad{background:#F9E9E2;color:#7A2E10}
+.pill{transition:top .45s cubic-bezier(.3,1.3,.5,1),opacity .3s ease}
+.tone .tdot{background:#FFFFFF;border:1px solid #CFCFCD;transition:background .3s ease,border-color .3s ease,transform .3s ease}
+.tone:hover .tdot{border-color:#111111}
+.tone-on .tdot{background:#111111;border-color:#111111;transform:scale(1.25)}
+.tone-on{font-weight:500}
+.tg-on{background:#111111;color:#FFFFFF}.tg-off{background:transparent;color:#111111}
+.dot-on{width:26px;background:#E6DAF0}.dot-off{width:10px;background:#FFFFFF}
+.stA{animation:popin .5s cubic-bezier(.2,1.5,.4,1) both}.stB{animation:popin2 .5s cubic-bezier(.2,1.5,.4,1) both}
+.steplbl{align-self:flex-start;display:inline-flex;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#111111;border:1.5px solid #111111;border-radius:999px;padding:5px 12px;margin-bottom:-6px}
+.sp-on{background:#111111;color:#FFFFFF}.sp-done{background:#DCEBD2;color:#111111}.sp-off{background:#FFFFFF;color:#8A8A8A;border-color:#CFCFCD !important}
+.bar-on{background:#111111}.bar-seen{background:#DCEBD2}.bar-off{background:#E3E3E1}
+.seg-on{background:#111111}.seg-off{background:#D6D6D4}
+.locked{filter:blur(10px) brightness(1.04);pointer-events:none;user-select:none}
+.open{filter:none;transition:filter 1.2s ease}
+input,textarea{color:#111111}
+input::placeholder,textarea::placeholder{color:#8A8A8A}
+input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
+@media (max-width:720px){
+  .hero-title{font-size:50px !important}
+  .h2{font-size:38px !important}
+  .hide-m{display:none !important}
+  .hero-box{min-height:620px !important}
+}
+
+@media (max-width:720px){
+  .wrap{padding-left:26px !important;padding-right:26px !important}
+  .m-ram .wrap{padding-top:64px !important;padding-bottom:64px !important;gap:56px !important}
+  .m-ram h2{font-size:58px !important}
+  .bob{font-size:12px !important;padding:7px 12px !important}
+  .m-pic{width:min(250px,100%) !important}
+  .m-pic .bob:nth-of-type(1){right:-4% !important}
+  .m-pic .b2{left:-4% !important}
+  .m-story{padding:24px 20px !important;gap:22px !important}
+  .m-story .sq{font-size:22px !important;min-height:0 !important;text-align:center}
+  .st-right{align-items:center !important;text-align:center}
+  .st-tg{align-self:center !important}
+  .st-nav{justify-content:center !important}
+  .m-sec{padding-bottom:72px !important}
+  .m-band{margin:28px 0 0 !important}
+  .m-band span[style*="56px"]{font-size:36px !important}
+  .m-hero{padding:30px 20px !important;gap:28px !important}
+  .m-test{padding:40px 18px !important}
+  .m-contact{padding:30px 20px !important;gap:30px !important}
+  .m-lesson{padding:26px 6px 14px !important;gap:26px !important}
+  .m-dcard{min-height:0 !important;padding:22px !important}
+  .m-dcard .dq{font-size:24px !important}
+  .m-dcard .dfoot{margin-top:10px !important}
+  .m-photo{width:100% !important;height:220px !important}
+  .m-gap{gap:28px !important}
+  .m-ltitle{font-size:28px !important}
+  .m-badge{padding:22px 20px !important}
+  .tab{flex-direction:column !important;align-items:center !important;text-align:center !important;padding:12px 6px !important;gap:8px !important}
+  .tab .tlabel{display:none !important}
+  .tab .ttitle{white-space:normal !important;font-size:13px !important;line-height:1.25 !important}
+  .tab .tbox{align-items:center !important}
+}
+
+.acc{color:#111111 !important;background:linear-gradient(transparent 58%, var(--mk,#F5E6B8) 58%, var(--mk,#F5E6B8) 92%, transparent 92%);padding:0 .06em}
+.mk1{--mk:#F5E6B8}.mk2{--mk:#D3E4F3}.mk3{--mk:#DCEBD2}.mk4{--mk:#E6DAF0}.mk5{--mk:#F6D9C4}.mk6{--mk:#F2D4D4}.mkw{--mk:#FFFFFF}
+.ccard{background:#F2D4D4 !important}
+.wa-float{box-shadow:0 10px 30px rgba(17,17,17,.18);transition:transform .25s ease}.wa-float:hover{transform:translateY(-2px)}
+@media (max-width:720px){.wa-txt{display:none}.wa-float{padding:16px !important}}
+.cm{font-family:'Instrument Serif',serif;font-weight:400;font-style:normal;font-size:1.05em;letter-spacing:.02em;display:inline-block;margin-right:.04em;line-height:0}
+.blue{background:#D3E4F3 !important;color:#111111;border-color:#111111 !important}
+.m-contact.blue{background:#F5E6B8 !important;border:1.5px solid #111111 !important}
+.blue p,.blue label{color:#333333 !important}
+.blue .card{color:#111111 !important;border:1.5px solid #111111 !important}
+.blue input,.blue textarea{color:#111111;border:1.5px solid #111111 !important;background:#FFFFFF !important}
+.m-bluesec{border-bottom:1.5px solid #111111}
+.dark{background:#111111 !important;color:#FFFFFF;border-color:#111111 !important}
+.dark .slabel{color:#FFFFFF !important}
+.dark .btn-line{color:#FFFFFF !important;border-color:#6B6B6B !important;background:transparent !important}
+.dark .seg-on{background:#FFFFFF}.dark .seg-off{background:#333333}
+@media (max-width:720px){.m-bluesec{padding:64px 0 !important;margin-bottom:72px !important}}
+@media (max-width:720px){
+  .wrap p{font-size:16px !important;line-height:1.7 !important}
+  .h2{line-height:1.06 !important}
+  .ram-col{gap:34px !important}
+  .m-ram h2{font-size:54px !important}
+  .chatbox{padding:22px 18px !important;gap:20px !important;border-radius:22px !important}
+  .chatbox .chip{font-size:13px !important;padding:8px 14px !important}
+  .chip{font-size:14px}
+  .sechead{margin-bottom:44px !important;gap:20px !important}
+  .m-lesson > div{gap:24px !important}
+  .m-dcard{gap:12px}
+  .m-sec{padding-bottom:96px !important}
+  .m-ram .wrap{padding-top:80px !important;padding-bottom:80px !important;gap:64px !important}
+  .m-bluesec{padding:80px 0 !important;margin-bottom:96px !important}
+}
+</style>
+<style>
+.dark .rec{color:#111111 !important}
+.tchip{background:transparent !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF;border:1.5px solid #FFFFFF !important;transition:background .2s ease,color .2s ease}
+.tchip:hover,.tchip:active{background:#FFFFFF !important;color:#111111 !important;-webkit-text-fill-color:#111111}
+.sit{transition:background .25s ease,transform .2s ease}
+.sit:active{transform:scale(.98)}
+.sit-off{background:#FFFFFF;color:#111111}.sit-off:hover{background:#F6F2FA}
+.sit-on{background:#E6DAF0;color:#111111}
+.sit-off .sitcheck{background:#FFFFFF}.sit-on .sitcheck{background:#111111}
+.sit-off .sitcheck svg{opacity:0}.sit-on .sitcheck svg{opacity:1}
+.tchip.sug{background:#FFFFFF !important;color:#111111 !important;-webkit-text-fill-color:#111111}
+@keyframes cnt1{0%{transform:scale(.9);opacity:.4}100%{transform:none;opacity:1}}@keyframes cnt2{0%{transform:scale(.9);opacity:.4}100%{transform:none;opacity:1}}
+.cA{display:inline-block;animation:cnt1 .4s cubic-bezier(.2,1.5,.4,1)}.cB{display:inline-block;animation:cnt2 .4s cubic-bezier(.2,1.5,.4,1)}
+@media (max-width:720px){.m-sitres{padding:22px 20px !important}.sit{min-height:0 !important;padding:16px !important}}
+.trust{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#333333}
+.wa-bar{display:none}
+.offer{transition:transform .3s ease}.offer:hover{transform:translateY(-4px)}
+.bubble{position:absolute;left:-4%;top:-2%;background:#FFFFFF;border:1.5px solid #111111;border-radius:20px 20px 20px 4px;padding:12px 16px;font-size:14px;line-height:1.4;max-width:220px}
+@media (max-width:720px){
+  .wa-float{display:none !important}
+  .wa-bar{display:flex;position:fixed;left:14px;right:14px;bottom:14px;z-index:60;align-items:center;justify-content:center;gap:10px;padding:16px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:16px;box-shadow:0 10px 30px rgba(17,17,17,.25)}
+  .pb-bar{height:90px}
+  .hero-grid{padding:28px 22px !important}
+  .bubble{left:0;top:-6%;font-size:13px;max-width:180px}
+  .offer{padding:28px 22px !important}
+}
+</style>
+
+<script async src="https://tally.so/widgets/embed.js"></script>
+<script src="vue.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script type="text/x-template" id="tpl">
+
+
+<div style="font-family:'Inter',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:100vh">
+
+  
+  <div class="wrap" style="max-width:1200px;margin:0 auto;padding:22px 32px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+    <a href="#inicio" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#111111">
+      <span class="pulse" style="width:9px;height:9px;border-radius:50%;background:#111111;display:inline-block"></span>
+      <span style="font-family:'Inter Tight',sans-serif;font-size:19px;font-weight:300;letter-spacing:.02em">descúbrete</span>
+    </a>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+      <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-line" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1.5px solid #111111;border-radius:999px;text-decoration:none;color:#111111;font-size:14px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Escríbeme</a>
+    </div>
+  </div>
+
+  
+  <div id="tesuena" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:24px 32px 120px">
+    <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:780px;margin-bottom:48px">
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">Test de 30 segundos · Sé sincero</span>
+      <h1 class="h2 hero-title" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:72px;line-height:1.02;letter-spacing:-.04em">¿Te suena <span class="acc mk4" style="font-weight:400">alguna de estas?</span></h1>
+      <p style="margin:0;font-size:17px;line-height:1.6;color:#4A4A4A">Toca las que te pasen. Al final te digo por dónde empezar. Soy Ramiro y te respondo yo.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+      <template v-for="x in sits">
+        <button type="button" @click="x.pick" :class="`btn sit ${x.cls}`" style="font:inherit;text-align:left;cursor:pointer;padding:20px 20px;border-radius:20px;border:1.5px solid #111111;display:flex;gap:14px;align-items:flex-start;min-height:96px">
+          <span class="sitcheck" style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:1.5px solid #111111;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="font-size:16px;line-height:1.4">{{x.t}}</span>
+        </button>
+      </template>
+      <a :href="waSit" target="_blank" rel="noopener" @click="tell" class="btn sit sit-other" style="text-decoration:none;color:#111111;padding:20px;border-radius:20px;border:1.5px dashed #111111;display:flex;gap:14px;align-items:flex-start;min-height:96px;background:#FFFFFF">
+        <span style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:1.5px solid #111111;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;font-size:16px;line-height:1">+</span>
+        <span style="font-size:16px;line-height:1.4">Me pasa otra cosa…<br><span style="font-size:13px;color:#6B6B6B">Escríbela con tus palabras</span></span>
+      </a>
+    </div>
+    <div class="m-sitres" style="margin-top:20px;border:1.5px solid #111111;border-radius:24px;background:#E6DAF0;padding:28px 30px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+      <div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:6px">
+        <span :class="sitAnim" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:28px;line-height:1.15;letter-spacing:-.025em">{{sitTitle}}</span>
+        <span style="font-size:15px;line-height:1.55;color:#333333">{{sitText}}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <a :href="waSit" target="_blank" rel="noopener" @click="tell" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg><span>{{tellLabel}}</span></a>
+          <template v-if="hasSel"><a :href="moreHref" class="btn btn-line" style="padding:15px 22px;border-radius:999px;border:1.5px solid #111111;color:#111111;text-decoration:none;font-weight:500;font-size:15px;background:#FFFFFF">{{moreLabel}}</a></template>
+        </div>
+    </div>
+  </div>
+
+  
+  <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px 48px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:12px;line-height:1.6;color:#8A8A8A">
+    <span>Web personal de Ramiro y Nora, scientologists. No es una web oficial de la Iglesia de Scientology.</span>
+    <span>[Aviso legal] · [Privacidad]</span>
+  </div>
+  
+
+</div>
+</script>
+<script>
+class DCLogic { constructor(props) { this.props = props || {}; } setState(p) { Object.assign(this.state, typeof p === 'function' ? p(this.state) : p); } forceUpdate() {} }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: {}, q: 0, goal: -1, answers: [], course: 0, coursePicked: false, sel: [], tick: 0 };
+  }
+  renderVals() {
+    const s = this.state;
+    const WA = '34XXXXXXXXX';
+    const PAGE = 'test';
+    const TALLY = 'KpVlEX';
+    const wa = (t) => 'https://wa.me/' + WA + '?text=' + encodeURIComponent(t);
+    const DUDAS = [
+      { q: '¿Es una secta?', a: 'Es lo primero que nos preguntan y lo entendemos: se ha publicado mucho, también críticas. En España está inscrita como confesión religiosa desde 2007, tras una sentencia de la Audiencia Nacional. Nuestra experiencia: vamos porque nos aporta. Ven, pregunta lo que quieras y júzgalo tú.' },
+      { q: '¿Qué creéis exactamente?', a: 'Que eres un ser espiritual, no solo un cuerpo y una mente. Que las personas son básicamente buenas y pueden mejorar su vida, sus relaciones y su capacidad aplicando unas herramientas concretas.' },
+      { q: '¿Tengo que dejar mi religión?', a: 'No. Hay gente que sigue con su religión y aplica lo que aprende aquí. Nadie te va a pedir que dejes nada.' },
+      { q: '¿Cuánto cuesta?', a: 'Hay cursos de introducción con un precio bajo y servicios más avanzados que se pagan como donación. Te decimos los precios claros desde el principio, sin sorpresas: [PRECIOS].' },
+      { q: '¿Y lo que he leído en internet?', a: 'Hay de todo: críticas, polémicas y también datos que no son correctos. No te pedimos que no lo leas. Te pedimos que también escuches a quien lo vive desde dentro y saques tus propias conclusiones.' },
+      { q: '¿Qué metas tiene?', a: 'Ayudar a construir un mundo con menos guerras, menos delincuencia y menos locura, donde las personas capaces puedan prosperar y la gente honesta tenga sus derechos. Y empieza por mejorar a cada persona.' }
+    ];
+    const dudas = DUDAS.map((d, i) => {
+      const isOpen = !!s.open[i];
+      return { q: d.q, a: d.a, num: '0' + (i + 1), open: isOpen, closed: !isOpen,
+        toggle: () => this.setState({ open: Object.assign({}, s.open, { [i]: !isOpen }) }) };
+    });
+    const CURSOS = ['Cómo mejorar tus relaciones', 'Cómo superar los altibajos', 'Cómo resolver conflictos', 'Comunicación personal'];
+    const GOALS = [
+      { label: 'Mis relaciones', c: 0, why: 'Herramientas prácticas para entender a los demás y que te entiendan: en casa, en pareja y con los amigos.' },
+      { label: 'El estrés', c: 1, why: 'Para manejar los altibajos y recuperar la calma cuando todo se complica.' },
+      { label: 'Comunicarme mejor', c: 3, why: 'La comunicación es la base de todo. Aprendes a comunicarte sin tensión ni malentendidos.' },
+      { label: 'El trabajo', c: 2, why: 'Para resolver conflictos con compañeros, jefes o clientes y trabajar más tranquilo.' },
+      { label: 'Mi familia', c: 0, why: 'Para convivir mejor, entender a los tuyos y resolver los roces del día a día.' },
+      { label: 'Conocerme', c: 1, why: 'Para entender por qué reaccionas como reaccionas y sentirte más seguro de ti.' }
+    ];
+    const QS = [
+      '¿Sientes que podrías sacar mucho más de tu vida?',
+      '¿Te pasa que repites los mismos problemas con la gente?',
+      '¿Te gustaría sentirte más tranquilo y seguro de ti mismo?'
+    ];
+    const SITS = [
+      ['Discuto con mi pareja por tonterías', 0],
+      ['Llego a casa agotado y sin ganas de nada', 1],
+      ['Repito los mismos errores una y otra vez', 5],
+      ['Me cuesta decir lo que pienso', 2],
+      ['Siento que podría dar mucho más de mí', 5],
+      ['Mis hijos no me cuentan nada', 4],
+      ['Tengo roces en el trabajo', 3],
+      ['Me agobio con facilidad', 1]
+    ];
+    const sel = s.sel;
+    const sits = SITS.map((x, i) => {
+      const on = sel.indexOf(i) >= 0;
+      return { t: x[0], cls: on ? 'sit-on' : 'sit-off',
+        pick: () => this.setState({ sel: on ? sel.filter((k) => k !== i) : sel.concat([i]), tick: s.tick + 1 }) };
+    });
+    const n = sel.length;
+    const tally = {};
+    sel.forEach((i) => { const g = SITS[i][1]; tally[g] = (tally[g] || 0) + 1; });
+    let sug = -1, best = 0;
+    sel.forEach((i) => { const g = SITS[i][1]; if (tally[g] > best) { best = tally[g]; sug = g; } });
+    const sitList = sel.map((i) => SITS[i][0].charAt(0).toLowerCase() + SITS[i][0].slice(1));
+    const joined = sitList.length > 1 ? sitList.slice(0, -1).join(', ') + ' y ' + sitList[sitList.length - 1] : (sitList[0] || '');
+    const myLine = n ? ' Me pasa que ' + joined + '.' : '';
+    const goals = GOALS.map((g, i) => ({ label: g.label, cls: i === sug ? 'sug' : '', pick: () => this.setState({ goal: i, q: 1, answers: [] }) }));
+    const ans = (v) => () => this.setState({ answers: s.answers.concat([v]), q: s.q + 1 });
+    const done = s.q > QS.length;
+    const g = s.goal >= 0 ? GOALS[s.goal] : (sug >= 0 ? GOALS[sug] : GOALS[0]);
+    const rec = CURSOS[g.c];
+    const autoCourse = s.goal >= 0 ? GOALS[s.goal].c : (sug >= 0 ? GOALS[sug].c : 0);
+    const ci = s.coursePicked ? s.course : autoCourse;
+    const cursos = CURSOS.map((t, i) => ({ t: t, cls: i === ci ? 'chip-on' : 'chip-off', pick: () => this.setState({ course: i, coursePicked: true }) }));
+    return {
+      waCafe: wa('Hola Ramiro, he visto tu web y me gustaría hablar contigo (por llamada o con un café).' + myLine),
+      waDuda: wa('Hola Ramiro, he visto tu web y tengo una duda: '),
+      waCurso: wa('Hola Ramiro, quiero apuntarme al curso «' + CURSOS[ci] + '». ¿Cómo lo hago?'),
+      waRec: wa('Hola Ramiro, he hecho el test de tu web y me recomienda el curso «' + rec + '».' + myLine + ' ¿Cómo me apunto?'),
+      sits: sits,
+      tellLabel: n ? 'Cuéntamelo por WhatsApp' : 'Me pasa otra cosa',
+      moreHref: PAGE === 'web' ? '#test' : '/',
+      moreLabel: PAGE === 'web' ? 'Ver qué me iría mejor' : 'Conocer más',
+      tell: (e) => {
+        const T = typeof window !== 'undefined' ? window.Tally : null;
+        if (!T || !T.openPopup) return;
+        if (e && e.preventDefault) e.preventDefault();
+        const temaTxt = sug >= 0 ? GOALS[sug].label : '';
+        T.openPopup(TALLY, {
+          layout: 'modal', width: 520, autoClose: 600,
+          hiddenFields: { situaciones: sel.map((i) => SITS[i][0]).join(' | '), tema: temaTxt, pagina: PAGE },
+          onSubmit: (payload) => {
+            let otra = '';
+            ((payload && payload.fields) || []).forEach((f) => { if (f.type === 'TEXTAREA' && f.value) otra = String(f.value); });
+            const extra = otra ? (myLine ? ' Y también: ' : ' Me pasa que: ') + otra.trim() : '';
+            const url = wa('Hola Ramiro, he visto tu web.' + myLine + extra + ' ¿Me ayudas?');
+            setTimeout(() => { window.location.href = url; }, 700);
+          }
+        });
+      },
+      hasSel: n > 0,
+      sugGoal: sug >= 0 ? GOALS[sug].label.toLowerCase() : '',
+      sitAnim: s.tick % 2 ? 'cA' : 'cB',
+      sitTitle: n === 0 ? 'Toca las que te pasen' : (n === 1 ? 'Te pasa 1 de estas.' : 'Te pasan ' + n + ' de estas.'),
+      sitText: n === 0 ? 'Verás que no eres el único, y que tiene solución.' : (n < 3 ? 'Tiene solución, y es más sencillo de lo que crees. Cuéntamelo y lo vemos juntos.' : 'No eres el único: le pasa a mucha gente, y se puede cambiar. Cuéntamelo y te digo por dónde empezar.'),
+      waSit: wa('Hola Ramiro, he visto tu web.' + (myLine || ' ') + ' ¿Me ayudas?'),
+      closeText: n ? 'Me has contado ' + n + (n === 1 ? ' cosa que te pasa' : ' cosas que te pasan') + '. Tiene solución. Escríbeme y te llamo, o quedamos para un café, cuando te venga bien.' : 'Escríbeme y te llamo, o quedamos para un café, cuando te venga bien. Me preguntas todo lo que quieras, sin compromiso.',
+      dudas: dudas,
+      steps: [0, 1, 2, 3].map((i) => ({ cls: i < s.q ? 'seg-on' : 'seg-off' })),
+      qGoal: s.q === 0,
+      qAsk: s.q >= 1 && !done,
+      qDone: done,
+      goals: goals,
+      qNum: Math.min(s.q, 3),
+      qText: s.q >= 1 && !done ? QS[s.q - 1] : '',
+      opts: [{ label: 'Sí', pick: ans(2) }, { label: 'A veces', pick: ans(1) }, { label: 'No', pick: ans(0) }],
+      recCourse: rec,
+      recText: g.why + ' Es corto, práctico y sin compromiso de seguir después.',
+      resetQuiz: () => this.setState({ q: 0, goal: -1, answers: [] }),
+      goBack: () => this.setState(s.q <= 1 ? { q: 0, answers: [] } : { q: s.q - 1, answers: s.answers.slice(0, -1) }),
+      cursos: cursos,
+      cursoSel: CURSOS[ci]
+    };
+  }
+}
+
+const { createApp, reactive, computed } = Vue;
+const inst = new Component({});
+inst.state = reactive(inst.state || {});
+const app = createApp({
+  template: '#tpl',
+  setup() {
+    const vals = computed(() => inst.renderVals());
+    const out = {};
+    Object.keys(vals.value).forEach((k) => Object.defineProperty(out, k, { get: () => vals.value[k], enumerable: true }));
+    return out;
+  }
+});
+app.config.compilerOptions.whitespace = 'preserve';
+app.mount('#app');
+</script>
+</body>
+</html>

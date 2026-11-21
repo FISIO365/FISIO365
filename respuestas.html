@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Respuestas · Descúbrete</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400&family=Inter:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:#111;background:#fff}
+.wrap{max-width:900px;margin:0 auto;padding:40px 26px 80px}
+h1{font-family:'Inter Tight',sans-serif;font-weight:200;font-size:52px;letter-spacing:-.04em;margin:0 0 8px}
+.lab{font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.card{border:1.5px solid #111;border-radius:24px;padding:26px;margin-top:20px}
+input{font:inherit;font-size:16px;padding:14px 16px;border:1.5px solid #111;border-radius:14px;width:100%;max-width:320px}
+button{font:inherit;font-weight:500;padding:14px 24px;border-radius:999px;border:1.5px solid #111;background:#111;color:#fff;cursor:pointer}
+.row{display:flex;align-items:center;gap:12px;margin:10px 0}
+.bar{height:12px;border-radius:999px;background:#E6DAF0;border:1.5px solid #111;transition:width .6s cubic-bezier(.2,1.2,.4,1)}
+.name{flex:0 0 46%;font-size:15px}.num{font-variant-numeric:tabular-nums;font-size:14px;color:#4A4A4A;min-width:28px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:20px}
+.kpi{border:1.5px solid #111;border-radius:20px;padding:18px 20px}.kpi b{display:block;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:44px;letter-spacing:-.03em}
+.otra{border-top:1px solid #E3E3E1;padding:14px 0}.otra:first-child{border-top:none}.meta{font-size:12px;color:#8A8A8A;margin-top:4px}
+.err{color:#7A2E10;margin-top:10px;font-size:14px}
+@media(max-width:600px){.name{flex-basis:52%}h1{font-size:40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="lab">Privado · Descúbrete</span>
+  <h1>Respuestas del «¿Te suena?»</h1>
+  <div id="login" class="card">
+    <p style="margin:0 0 14px">Escribe la contraseña para ver las respuestas.</p>
+    <form id="f" style="display:flex;gap:10px;flex-wrap:wrap"><input id="p" type="password" placeholder="Contraseña" autocomplete="current-password"><button type="submit">Entrar</button></form>
+    <div id="e" class="err"></div>
+  </div>
+  <div id="out" style="display:none">
+    <div class="kpis">
+      <div class="kpi" style="background:#E6DAF0"><b id="k1">0</b>personas han escrito</div>
+      <div class="kpi" style="background:#F5E6B8"><b id="k2">0</b>han contado «otra cosa»</div>
+      <div class="kpi" style="background:#DCEBD2"><b id="k3">0</b>desde la página de TikTok</div>
+    </div>
+    <div class="card"><span class="lab">Lo que más se marca</span><div id="bars" style="margin-top:14px"></div></div>
+    <div class="card" style="background:#F6F6F4"><span class="lab">«Me pasa otra cosa» · ideas para añadir</span><div id="otras" style="margin-top:10px"></div></div>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function load(pass) {
+  $('e').textContent = '';
+  const r = await fetch('/api/respuestas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pass }) });
+  if (r.status === 401) { $('e').textContent = 'Contraseña incorrecta.'; return; }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { $('e').textContent = d.error === 'nokey' ? 'Falta conectar Tally (TALLY_API_KEY en Vercel).' : 'No se han podido cargar las respuestas.'; return; }
+  try { sessionStorage.setItem('rp', pass); } catch (e) {}
+  const rows = d.rows || [];
+  const counts = {};
+  rows.forEach((r) => (r.situaciones || '').split(' | ').filter(Boolean).forEach((s) => { counts[s] = (counts[s] || 0) + 1; }));
+  const list = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = list.length ? list[0][1] : 1;
+  $('bars').innerHTML = list.length ? list.map(([s, n]) => '<div class="row"><span class="name">' + esc(s) + '</span><span class="bar" style="width:' + Math.max(4, Math.round(44 * n / max)) + '%"></span><span class="num">' + n + '</span></div>').join('') : '<p style="color:#8A8A8A">Todavía no hay respuestas.</p>';
+  const otras = rows.filter((r) => r.otra).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('otras').innerHTML = otras.length ? otras.map((r) => '<div class="otra">' + esc(r.otra) + '<div class="meta">' + (r.fecha ? new Date(r.fecha).toLocaleString('es-ES') : '') + (r.pagina ? ' · ' + esc(r.pagina) : '') + '</div></div>').join('') : '<p style="color:#8A8A8A">Nadie ha escrito «otra cosa» todavía.</p>';
+  $('k1').textContent = rows.length; $('k2').textContent = otras.length; $('k3').textContent = rows.filter((r) => r.pagina === 'test').length;
+  $('login').style.display = 'none'; $('out').style.display = 'block';
+}
+$('f').addEventListener('submit', (e) => { e.preventDefault(); load($('p').value); });
+try { const s = sessionStorage.getItem('rp'); if (s) load(s); } catch (e) {}
+</script>
+</body>
+</html>

@@ -174,6 +174,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
 }
 </style>
 
+<script async src="https://tally.so/widgets/embed.js"></script>
 <script src="vue.js"></script>
 </head>
 <body>
@@ -242,18 +243,20 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
           <span style="font-size:16px;line-height:1.4">{{x.t}}</span>
         </button>
       </template>
+      <a :href="waSit" target="_blank" rel="noopener" @click="tell" class="btn sit sit-other" style="text-decoration:none;color:#111111;padding:20px;border-radius:20px;border:1.5px dashed #111111;display:flex;gap:14px;align-items:flex-start;min-height:96px;background:#FFFFFF">
+        <span style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:1.5px solid #111111;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;font-size:16px;line-height:1">+</span>
+        <span style="font-size:16px;line-height:1.4">Me pasa otra cosa…<br><span style="font-size:13px;color:#6B6B6B">Escríbela con tus palabras</span></span>
+      </a>
     </div>
     <div class="m-sitres" style="margin-top:20px;border:1.5px solid #111111;border-radius:24px;background:#E6DAF0;padding:28px 30px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
       <div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:6px">
         <span :class="sitAnim" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:28px;line-height:1.15;letter-spacing:-.025em">{{sitTitle}}</span>
         <span style="font-size:15px;line-height:1.55;color:#333333">{{sitText}}</span>
       </div>
-      <template v-if="hasSel">
-        <div class="swap" style="display:flex;flex-wrap:wrap;gap:10px">
-          <a :href="waSit" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg><span>Cuéntamelo por WhatsApp</span></a>
-          <a href="#test" class="btn btn-line" style="padding:15px 22px;border-radius:999px;border:1.5px solid #111111;color:#111111;text-decoration:none;font-weight:500;font-size:15px;background:#FFFFFF">Ver qué me iría mejor</a>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <a :href="waSit" target="_blank" rel="noopener" @click="tell" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg><span>{{tellLabel}}</span></a>
+          <template v-if="hasSel"><a :href="moreHref" class="btn btn-line" style="padding:15px 22px;border-radius:999px;border:1.5px solid #111111;color:#111111;text-decoration:none;font-weight:500;font-size:15px;background:#FFFFFF">{{moreLabel}}</a></template>
         </div>
-      </template>
     </div>
   </div>
 
@@ -408,6 +411,8 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state;
     const WA = '34XXXXXXXXX';
+    const PAGE = 'web';
+    const TALLY = 'KpVlEX';
     const wa = (t) => 'https://wa.me/' + WA + '?text=' + encodeURIComponent(t);
     const DUDAS = [
       { q: '¿Es una secta?', a: 'Es lo primero que nos preguntan y lo entendemos: se ha publicado mucho, también críticas. En España está inscrita como confesión religiosa desde 2007, tras una sentencia de la Audiencia Nacional. Nuestra experiencia: vamos porque nos aporta. Ven, pregunta lo que quieras y júzgalo tú.' },
@@ -474,6 +479,26 @@ class Component extends DCLogic {
       waCurso: wa('Hola Ramiro, quiero apuntarme al curso «' + CURSOS[ci] + '». ¿Cómo lo hago?'),
       waRec: wa('Hola Ramiro, he hecho el test de tu web y me recomienda el curso «' + rec + '».' + myLine + ' ¿Cómo me apunto?'),
       sits: sits,
+      tellLabel: n ? 'Cuéntamelo por WhatsApp' : 'Me pasa otra cosa',
+      moreHref: PAGE === 'web' ? '#test' : '/',
+      moreLabel: PAGE === 'web' ? 'Ver qué me iría mejor' : 'Conocer más',
+      tell: (e) => {
+        const T = typeof window !== 'undefined' ? window.Tally : null;
+        if (!T || !T.openPopup) return;
+        if (e && e.preventDefault) e.preventDefault();
+        const temaTxt = sug >= 0 ? GOALS[sug].label : '';
+        T.openPopup(TALLY, {
+          layout: 'modal', width: 520, autoClose: 600,
+          hiddenFields: { situaciones: sel.map((i) => SITS[i][0]).join(' | '), tema: temaTxt, pagina: PAGE },
+          onSubmit: (payload) => {
+            let otra = '';
+            ((payload && payload.fields) || []).forEach((f) => { if (f.type === 'TEXTAREA' && f.value) otra = String(f.value); });
+            const extra = otra ? (myLine ? ' Y también: ' : ' Me pasa que: ') + otra.trim() : '';
+            const url = wa('Hola Ramiro, he visto tu web.' + myLine + extra + ' ¿Me ayudas?');
+            setTimeout(() => { window.location.href = url; }, 700);
+          }
+        });
+      },
       hasSel: n > 0,
       sugGoal: sug >= 0 ? GOALS[sug].label.toLowerCase() : '',
       sitAnim: s.tick % 2 ? 'cA' : 'cB',
