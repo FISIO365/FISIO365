@@ -12834,7 +12834,7 @@ async function renderControl(wrap){
    ${tile({...X,t:'Ocupación',v:oc,prev:ocP,full:ocup(PF),suf:'%',cls:cl(oc,85,65),go:'rend'})}
    ${tile({...X,t:'Ingresos',v:ing,prev:ingP,full:ingF,add:1,fmt:eur,go:'stats'})}
    ${tile({...X,t:'Citas hechas',v:sum(L,'realizadas'),prev:sum(P,'realizadas'),full:sum(PF,'realizadas'),add:1,go:'stats'})}
-   ${tile({...X,t:'Pacientes atendidos',v:at,prev:atP,full:sum(PF,'atendidos'),add:1,go:'rend'})}
+   <div class="pc-at" style="display:contents">${tile({...X,t:'Pacientes atendidos',v:at,prev:atP,full:sum(PF,'atendidos'),add:1,go:'rend'})}</div>
    <div class="pc-pk" style="display:contents">${tile({t:'Pacientes con pack',v:null,sub:'Calculando…'})}</div>
    ${tile({...X,t:'Pacientes nuevos',v:okN(nv)?nv.nuevos:null,prev:okN(nvP)?nvP.nuevos:null,full:okN(nvF)?nvF.nuevos:null,add:1,go:'stats'})}
    ${tile({...X,t:'Vuelven tras la 1ª',v:conv,prev:convP,full:okN(nvF)?nvF.conversion:null,suf:'%',cls:cl(conv,70,50),sub:okN(nv)?nv.reagendaron+' de '+nv.vinieron+' primeras visitas':'',go:'stats'})}
@@ -12843,7 +12843,9 @@ async function renderControl(wrap){
    ${tile({...X,t:'Cancelaciones',v:canc,prev:cancP,full:sum(PF,'canceladas'),add:1,menos:1,go:'rend'})}
   </div>`));
   // % de pacientes atendidos con pack: packs cobrados en el panel y bonos pagados fuera del panel (los vales regalo no cuentan)
-  Promise.all([pcPacks(d,h),pcPacks(pd,ph)]).then(([A,B])=>{const el=vivo()&&res.querySelector('[data-b="neg"] .pc-pk');if(!el)return;
+  // Atendidos = personas distintas (si un paciente lo vieron dos fisios, cuenta una vez), del mismo sitio que los packs para que cuadre
+  Promise.all([pcPacks(d,h),pcPacks(pd,ph),parcial?pcPacks(fd,fh):null]).then(([A,B,F])=>{const el=vivo()&&res.querySelector('[data-b="neg"] .pc-pk');if(!el)return;
+   const ea=res.querySelector('[data-b="neg"] .pc-at');if(ea&&A){const Ff=parcial?F:B;ea.innerHTML=tile({...X,t:'Pacientes atendidos',v:A.at,prev:B?B.at:null,full:Ff?Ff.at:null,add:1,go:'rend'});ea.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});}
    const v=A&&A.at?pct(A.pk,A.at):null,vp=B&&B.at?pct(B.pk,B.at):null;
    el.innerHTML=tile({t:'Pacientes con pack',v,prev:vp,suf:'%',sub:A?A.pk+' de '+A.at+' pacientes atendidos':'No se ha podido calcular',go:'stats'});
    el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{showSection(x.dataset.go);window.scrollTo(0,0);});});});
