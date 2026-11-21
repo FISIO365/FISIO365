@@ -33,7 +33,7 @@ function pon(url){actual=url;v.src=blobs[url]||url;var p=v.play();if(p&&p.catch)
 v.addEventListener('playing',function(){c.classList.add('fuera');});
 // Descarga entera (se guarda en la memoria de la tele); si no deja, se reproduce directamente
 function baja(url,conBarra,listo){if(blobs[url]){listo();return}if(cargando[url])return;cargando[url]=1;
- try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='blob';
+ try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='blob';x.timeout=180000;x.ontimeout=function(){cargando[url]=0;listo();};
   if(conBarra)x.onprogress=function(e){if(e.lengthComputable){var p=Math.round(e.loaded*100/e.total);b.style.width=p+'%';t.textContent='Cargando el vídeo… '+p+' %';}};
   x.onload=function(){cargando[url]=0;if(x.status===200&&x.response&&x.response.size>1e6)blobs[url]=URL.createObjectURL(x.response);listo();};
   x.onerror=function(){cargando[url]=0;listo();};x.send();
@@ -43,6 +43,10 @@ function siguiente(){var L=lista();pos=(pos+1)%L.length;var url=L[pos];
  L.forEach(function(u){baja(u,false,function(){});});}
 // Arranque: el primero de la lista con barra; los demás se bajan detrás
 (function(){var L=lista();pos=0;baja(L[0],true,function(){b.style.width='100%';pon(L[0]);L.slice(1).forEach(function(u){baja(u,false,function(){});});});})();
+// Si a los 40 s todavía no se ve nada (la tele no termina de descargarlo), lo pone directamente desde internet
+setTimeout(function(){if(!c.classList.contains('fuera')){t.textContent='Poniendo el vídeo…';pon(lista()[0]);}},40000);
+// Y si aun así no arranca en 2 minutos, vuelve a empezar
+setTimeout(function(){if(!c.classList.contains('fuera'))location.reload();},120000);
 // Al acabar un vídeo pasa al siguiente (y mira la fecha cada vez)
 v.addEventListener('ended',siguiente);
 setInterval(function(){if(v.src&&v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){});}},5000);
