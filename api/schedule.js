@@ -127,15 +127,20 @@ async function vendidoPorFisio(desde, hasta) {
   const clave = n => nrm(n).split(' ')[0] || '';
   const deFact = t => { const m = String(t || '').match(/Fisioterapeuta:\s*([^·\n<]+)/i); return m ? clave(m[1]) : ''; };
   const mv = (f, n) => { const x = new Date(f + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
-  const [tk, rn, PS, pacT, cit, cont, fx] = await Promise.all([
+  const [tk, rn, PS, pacT, cit, cont, grp, fx] = await Promise.all([
     HOLDED_KEY ? holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40) : [],
     HOLDED_KEY ? holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(() => []) : [],
     packsPorSesion(desde, hasta).catch(() => ({ tickets: new Set(), cobros: [], filas: new Set() })),
     capTodos(PACIENTES, 'fields[]=DNI&fields[]=EMAIL&fields[]=WHATSAPP&fields[]=TELF&fields[]=FULL%20NAME'),
     capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'${mv(desde, -181)}'),IS_BEFORE({FECHA},'${mv(hasta, 61)}'),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE'))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`),
     HOLDED_KEY ? (_hCont.v && Date.now() - _hCont.t < 30 * 60e3 ? _hCont.v : holdedTodos('/contacts?limit=200', 40).then(v => { _hCont = { t: Date.now(), v }; return v; }).catch(() => [])) : [],
+    capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent("{PACK GRUPO}!=''")}&fields[]=${encodeURIComponent('PACK GRUPO')}&fields[]=${encodeURIComponent('HOLDED ID')}&fields[]=${encodeURIComponent('FECHA DE COBRO')}&fields[]=FECHA`).catch(() => []),
     FACX.db().then(D => D.query(`select fecha::text f, total::float v, cobro, cliente, paciente, fisio, lineas from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).then(r => r.rows).catch(() => [])
   ]);
+  // Packs pagados en varias partes: cada pago cuenta desde el primer día del pack (el del primer pago)
+  const ini = {}, docIni = {}, cobIni = {};
+  grp.forEach(r => { const F = r.fields || {}, g = String(F['PACK GRUPO'] || '').trim(), f = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10); if (g && f && (!ini[g] || f < ini[g])) ini[g] = f; });
+  grp.forEach(r => { const F = r.fields || {}, g = String(F['PACK GRUPO'] || '').trim(), i = ini[g]; if (!i) return; cobIni[r.id] = i; if (F['HOLDED ID']) docIni[String(F['HOLDED ID'])] = i; });
   // Citas por paciente (para saber quién le atendía)
   const C = {}; const nombre = {};
   cit.forEach(r => { const F = r.fields || {}, p = (F['RELACIÓN - CITA'] || [])[0], n = String(nmA(F['PREF.']) || '').trim(); if (!p || !n) return; const kk = clave(n); if (!kk || /^(admin|recep|sala|libre|bloq)/.test(kk)) return;
@@ -157,14 +162,14 @@ async function vendidoPorFisio(desde, hasta) {
     const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     const v = sg * importeAbs(d); if (!v) return;
     const cid = d.contact_id || (d.contact && typeof d.contact === 'object' ? d.contact.id : d.contact), pid = contPac[cid] || porNom(d.contact_name || d.contactName);
-    if (pid && esPack(d.lines || d.products || d.items)) { const kp = porPack(pid, f); if (kp) return suma(kp, v, 'pack'); }
+    if (pid && (docIni[String(d.id)] || esPack(d.lines || d.products || d.items))) { const kp = porPack(pid, docIni[String(d.id)] || f); if (kp) return suma(kp, v, 'pack'); }
     const kf = deFact(d.notes || d.desc || ''); if (kf) return suma(kf, v, 'fact');
     const kc = pid ? porCita(pid, f) : ''; suma(kc, v, kc ? 'cita' : ''); };
   tk.forEach(d => doc(d, 1)); rn.forEach(d => doc(d, -1));
   const facDeCobro = {}; fx.forEach(x => { if (x.cobro) facDeCobro[x.cobro] = x.fisio; });
-  PS.cobros.forEach(c => { const kp = porPack(c.pac, c.f); if (kp) return suma(kp, c.v, 'pack'); const kf = deFact(facDeCobro[c.id]); suma(kf, c.v, kf ? 'fact' : ''); }); // siempre son packs
+  PS.cobros.forEach(c => { const kp = porPack(c.pac, cobIni[c.id] || c.f); if (kp) return suma(kp, c.v, 'pack'); const kf = deFact(facDeCobro[c.id]); suma(kf, c.v, kf ? 'fact' : ''); }); // siempre son packs
   fx.forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return;
-    if (x.paciente && esPack(x.lineas)) { const kp = porPack(x.paciente, x.f); if (kp) return suma(kp, x.v, 'pack'); }
+    if (x.paciente && (cobIni[x.cobro] || esPack(x.lineas))) { const kp = porPack(x.paciente, cobIni[x.cobro] || x.f); if (kp) return suma(kp, x.v, 'pack'); }
     const kf = deFact(x.fisio); if (kf) return suma(kf, x.v, 'fact'); const kc = x.paciente ? porCita(x.paciente, x.f) : ''; suma(kc, x.v, kc ? 'cita' : ''); });
   const v = { fisios: Object.values(R).map(x => ({ ...x, fisio: x.k === 'sin' ? 'Sin asignar' : (nombre[x.k] || x.k).charAt(0).toUpperCase() + (nombre[x.k] || x.k).slice(1).toLowerCase() })).sort((a, b) => b.v - a.v),
     total: Math.round(Object.values(R).reduce((t, x) => t + x.v, 0) * 100) / 100 };
