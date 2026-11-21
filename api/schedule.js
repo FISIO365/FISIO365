@@ -118,7 +118,7 @@ async function ingresosHoldedDias(desde, hasta) {
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
 // Dinero que entra en la clínica (lo mismo que «Ingresos») repartido por el fisio que lo vende:
-// el fisio que sale en la factura («Fisioterapeuta: …»); si no sale, el de la cita del paciente ese día,
+// los packs, al fisio del primer día del pack; el resto, al fisio que sale en la factura («Fisioterapeuta: …»); si no sale, el de la cita del paciente ese día,
 // o si no la última antes (o la primera después). Lo que no se puede asignar va a «Sin asignar».
 let _vend = { t: 0, k: '', v: null };
 async function vendidoPorFisio(desde, hasta) {
@@ -134,13 +134,16 @@ async function vendidoPorFisio(desde, hasta) {
     capTodos(PACIENTES, 'fields[]=DNI&fields[]=EMAIL&fields[]=WHATSAPP&fields[]=TELF&fields[]=FULL%20NAME'),
     capTodos(CIT_T, `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},'${mv(desde, -181)}'),IS_BEFORE({FECHA},'${mv(hasta, 61)}'),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE'))`)}&fields[]=FECHA&fields[]=PREF.&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`),
     HOLDED_KEY ? (_hCont.v && Date.now() - _hCont.t < 30 * 60e3 ? _hCont.v : holdedTodos('/contacts?limit=200', 40).then(v => { _hCont = { t: Date.now(), v }; return v; }).catch(() => [])) : [],
-    FACX.db().then(D => D.query(`select fecha::text f, total::float v, cobro, cliente, paciente, fisio from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).then(r => r.rows).catch(() => [])
+    FACX.db().then(D => D.query(`select fecha::text f, total::float v, cobro, cliente, paciente, fisio, lineas from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).then(r => r.rows).catch(() => [])
   ]);
   // Citas por paciente (para saber quién le atendía)
   const C = {}; const nombre = {};
   cit.forEach(r => { const F = r.fields || {}, p = (F['RELACIÓN - CITA'] || [])[0], n = String(nmA(F['PREF.']) || '').trim(); if (!p || !n) return; const kk = clave(n); if (!kk || /^(admin|recep|sala|libre|bloq)/.test(kk)) return;
     nombre[kk] = nombre[kk] || n.split(/\s+/)[0]; (C[p] = C[p] || []).push({ f: String(F['FECHA'] || '').slice(0, 10), k: kk }); });
   Object.values(C).forEach(L => L.sort((a, b) => a.f.localeCompare(b.f)));
+  // Packs: se apuntan al fisio del primer día del pack (la cita de ese día o, si no hay, la primera después)
+  const porPack = (p, f) => { const L = C[p]; if (!L || !L.length) return ''; const x = L.find(y => y.f >= f) || L[L.length - 1]; return x.k; };
+  const esPack = L => (L || []).some(x => /pack|bono|\d+\s*ses/i.test(String((x && (x.name || x.desc || x.concept || x.concepto || x.product_name || x.description)) || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
   const porCita = (p, f) => { const L = C[p]; if (!L || !L.length) return ''; const mismo = L.find(x => x.f === f); if (mismo) return mismo.k; let ant = null; for (const x of L) { if (x.f < f) ant = x; else break; } return (ant || L.find(x => x.f > f) || {}).k || ''; };
   // Contactos de Holded → paciente
   const dni = {}, mail = {}, tel = {}, nom = {};
@@ -148,18 +151,20 @@ async function vendidoPorFisio(desde, hasta) {
     const t = soloDigitos(f['WHATSAPP'] || f['TELF']); if (t.length === 9) tel[t] = p.id; const n = nrm(f['FULL NAME']); if (n) (nom[n] = nom[n] || []).push(p.id); });
   const porNom = n => { const l = nom[nrm(n)]; return l && l.length === 1 ? l[0] : ''; };
   const contPac = {}; cont.forEach(c => { const id = dni[normDni(c.code || c.vatnumber || c.tax_id || c.nif)] || mail[String(c.email || '').trim().toLowerCase()] || tel[soloDigitos(c.mobile)] || tel[soloDigitos(c.phone)] || porNom(c.name); if (id) contPac[c.id] = id; });
-  const R = {}; const suma = (kk, v, como) => { kk = kk || 'sin'; const x = R[kk] = R[kk] || { k: kk, v: 0, n: 0, fact: 0, cita: 0 }; x.v = Math.round((x.v + v) * 100) / 100; x.n++; if (como) x[como]++; };
+  const R = {}; const suma = (kk, v, como) => { kk = kk || 'sin'; const x = R[kk] = R[kk] || { k: kk, v: 0, n: 0, fact: 0, cita: 0, pack: 0 }; x.v = Math.round((x.v + v) * 100) / 100; x.n++; if (como) x[como]++; };
   const vistos = new Set(PS.tickets);
   const doc = (d, sg) => { if (!d || !d.id || vistos.has(String(d.id))) return; vistos.add(String(d.id));
     const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     const v = sg * importeAbs(d); if (!v) return;
-    const kf = deFact(d.notes || d.desc || ''); if (kf) return suma(kf, v, 'fact');
     const cid = d.contact_id || (d.contact && typeof d.contact === 'object' ? d.contact.id : d.contact), pid = contPac[cid] || porNom(d.contact_name || d.contactName);
+    if (pid && esPack(d.lines || d.products || d.items)) { const kp = porPack(pid, f); if (kp) return suma(kp, v, 'pack'); }
+    const kf = deFact(d.notes || d.desc || ''); if (kf) return suma(kf, v, 'fact');
     const kc = pid ? porCita(pid, f) : ''; suma(kc, v, kc ? 'cita' : ''); };
   tk.forEach(d => doc(d, 1)); rn.forEach(d => doc(d, -1));
   const facDeCobro = {}; fx.forEach(x => { if (x.cobro) facDeCobro[x.cobro] = x.fisio; });
-  PS.cobros.forEach(c => { const kf = deFact(facDeCobro[c.id]); if (kf) return suma(kf, c.v, 'fact'); const kc = porCita(c.pac, c.f); suma(kc, c.v, kc ? 'cita' : ''); });
+  PS.cobros.forEach(c => { const kp = porPack(c.pac, c.f); if (kp) return suma(kp, c.v, 'pack'); const kf = deFact(facDeCobro[c.id]); suma(kf, c.v, kf ? 'fact' : ''); }); // siempre son packs
   fx.forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return;
+    if (x.paciente && esPack(x.lineas)) { const kp = porPack(x.paciente, x.f); if (kp) return suma(kp, x.v, 'pack'); }
     const kf = deFact(x.fisio); if (kf) return suma(kf, x.v, 'fact'); const kc = x.paciente ? porCita(x.paciente, x.f) : ''; suma(kc, x.v, kc ? 'cita' : ''); });
   const v = { fisios: Object.values(R).map(x => ({ ...x, fisio: x.k === 'sin' ? 'Sin asignar' : (nombre[x.k] || x.k).charAt(0).toUpperCase() + (nombre[x.k] || x.k).slice(1).toLowerCase() })).sort((a, b) => b.v - a.v),
     total: Math.round(Object.values(R).reduce((t, x) => t + x.v, 0) * 100) / 100 };
