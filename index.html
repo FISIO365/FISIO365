@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&amp;family=Inter:wght@400;500&amp;family=Instrument+Serif&amp;display=swap">
 <style>
-body{margin:0;background:#FAF7F2}
-a{color:#2347C5}a:hover{color:#1A36A0}
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#333333}
 *{box-sizing:border-box}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -30,49 +30,49 @@ a{color:#2347C5}a:hover{color:#1A36A0}
 .reveal{animation:fadeUp linear both;animation-timeline:view();animation-range:entry 0% cover 25%}
 .btn{transition:background .25s ease,color .25s ease,border-color .25s ease,transform .25s ease}
 .btn:hover{transform:translateY(-1px)}
-.btn-main:hover{background:#1A36A0 !important;color:#FFFFFF !important}
-.btn-line:hover{border-color:#B9AE9E !important;background:rgba(0,0,0,.025) !important}
+.btn-main:hover{background:#333333 !important;color:#FFFFFF !important}
+.btn-line:hover{border-color:#B5B5B3 !important;background:rgba(0,0,0,.025) !important}
 .card{transition:border-color .3s ease,background .3s ease,transform .3s ease}
-.card:hover{border-color:rgba(35,71,197,.35) !important;background:#FFFDF9 !important;transform:translateY(-2px)}
+.card:hover{border-color:rgba(17,17,17,.35) !important;background:#FAFAF9 !important;transform:translateY(-2px)}
 .swap{animation:fadeUp .5s ease both}
-.chip-on{background:#2347C5;color:#FFFFFF;border-color:#2347C5 !important}
-.chip-off{background:#FFFFFF;color:#1B1A18}
-.chip-off:hover{border-color:#2347C5 !important}
+.chip-on{background:#111111;color:#FFFFFF;border-color:#111111 !important}
+.chip-off{background:#FFFFFF;color:#111111}
+.chip-off:hover{border-color:#111111 !important}
 .band{fill:none;stroke-width:16;transition:stroke .45s ease}
-.b-neutral{stroke:#F1ECE4}.b-help{stroke:#2347C5}.b-harm{stroke:#CFC7BB}
-.ldot{transition:background .45s ease}.ldot.b-neutral{background:#EDE7DD}.ldot.b-help{background:#2347C5}.ldot.b-harm{background:#B9AE9E}
-.chip-best{background:#E4EAFB;color:#1B1A18;border-color:#2347C5 !important}.chip-tried{background:#F7F4EF;color:#8A847B}
+.b-neutral{stroke:#F0F0EE}.b-help{stroke:#A8CF97}.b-harm{stroke:#F2C4C4}
+.ldot{transition:background .45s ease}.ldot.b-neutral{background:#E6E6E4}.ldot.b-help{background:#A8CF97}.ldot.b-harm{background:#F2C4C4}
+.chip-best{background:#DCEBD2;color:#111111;border-color:#111111 !important}.chip-tried{background:#F5F5F3;color:#8A8A8A}
 .selring{transition:r .45s cubic-bezier(.3,1.3,.5,1)}
-.vdot{fill:#FFFFFF;stroke:#2347C5;stroke-width:1.5;transition:fill .3s ease}.vdot.v-hit{fill:#2347C5}
-.k-on{background:#E4EAFB;border-color:#2347C5 !important;color:#1B1A18}.k-on .kletter{background:#2347C5;color:#FFFFFF}
-.k-off{background:#FFFFFF;color:#1B1A18}.k-off .kletter{border:1px solid #E2DACD;color:#55514B}.k-off:hover{border-color:#2347C5 !important}
+.vdot{fill:#FFFFFF;stroke:#111111;stroke-width:1.5;transition:fill .3s ease}.vdot.v-hit{fill:#111111}
+.k-on{background:#DCEBD2;border-color:#111111 !important;color:#111111}.k-on .kletter{background:#111111;color:#FFFFFF}
+.k-off{background:#FFFFFF;color:#111111}.k-off .kletter{border:1px solid #D6D6D4;color:#4A4A4A}.k-off:hover{border-color:#111111 !important}
 @keyframes shakeA{0%,100%{transform:none}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 @keyframes shakeB{0%,100%{transform:none}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 .shakeA{animation:shakeA .45s ease}.shakeB{animation:shakeB .45s ease}
-.tab-on{background:#1B1A18;color:#FAF7F2;border-color:#1B1A18 !important}
-.tab-on .tabnum{background:#2347C5;color:#FFFFFF}
-.tab-off{background:#FFFFFF;color:#1B1A18}
-.tab-off .tabnum{border:1px solid #E2DACD;color:#55514B}
-.tab-off:hover{border-color:#2347C5 !important}
+.tab-on{background:#111111;color:#FFFFFF;border-color:#111111 !important}
+.tab-on .tabnum{background:#111111;color:#FFFFFF}
+.tab-off{background:#FFFFFF;color:#111111}
+.tab-off .tabnum{border:1px solid #D6D6D4;color:#4A4A4A}
+.tab-off:hover{border-color:#111111 !important}
 .msg-ok{background:#EEF4EA;color:#2F4A26}
 .msg-bad{background:#F9E9E2;color:#7A2E10}
 .pill{transition:top .45s cubic-bezier(.3,1.3,.5,1),opacity .3s ease}
-.tone .tdot{background:#FFFFFF;border:1px solid #D9CFC0;transition:background .3s ease,border-color .3s ease,transform .3s ease}
-.tone:hover .tdot{border-color:#2347C5}
-.tone-on .tdot{background:#2347C5;border-color:#2347C5;transform:scale(1.25)}
+.tone .tdot{background:#FFFFFF;border:1px solid #CFCFCD;transition:background .3s ease,border-color .3s ease,transform .3s ease}
+.tone:hover .tdot{border-color:#111111}
+.tone-on .tdot{background:#111111;border-color:#111111;transform:scale(1.25)}
 .tone-on{font-weight:500}
-.tg-on{background:#1B1A18;color:#FAF7F2}.tg-off{background:transparent;color:#1B1A18}
-.dot-on{width:26px;background:#2347C5}.dot-off{width:10px;background:#FFFFFF}
+.tg-on{background:#111111;color:#FFFFFF}.tg-off{background:transparent;color:#111111}
+.dot-on{width:26px;background:#E6DAF0}.dot-off{width:10px;background:#FFFFFF}
 .stA{animation:popin .5s cubic-bezier(.2,1.5,.4,1) both}.stB{animation:popin2 .5s cubic-bezier(.2,1.5,.4,1) both}
-.steplbl{align-self:flex-start;display:inline-flex;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#1B1A18;border:1.5px solid #1B1A18;border-radius:999px;padding:5px 12px;margin-bottom:-6px}
-.sp-on{background:#1B1A18;color:#FAF7F2}.sp-done{background:#E4EAFB;color:#1B1A18}.sp-off{background:#FFFFFF;color:#8A847B;border-color:#D9CFC0 !important}
-.bar-on{background:#2347C5}.bar-seen{background:#9DB0EE}.bar-off{background:#EAE3D8}
-.seg-on{background:#2347C5}.seg-off{background:#E2DACD}
+.steplbl{align-self:flex-start;display:inline-flex;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#111111;border:1.5px solid #111111;border-radius:999px;padding:5px 12px;margin-bottom:-6px}
+.sp-on{background:#111111;color:#FFFFFF}.sp-done{background:#DCEBD2;color:#111111}.sp-off{background:#FFFFFF;color:#8A8A8A;border-color:#CFCFCD !important}
+.bar-on{background:#111111}.bar-seen{background:#DCEBD2}.bar-off{background:#E3E3E1}
+.seg-on{background:#111111}.seg-off{background:#D6D6D4}
 .locked{filter:blur(10px) brightness(1.04);pointer-events:none;user-select:none}
 .open{filter:none;transition:filter 1.2s ease}
-input,textarea{color:#1B1A18}
-input::placeholder,textarea::placeholder{color:#8A847B}
-input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
+input,textarea{color:#111111}
+input::placeholder,textarea::placeholder{color:#8A8A8A}
+input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
 @media (max-width:720px){
   .hero-title{font-size:50px !important}
   .h2{font-size:38px !important}
@@ -82,7 +82,6 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
 
 @media (max-width:720px){
   .wrap{padding-left:26px !important;padding-right:26px !important}
-  .m-ram{margin-bottom:72px !important}
   .m-ram .wrap{padding-top:64px !important;padding-bottom:64px !important;gap:56px !important}
   .m-ram h2{font-size:58px !important}
   .bob{font-size:12px !important;padding:7px 12px !important}
@@ -114,23 +113,21 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   .tab .tbox{align-items:center !important}
 }
 
+.acc{color:#111111 !important;background:linear-gradient(transparent 58%, var(--mk,#F5E6B8) 58%, var(--mk,#F5E6B8) 92%, transparent 92%);padding:0 .06em}
+.mk1{--mk:#F5E6B8}.mk2{--mk:#D3E4F3}.mk3{--mk:#DCEBD2}.mk4{--mk:#E6DAF0}.mk5{--mk:#F6D9C4}.mk6{--mk:#F2D4D4}.mkw{--mk:#FFFFFF}
+.ccard{background:#F2D4D4 !important}
 .cm{font-family:'Instrument Serif',serif;font-weight:400;font-style:normal;font-size:1.05em;letter-spacing:.02em;display:inline-block;margin-right:.04em;line-height:0}
-.blue{background:#2347C5 !important;color:#FFFFFF;border-color:#2347C5 !important}
-.blue h2,.blue h2 span{color:#FFFFFF !important}
-.blue h2 .acc{color:#BFCBF7 !important}
-.blue .slabel{color:#BFCBF7 !important}
-.blue p,.blue label{color:#DCE3FA !important}
-.blue .card{color:#1B1A18 !important}
-.blue .btn-main{background:#FFFFFF !important;color:#2347C5 !important;border-color:#FFFFFF !important}
-.blue .btn-main:hover{background:#E4EAFB !important}
-.blue .btn-line{color:#FFFFFF !important;border-color:rgba(255,255,255,.55) !important;background:transparent !important}
-.blue .btn-line svg path{stroke:#FFFFFF}
-.blue input,.blue textarea{color:#1B1A18;border-color:#FFFFFF !important}
-.dark{background:#1B1A18 !important;color:#FAF7F2;border-color:#1B1A18 !important}
-.dark span{color:#E9E4DA !important}
-.dark .slabel{color:#A9BBF5 !important}
-.dark .btn-line{color:#FAF7F2 !important;border-color:#6E6A63 !important;background:transparent !important}
-.dark .seg-off{background:#3A3733}
+.blue{background:#D3E4F3 !important;color:#111111;border-color:#111111 !important}
+.m-contact.blue{background:#F5E6B8 !important;border:1.5px solid #111111 !important}
+.blue p,.blue label{color:#333333 !important}
+.blue .card{color:#111111 !important;border:1.5px solid #111111 !important}
+.blue input,.blue textarea{color:#111111;border:1.5px solid #111111 !important;background:#FFFFFF !important}
+.m-bluesec{border-bottom:1.5px solid #111111}
+.dark{background:#111111 !important;color:#FFFFFF;border-color:#111111 !important}
+.dark span{color:#E8E8E6 !important}
+.dark .slabel{color:#FFFFFF !important}
+.dark .btn-line{color:#FFFFFF !important;border-color:#6B6B6B !important;background:transparent !important}
+.dark .seg-on{background:#FFFFFF}.dark .seg-off{background:#333333}
 @media (max-width:720px){.m-bluesec{padding:64px 0 !important;margin-bottom:72px !important}}
 @media (max-width:720px){
   .wrap p{font-size:16px !important;line-height:1.7 !important}
@@ -144,7 +141,6 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   .m-lesson > div{gap:24px !important}
   .m-dcard{gap:12px}
   .m-sec{padding-bottom:96px !important}
-  .m-ram{margin-bottom:96px !important}
   .m-ram .wrap{padding-top:80px !important;padding-bottom:80px !important;gap:64px !important}
   .m-bluesec{padding:80px 0 !important;margin-bottom:96px !important}
 }
@@ -157,47 +153,47 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
 <script type="text/x-template" id="tpl">
 
 
-<div style="font-family:'Inter',system-ui,sans-serif;color:#1B1A18;background:#FAF7F2;min-height:100vh">
+<div style="font-family:'Inter',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:100vh">
 
   
   <div class="wrap" style="max-width:1200px;margin:0 auto;padding:22px 32px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
-    <a href="#inicio" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#1B1A18">
-      <span class="pulse" style="width:9px;height:9px;border-radius:50%;background:#2347C5;display:inline-block"></span>
+    <a href="#inicio" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#111111">
+      <span class="pulse" style="width:9px;height:9px;border-radius:50%;background:#111111;display:inline-block"></span>
       <span style="font-family:'Inter Tight',sans-serif;font-size:19px;font-weight:300;letter-spacing:.02em">descúbrete</span>
     </a>
     <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-      <a href="#pruebalo" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6E6A63;font-size:14px">Pruébalo</a>
-      <a href="#dudas" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6E6A63;font-size:14px">Lo que has oído</a>
-      <a href="#videos" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6E6A63;font-size:14px">Vídeos</a>
-      <a href="#test" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6E6A63;font-size:14px">Test</a>
-      <a href="#contacto" class="btn btn-line" style="padding:10px 18px;border:1px solid #D9CFC0;border-radius:999px;text-decoration:none;color:#1B1A18;font-size:14px">Habla conmigo</a>
+      <a href="#pruebalo" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6B6B6B;font-size:14px">Pruébalo</a>
+      <a href="#dudas" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6B6B6B;font-size:14px">Lo que has oído</a>
+      <a href="#videos" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6B6B6B;font-size:14px">Vídeos</a>
+      <a href="#test" class="hide-m" style="padding:10px 14px;text-decoration:none;color:#6B6B6B;font-size:14px">Test</a>
+      <a href="#contacto" class="btn btn-line" style="padding:10px 18px;border:1px solid #CFCFCD;border-radius:999px;text-decoration:none;color:#111111;font-size:14px">Habla conmigo</a>
     </div>
   </div>
 
   
   <div id="inicio" class="wrap" style="max-width:1200px;margin:0 auto;padding:16px 32px 32px">
-    <div class="m-hero m-gap" style="border:1px solid #EAE3D8;border-radius:32px;background:#FFFFFF;padding:64px 56px;display:flex;flex-wrap:wrap;gap:56px;align-items:center">
+    <div class="m-hero m-gap" style="border:1px solid #E3E3E1;border-radius:32px;background:#FFFFFF;padding:64px 56px;display:flex;flex-wrap:wrap;gap:56px;align-items:center">
       <div class="fade" style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:26px">
-        <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #EAE3D8;border-radius:999px;background:#FAF7F2;font-size:13px;color:#55514B">
-          <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:#2347C5;display:inline-block"></span>Para cualquier persona, de cualquier edad
+        <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #E3E3E1;border-radius:999px;background:#FFFFFF;font-size:13px;color:#4A4A4A">
+          <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:#111111;display:inline-block"></span>Para cualquier persona, de cualquier edad
         </span>
-        <h1 class="hero-title" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:84px;line-height:1;letter-spacing:-.045em">Scientology es para ti. <span class="acc" style="font-weight:400;color:#2347C5">Y para cualquiera.</span></h1>
-        <p style="margin:0;max-width:540px;font-size:19px;line-height:1.65;color:#55514B">Para entenderte mejor, llevarte mejor con los tuyos y vivir con más ganas. Te lo cuento yo, Ramiro, como me lo contaron a mí: con calma y sin rollos.</p>
+        <h1 class="hero-title" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:84px;line-height:1;letter-spacing:-.045em">Scientology es para ti. <span class="acc mk1" style="font-weight:400;color:#111111">Y para cualquiera.</span></h1>
+        <p style="margin:0;max-width:540px;font-size:19px;line-height:1.65;color:#4A4A4A">Para entenderte mejor, llevarte mejor con los tuyos y vivir con más ganas. Te lo cuento yo, Ramiro, como me lo contaron a mí: con calma y sin rollos.</p>
         <div style="display:flex;flex-wrap:wrap;gap:12px">
-          <a href="#dudas" class="btn btn-main" style="padding:15px 28px;border-radius:999px;background:#2347C5;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Cuéntame más</a>
-          <a href="#test" class="btn btn-line" style="padding:15px 28px;border-radius:999px;border:1px solid #D9CFC0;color:#1B1A18;text-decoration:none;font-weight:500;font-size:15px">Test de 1 minuto</a>
+          <a href="#dudas" class="btn btn-main" style="padding:15px 28px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Cuéntame más</a>
+          <a href="#test" class="btn btn-line" style="padding:15px 28px;border-radius:999px;border:1px solid #CFCFCD;color:#111111;text-decoration:none;font-weight:500;font-size:15px">Test de 1 minuto</a>
         </div>
       </div>
-      <div class="fade d2" style="flex:1 1 380px;min-width:0;border:1px solid #EAE3D8;border-radius:26px;background:#FAF7F2;padding:30px;display:flex;flex-direction:column;gap:20px">
+      <div class="fade d2" style="flex:1 1 380px;min-width:0;border:1.5px solid #111111;border-radius:26px;background:#F5E6B8;padding:30px;display:flex;flex-direction:column;gap:20px">
         <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:28px;line-height:1.15;letter-spacing:-.025em">¿Qué te gustaría mejorar?</span>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           <template v-for="g in goals">
-            <button type="button" @click="g.pick" :class="`btn chip ${g.cls}`" style="font:inherit;font-size:14px;cursor:pointer;padding:11px 18px;border-radius:999px;border:1px solid #E2DACD">{{g.label}}</button>
+            <button type="button" @click="g.pick" :class="`btn chip ${g.cls}`" style="font:inherit;font-size:14px;cursor:pointer;padding:11px 18px;border-radius:999px;border:1px solid #D6D6D4">{{g.label}}</button>
           </template>
         </div>
-        <div class="swap" style="border:1px solid #EAE3D8;border-radius:20px;background:#FFFFFF;padding:22px;display:flex;flex-direction:column;gap:12px;min-height:150px">
-          <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#2347C5">{{goalTitle}}</span>
-          <span style="font-size:16px;line-height:1.6;color:#3A3733">{{goalText}}</span>
+        <div class="swap" style="border:1px solid #E3E3E1;border-radius:20px;background:#FFFFFF;padding:22px;display:flex;flex-direction:column;gap:12px;min-height:150px">
+          <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#111111">{{goalTitle}}</span>
+          <span style="font-size:16px;line-height:1.6;color:#333333">{{goalText}}</span>
           <a href="#curso" style="margin-top:auto;font-size:14px;font-weight:500;text-decoration:none">Ver cómo empezar →</a>
         </div>
       </div>
@@ -205,15 +201,15 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
     <div style="margin-top:28px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:center">
       <div style="display:flex">
         <template v-for="f in faces">
-          <span :style="`width:52px;height:52px;border-radius:50%;border:2px solid #FAF7F2;background:${f.bg};margin-left:-10px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#8A847B`">foto</span>
+          <span :style="`width:52px;height:52px;border-radius:50%;border:2px solid #FFFFFF;background:${f.bg};margin-left:-10px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#8A8A8A`">foto</span>
         </template>
       </div>
-      <span style="font-size:15px;color:#55514B">Estudiantes, padres, abuelos, emprendedores… <span style="color:#1B1A18;font-weight:500">gente como tú.</span></span>
+      <span style="font-size:15px;color:#4A4A4A">Estudiantes, padres, abuelos, emprendedores… <span style="color:#111111;font-weight:500">gente como tú.</span></span>
     </div>
   </div>
 
   
-  <div aria-hidden="true" class="m-band" style="overflow:hidden;padding:26px 0;margin:48px 0 0;background:#2347C5">
+  <div aria-hidden="true" class="m-band" style="overflow:hidden;padding:26px 0;margin:48px 0 0;background:#111111">
     <div class="track" style="align-items:center">
       <template v-for="b in band">
         <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:56px;letter-spacing:-.035em;color:#FFFFFF;padding:0 30px;white-space:nowrap">{{b}}</span>
@@ -223,36 +219,36 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   </div>
 
   
-  <div style="border-top:2px solid #2347C5;border-bottom:2px solid #2347C5;background:#FFFFFF;margin-bottom:120px" class="m-ram">
+  <div style="border-top:1.5px solid #111111;border-bottom:1.5px solid #111111;background:#FFFFFF;margin-bottom:0" class="m-ram">
     <div class="wrap" style="max-width:1200px;margin:0 auto;padding:110px 32px;display:flex;flex-wrap:wrap;gap:72px;align-items:center">
       <div class="reveal" style="flex:1 1 300px;display:flex;justify-content:center;min-width:0">
         <div class="m-pic" style="position:relative;width:min(380px,100%);aspect-ratio:1 / 1">
-          <svg viewBox="0 0 300 300" aria-hidden="true" style="position:absolute;inset:-6%;width:112%;height:112%;overflow:visible"><circle cx="150" cy="150" r="146" fill="none" stroke="#1B1A18" stroke-width="1" stroke-dasharray="2 7" stroke-linecap="round" class="spinr"></circle></svg>
-          <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid #1B1A18;background:#2347C5"></div>
-          <div style="position:absolute;inset:7%;border-radius:50%;border:1.5px solid #1B1A18;background:#FAF7F2;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;font-weight:500;color:#6E6A63">[Tu foto]</div>
-          <span class="bob" style="position:absolute;right:-6%;top:8%;border:1.5px solid #1B1A18;background:#FFFFFF;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Empresario</span>
-          <span class="bob b2" style="position:absolute;left:-8%;bottom:20%;border:1.5px solid #1B1A18;background:#1B1A18;color:#FAF7F2;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Scientologist</span>
-          <span class="bob b3" style="position:absolute;right:2%;bottom:2%;border:1.5px solid #1B1A18;background:#E4EAFB;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Barcelona</span>
+          <svg viewBox="0 0 300 300" aria-hidden="true" style="position:absolute;inset:-6%;width:112%;height:112%;overflow:visible"><circle cx="150" cy="150" r="146" fill="none" stroke="#111111" stroke-width="1" stroke-dasharray="2 7" stroke-linecap="round" class="spinr"></circle></svg>
+          <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid #111111;background:#F6D9C4"></div>
+          <div style="position:absolute;inset:7%;border-radius:50%;border:1.5px solid #111111;background:#FFFFFF;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;font-weight:500;color:#6B6B6B">[Tu foto]</div>
+          <span class="bob" style="position:absolute;right:-6%;top:8%;border:1.5px solid #111111;background:#FFFFFF;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Empresario</span>
+          <span class="bob b2" style="position:absolute;left:-8%;bottom:20%;border:1.5px solid #111111;background:#111111;color:#FFFFFF;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Scientologist</span>
+          <span class="bob b3" style="position:absolute;right:2%;bottom:2%;border:1.5px solid #111111;background:#F6D9C4;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:500;white-space:nowrap">Barcelona</span>
         </div>
       </div>
       <div class="reveal ram-col" style="flex:999 1 460px;min-width:0;display:flex;flex-direction:column;gap:30px">
-        <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">01 — Quién te lo cuenta</span>
-        <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:96px;line-height:1.02;letter-spacing:-.05em">Hola<span class="cm">,</span><br>soy <span class="acc" style="font-weight:400;color:#2347C5">Ramiro.</span></h2>
-        <p style="margin:0;font-size:19px;line-height:1.6;color:#3A3733;max-width:560px">Esta no es una web oficial: es la mía. La he hecho porque mucha gente me pregunta y casi nadie tiene la información de primera mano. <span style="font-weight:500;color:#1B1A18">Pregúntame lo que quieras.</span></p>
-        <div class="chatbox" style="border:1.5px solid #1B1A18;border-radius:26px;background:#FAF7F2;padding:24px;display:flex;flex-direction:column;gap:18px;max-width:600px">
+        <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">01 — Quién te lo cuenta</span>
+        <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:96px;line-height:1.02;letter-spacing:-.05em">Hola<span class="cm">,</span><br>soy <span class="acc mk5" style="font-weight:400;color:#111111">Ramiro.</span></h2>
+        <p style="margin:0;font-size:19px;line-height:1.6;color:#333333;max-width:560px">Esta no es una web oficial: es la mía. La he hecho porque mucha gente me pregunta y casi nadie tiene la información de primera mano. <span style="font-weight:500;color:#111111">Pregúntame lo que quieras.</span></p>
+        <div class="chatbox" style="border:1.5px solid #111111;border-radius:26px;background:#F6D9C4;padding:24px;display:flex;flex-direction:column;gap:18px;max-width:600px">
           <div style="display:flex;flex-wrap:wrap;gap:10px">
             <template v-for="q in asks">
-              <button type="button" @click="q.pick" :class="`btn chip ${q.cls}`" style="font:inherit;font-size:14px;cursor:pointer;padding:10px 16px;border-radius:999px;border:1.5px solid #1B1A18">{{q.t}}</button>
+              <button type="button" @click="q.pick" :class="`btn chip ${q.cls}`" style="font:inherit;font-size:14px;cursor:pointer;padding:10px 16px;border-radius:999px;border:1.5px solid #111111">{{q.t}}</button>
             </template>
           </div>
           <template v-if="chatOn">
             <div style="display:flex;flex-direction:column;gap:10px">
-              <span :class="popCls" style="align-self:flex-end;max-width:85%;background:#1B1A18;color:#FAF7F2;border-radius:18px 18px 4px 18px;padding:12px 16px;font-size:15px;line-height:1.45">{{chatQ}}</span>
-              <span :class="`${popCls} d-late`" style="align-self:flex-start;max-width:90%;background:#FFFFFF;border:1.5px solid #1B1A18;border-radius:18px 18px 18px 4px;padding:12px 16px;font-size:15px;line-height:1.5;color:#1B1A18">{{chatA}}</span>
+              <span :class="popCls" style="align-self:flex-end;max-width:85%;background:#111111;color:#FFFFFF;border-radius:18px 18px 4px 18px;padding:12px 16px;font-size:15px;line-height:1.45">{{chatQ}}</span>
+              <span :class="`${popCls} d-late`" style="align-self:flex-start;max-width:90%;background:#FFFFFF;border:1.5px solid #111111;border-radius:18px 18px 18px 4px;padding:12px 16px;font-size:15px;line-height:1.5;color:#111111">{{chatA}}</span>
             </div>
           </template>
           <template v-if="chatOff">
-            <span style="display:inline-flex;align-items:center;gap:10px;font-size:14px;color:#6E6A63"><span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#2347C5;display:inline-block"></span>Toca una pregunta</span>
+            <span style="display:inline-flex;align-items:center;gap:10px;font-size:14px;color:#6B6B6B"><span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#111111;display:inline-block"></span>Toca una pregunta</span>
           </template>
         </div>
       </div>
@@ -263,29 +259,29 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   <div class="blue m-bluesec" style="padding:110px 0;margin-bottom:120px">
   <div id="dudas" class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px">
     <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:760px;margin-bottom:56px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">02 — Lo que seguramente has oído</span>
-      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Pregúntame lo que quieras. <span class="acc" style="font-weight:400;color:#2347C5">De verdad.</span></h2>
-      <p style="margin:0;font-size:16px;color:#6E6A63">Toca una tarjeta para ver la respuesta.</p>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">02 — Lo que seguramente has oído</span>
+      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Pregúntame lo que quieras. <span class="acc mkw" style="font-weight:400;color:#111111">De verdad.</span></h2>
+      <p style="margin:0;font-size:16px;color:#6B6B6B">Toca una tarjeta para ver la respuesta.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
       <template v-for="d in dudas">
-        <button type="button" @click="d.toggle" class="card m-dcard" style="text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:270px;padding:30px;border-radius:24px;border:1px solid #EAE3D8;background:#FFFFFF;display:flex;flex-direction:column">
+        <button type="button" @click="d.toggle" class="card m-dcard" style="text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:270px;padding:30px;border-radius:24px;border:1px solid #E3E3E1;background:#FFFFFF;display:flex;flex-direction:column">
           <template v-if="d.closed">
             <span class="swap" style="display:flex;flex-direction:column;gap:16px;flex:1">
-              <span style="font-size:13px;color:#2347C5;letter-spacing:.08em">{{d.num}}</span>
+              <span style="font-size:13px;color:#111111;letter-spacing:.08em">{{d.num}}</span>
               <span class="dq" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:30px;line-height:1.15;letter-spacing:-.025em">{{d.q}}</span>
-              <span class="dfoot" style="margin-top:auto;display:inline-flex;align-items:center;gap:10px;font-size:13px;color:#6E6A63">
-                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#2347C5" stroke-width="1"></circle><path d="M9 5.5v7M5.5 9h7" stroke="#2347C5" stroke-width="1" stroke-linecap="round"></path></svg>
+              <span class="dfoot" style="margin-top:auto;display:inline-flex;align-items:center;gap:10px;font-size:13px;color:#6B6B6B">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1"></circle><path d="M9 5.5v7M5.5 9h7" stroke="#111111" stroke-width="1" stroke-linecap="round"></path></svg>
                 Ver respuesta
               </span>
             </span>
           </template>
           <template v-if="d.open">
             <span class="swap" style="display:flex;flex-direction:column;gap:14px;flex:1">
-              <span style="font-size:13px;font-weight:500;color:#2347C5">{{d.q}}</span>
-              <span style="font-size:16px;line-height:1.65;color:#3A3733">{{d.a}}</span>
-              <span class="dfoot" style="margin-top:auto;display:inline-flex;align-items:center;gap:10px;font-size:13px;color:#6E6A63">
-                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#2347C5" stroke-width="1"></circle><path d="M5.5 9h7" stroke="#2347C5" stroke-width="1" stroke-linecap="round"></path></svg>
+              <span style="font-size:13px;font-weight:500;color:#111111">{{d.q}}</span>
+              <span style="font-size:16px;line-height:1.65;color:#333333">{{d.a}}</span>
+              <span class="dfoot" style="margin-top:auto;display:inline-flex;align-items:center;gap:10px;font-size:13px;color:#6B6B6B">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1"></circle><path d="M5.5 9h7" stroke="#111111" stroke-width="1" stroke-linecap="round"></path></svg>
                 Cerrar
               </span>
             </span>
@@ -300,46 +296,46 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   
   <div id="videos" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 140px">
     <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:760px;margin-bottom:56px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">03 — Lo que no sale en los titulares</span>
-      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Míralo con <span style="font-weight:400">tus propios ojos.</span></h2>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">03 — Lo que no sale en los titulares</span>
+      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Míralo con <span class="acc mk4" style="font-weight:400">tus propios ojos.</span></h2>
     </div>
     <div style="position:relative">
       <div :class="videosClass">
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
           <template v-for="v in videos">
-            <div class="card" style="border:1px solid #EAE3D8;border-radius:24px;background:#FFFFFF;padding:12px;display:flex;flex-direction:column;gap:16px">
-              <div style="aspect-ratio:16/9;border-radius:16px;border:1px solid #EFE9DF;background:#FFFFFF;display:flex;align-items:center;justify-content:center">
-                <svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28.5" fill="none" stroke="#1B1A18" stroke-opacity=".5" stroke-width="1"></circle><path d="M25 20.5l14 9.5-14 9.5z" fill="none" stroke="#1B1A18" stroke-width="1.2" stroke-linejoin="round"></path></svg>
+            <div class="card" style="border:1px solid #E3E3E1;border-radius:24px;background:#FFFFFF;padding:12px;display:flex;flex-direction:column;gap:16px">
+              <div style="aspect-ratio:16/9;border-radius:16px;border:1px solid #EEEEEC;background:#FFFFFF;display:flex;align-items:center;justify-content:center">
+                <svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28.5" fill="none" stroke="#111111" stroke-opacity=".5" stroke-width="1"></circle><path d="M25 20.5l14 9.5-14 9.5z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"></path></svg>
               </div>
               <div style="padding:2px 12px 14px;display:flex;flex-direction:column;gap:6px">
                 <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:22px;letter-spacing:-.02em">{{v.t}}</span>
-                <span style="font-size:13px;color:#8A847B">{{v.s}}</span>
+                <span style="font-size:13px;color:#8A8A8A">{{v.s}}</span>
               </div>
             </div>
           </template>
         </div>
-        <div class="m-story" style="margin-top:16px;border:1.5px solid #1B1A18;border-radius:28px;background:#FFFFFF;padding:36px;display:flex;flex-wrap:wrap;gap:40px;align-items:center">
+        <div class="m-story" style="margin-top:16px;border:1.5px solid #111111;border-radius:28px;background:#FFFFFF;padding:36px;display:flex;flex-wrap:wrap;gap:40px;align-items:center">
           <div style="flex:0 1 220px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;margin:0 auto">
-            <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">Historias reales · {{stNum}} de 3</span>
+            <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">Historias reales · {{stNum}} de 3</span>
             <div :class="stAnim" style="position:relative;width:150px;height:150px">
-              <div :style="`position:absolute;inset:0;border-radius:50%;border:1.5px solid #1B1A18;background:${st.bg};transition:background .4s ease`"></div>
-              <div style="position:absolute;inset:9%;border-radius:50%;border:1.5px solid #1B1A18;background:#FAF7F2;display:flex;align-items:center;justify-content:center;font-size:13px;color:#6E6A63">[foto]</div>
+              <div :style="`position:absolute;inset:0;border-radius:50%;border:1.5px solid #111111;background:${st.bg};transition:background .4s ease`"></div>
+              <div style="position:absolute;inset:9%;border-radius:50%;border:1.5px solid #111111;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:13px;color:#6B6B6B">[foto]</div>
             </div>
             <span style="font-family:'Inter Tight',sans-serif;font-weight:400;font-size:20px;letter-spacing:-.01em">{{st.name}}</span>
-            <span style="border:1.5px solid #1B1A18;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;background:#E4EAFB">{{st.tag}}</span>
+            <span style="border:1.5px solid #111111;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;background:#E6DAF0">{{st.tag}}</span>
           </div>
           <div class="st-right" style="flex:999 1 380px;min-width:0;display:flex;flex-direction:column;gap:22px">
-            <div class="st-tg" style="align-self:flex-start;display:flex;border:1.5px solid #1B1A18;border-radius:999px;padding:4px;gap:4px;background:#FAF7F2">
+            <div class="st-tg" style="align-self:flex-start;display:flex;border:1.5px solid #111111;border-radius:999px;padding:4px;gap:4px;background:#FFFFFF">
               <button type="button" @click="stBefore" :class="stBCls" style="font:inherit;font-size:14px;font-weight:500;cursor:pointer;padding:9px 20px;border-radius:999px;border:none">Antes</button>
               <button type="button" @click="stAfter" :class="stACls" style="font:inherit;font-size:14px;font-weight:500;cursor:pointer;padding:9px 20px;border-radius:999px;border:none">Después</button>
             </div>
-            <span :class="`sq ${stAnim}`" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:32px;line-height:1.2;letter-spacing:-.03em;color:#1B1A18;min-height:120px">{{stText}}</span>
+            <span :class="`sq ${stAnim}`" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:32px;line-height:1.2;letter-spacing:-.03em;color:#111111;min-height:120px">{{stText}}</span>
             <div class="st-nav" style="display:flex;align-items:center;gap:12px">
-              <button type="button" @click="stPrev" aria-label="Historia anterior" class="btn chip chip-off" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #1B1A18;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="#1B1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
-              <button type="button" @click="stNext" aria-label="Historia siguiente" class="btn" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #1B1A18;background:#1B1A18;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="#FAF7F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+              <button type="button" @click="stPrev" aria-label="Historia anterior" class="btn chip chip-off" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #111111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="#111111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+              <button type="button" @click="stNext" aria-label="Historia siguiente" class="btn" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #111111;background:#111111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
               <div style="display:flex;gap:6px;margin-left:6px">
                 <template v-for="dt in stDots">
-                  <span :class="dt.cls" style="height:8px;border-radius:999px;border:1.5px solid #1B1A18;transition:width .35s ease,background .35s ease"></span>
+                  <span :class="dt.cls" style="height:8px;border-radius:999px;border:1.5px solid #111111;transition:width .35s ease,background .35s ease"></span>
                 </template>
               </div>
             </div>
@@ -348,11 +344,11 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
       </div>
       <template v-if="videosLocked">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px">
-          <div class="fade" style="max-width:460px;text-align:center;background:rgba(255,255,255,.94);border:1px solid #E2DACD;border-radius:28px;padding:40px 34px;display:flex;flex-direction:column;align-items:center;gap:18px">
-            <span class="pulse" style="width:12px;height:12px;border-radius:50%;background:#2347C5;display:inline-block"></span>
+          <div class="fade" style="max-width:460px;text-align:center;background:rgba(255,255,255,.94);border:1px solid #D6D6D4;border-radius:28px;padding:40px 34px;display:flex;flex-direction:column;align-items:center;gap:18px">
+            <span class="pulse" style="width:12px;height:12px;border-radius:50%;background:#111111;display:inline-block"></span>
             <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:30px;line-height:1.15;letter-spacing:-.025em">¿Quieres ver lo que casi nadie te enseña?</span>
-            <span style="font-size:15px;line-height:1.6;color:#6E6A63">Vídeos cortos e historias reales de personas que lo han vivido.</span>
-            <button type="button" @click="unlockVideos" class="btn btn-main" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 28px;border:none;border-radius:999px;background:#2347C5;color:#FFFFFF">Sí, enséñamelo</button>
+            <span style="font-size:15px;line-height:1.6;color:#6B6B6B">Vídeos cortos e historias reales de personas que lo han vivido.</span>
+            <button type="button" @click="unlockVideos" class="btn btn-main" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 28px;border:none;border-radius:999px;background:#111111;color:#FFFFFF">Sí, enséñamelo</button>
           </div>
         </div>
       </template>
@@ -361,8 +357,8 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
 
   
   <div id="test" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 140px">
-    <div class="reveal m-test dark" style="position:relative;overflow:hidden;border:1px solid #EAE3D8;border-radius:32px;background:#FFFFFF;padding:72px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:26px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">04 — Test de 1 minuto</span>
+    <div class="reveal m-test dark" style="position:relative;overflow:hidden;border:1px solid #E3E3E1;border-radius:32px;background:#FFFFFF;padding:72px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:26px">
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">04 — Test de 1 minuto</span>
       <div style="display:flex;gap:8px">
         <template v-for="st in steps">
           <span :class="st.cls" style="width:40px;height:2px;border-radius:2px;transition:background .4s ease"></span>
@@ -370,11 +366,11 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
       </div>
       <template v-if="quizRunning">
         <div class="swap" style="display:flex;flex-direction:column;align-items:center;gap:30px;max-width:720px">
-          <span style="font-size:13px;color:#8A847B">Pregunta {{qNum}} de 5</span>
+          <span style="font-size:13px;color:#8A8A8A">Pregunta {{qNum}} de 5</span>
           <span class="h2" style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:48px;line-height:1.1;letter-spacing:-.035em">{{qText}}</span>
           <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
             <template v-for="o in opts">
-              <button type="button" @click="o.pick" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;min-width:130px;padding:14px 26px;border-radius:999px;border:1px solid #D9CFC0;background:transparent;color:#1B1A18">{{o.label}}</button>
+              <button type="button" @click="o.pick" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;min-width:130px;padding:14px 26px;border-radius:999px;border:1px solid #CFCFCD;background:transparent;color:#111111">{{o.label}}</button>
             </template>
           </div>
         </div>
@@ -382,10 +378,10 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
       <template v-if="quizDone">
         <div class="swap" style="display:flex;flex-direction:column;align-items:center;gap:20px;max-width:640px">
           <span class="h2" style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:48px;line-height:1.1;letter-spacing:-.035em">{{resultTitle}}</span>
-          <span style="font-size:17px;line-height:1.65;color:#55514B">{{resultText}}</span>
+          <span style="font-size:17px;line-height:1.65;color:#4A4A4A">{{resultText}}</span>
           <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:8px">
-            <a href="#contacto" class="btn btn-main" style="padding:15px 28px;border-radius:999px;background:#2347C5;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero hacer el test completo (OCA)</a>
-            <button type="button" @click="resetQuiz" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;padding:15px 26px;border-radius:999px;border:1px solid #D9CFC0;background:transparent;color:#1B1A18">Repetir</button>
+            <a href="#contacto" class="btn btn-main" style="padding:15px 28px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero hacer el test completo (OCA)</a>
+            <button type="button" @click="resetQuiz" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;padding:15px 26px;border-radius:999px;border:1px solid #CFCFCD;background:transparent;color:#111111">Repetir</button>
           </div>
         </div>
       </template>
@@ -395,16 +391,16 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   
   <div id="pruebalo" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 140px">
     <div class="reveal sechead" style="display:flex;flex-direction:column;gap:22px;max-width:780px;margin-bottom:56px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">05 — Un adelanto de las bases</span>
-      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Tres ideas de Scientology <span class="acc" style="font-weight:400;color:#2347C5">que puedes usar mañana.</span></h2>
-      <p style="margin:0;font-size:16px;color:#6E6A63">Un minicurso de tres lecciones. Juega con cada una y llévate algo práctico para tu vida.</p>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">05 — Un adelanto de las bases</span>
+      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Tres ideas de Scientology <span class="acc mk3" style="font-weight:400;color:#111111">que puedes usar mañana.</span></h2>
+      <p style="margin:0;font-size:16px;color:#6B6B6B">Un minicurso de tres lecciones. Juega con cada una y llévate algo práctico para tu vida.</p>
     </div>
 
-    <div style="border:1px solid #EAE3D8;border-radius:32px;background:#FFFFFF;padding:14px">
+    <div style="border:1px solid #E3E3E1;border-radius:32px;background:#FFFFFF;padding:14px">
       <div style="display:flex;flex-direction:column;gap:10px;padding:16px 18px 0">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
-          <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#2347C5">Lección {{lessonNum}} de 3</span>
-          <span style="font-size:13px;color:#8A847B">{{lessonSeen}} de 3 vistas</span>
+          <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#111111">Lección {{lessonNum}} de 3</span>
+          <span style="font-size:13px;color:#8A8A8A">{{lessonSeen}} de 3 vistas</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px">
           <template v-for="t in tabs">
@@ -420,13 +416,13 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
         <div class="swap m-lesson" style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 30px 30px;align-items:flex-start">
           <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:20px">
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-              <span class="pillcount" style="padding:8px 14px;border-radius:999px;background:#E4EAFB;color:#1A36A0;font-size:14px;font-weight:500">Ayuda a {{dHelp}} de 8</span>
-              <span class="pillcount" style="padding:8px 14px;border-radius:999px;background:#F1EEE8;color:#55514B;font-size:14px;font-weight:500">Perjudica a {{dHarm}}</span>
+              <span class="pillcount" style="padding:8px 14px;border-radius:999px;background:#DCEBD2;color:#111111;font-size:14px;font-weight:500;border:1.5px solid #111111">Ayuda a {{dHelp}} de 8</span>
+              <span class="pillcount" style="padding:8px 14px;border-radius:999px;background:#F2D4D4;color:#111111;font-size:14px;font-weight:500;border:1.5px solid #111111">Perjudica a {{dHarm}}</span>
             </div>
-            <svg width="300" height="300" viewBox="0 0 320 320" role="img" aria-label="Ocho anillos, uno por dinámica: en naranja las que salen ganando, en gris las que salen perdiendo" style="max-width:100%;height:auto"><circle cx="160" cy="160" r="14" :class="`band ${bands.b1}`"></circle><circle cx="160" cy="160" r="32" :class="`band ${bands.b2}`"></circle><circle cx="160" cy="160" r="50" :class="`band ${bands.b3}`"></circle><circle cx="160" cy="160" r="68" :class="`band ${bands.b4}`"></circle><circle cx="160" cy="160" r="86" :class="`band ${bands.b5}`"></circle><circle cx="160" cy="160" r="104" :class="`band ${bands.b6}`"></circle><circle cx="160" cy="160" r="122" :class="`band ${bands.b7}`"></circle><circle cx="160" cy="160" r="140" :class="`band ${bands.b8}`"></circle></svg>
+            <svg width="300" height="300" viewBox="0 0 320 320" role="img" aria-label="Ocho anillos, uno por dinámica: en verde las que salen ganando, en rosa las que salen perdiendo" style="max-width:100%;height:auto"><circle cx="160" cy="160" r="14" :class="`band ${bands.b1}`"></circle><circle cx="160" cy="160" r="32" :class="`band ${bands.b2}`"></circle><circle cx="160" cy="160" r="50" :class="`band ${bands.b3}`"></circle><circle cx="160" cy="160" r="68" :class="`band ${bands.b4}`"></circle><circle cx="160" cy="160" r="86" :class="`band ${bands.b5}`"></circle><circle cx="160" cy="160" r="104" :class="`band ${bands.b6}`"></circle><circle cx="160" cy="160" r="122" :class="`band ${bands.b7}`"></circle><circle cx="160" cy="160" r="140" :class="`band ${bands.b8}`"></circle></svg>
             <div style="width:100%;max-width:360px;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px">
               <template v-for="l in legend">
-                <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#55514B;min-width:0">
+                <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A4A4A;min-width:0">
                   <span :class="`ldot ${l.cls}`" style="width:10px;height:10px;border-radius:50%;flex:0 0 auto"></span>
                   <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{l.n}} · {{l.name}}</span>
                 </span>
@@ -437,24 +433,24 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
             <span class="m-ltitle" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:34px;line-height:1.1;letter-spacing:-.03em">Las 8 dinámicas</span>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <template v-for="sp in stepsUI">
-                <span :class="sp.cls" style="font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1.5px solid #1B1A18">{{sp.t}}</span>
+                <span :class="sp.cls" style="font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1.5px solid #111111">{{sp.t}}</span>
               </template>
             </div>
             <template v-if="step0">
               <div class="swap" style="display:flex;flex-direction:column;gap:18px">
-              <span style="font-size:16px;line-height:1.65;color:#55514B">Tu vida no va solo de ti: va de ocho círculos, desde ti mismo hasta el infinito. <span style="color:#1B1A18;font-weight:500">La mejor decisión es la que ayuda a más dinámicas a la vez.</span></span>
-              <span style="font-size:15px;line-height:1.6;color:#55514B">Mira los ocho anillos: van de ti (el centro) hacia fuera, hasta el infinito. Ahora vas a decidir en tres situaciones reales.</span>
-              <button type="button" @click="toStep1" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #1B1A18;border-radius:999px;background:#2347C5;color:#FFFFFF">Empezar el juego →</button>
+              <span style="font-size:16px;line-height:1.65;color:#4A4A4A">Tu vida no va solo de ti: va de ocho círculos, desde ti mismo hasta el infinito. <span style="color:#111111;font-weight:500">La mejor decisión es la que ayuda a más dinámicas a la vez.</span></span>
+              <span style="font-size:15px;line-height:1.6;color:#4A4A4A">Mira los ocho anillos: van de ti (el centro) hacia fuera, hasta el infinito. Ahora vas a decidir en tres situaciones reales.</span>
+              <button type="button" @click="toStep1" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #111111;border-radius:999px;background:#111111;color:#FFFFFF">Empezar el juego →</button>
               </div>
             </template>
             <template v-if="step1">
             <div class="swap" style="display:flex;flex-direction:column;gap:18px">
             <template v-if="dPlaying">
               <div class="swap" style="display:flex;flex-direction:column;gap:12px">
-                <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8A847B">Situación {{dNum}} de 3</span>
-                <span style="border:1px solid #EAE3D8;border-radius:18px 18px 18px 4px;background:#FAF7F2;padding:16px 18px;font-size:16px;line-height:1.5;color:#1B1A18">{{dQ}}</span>
+                <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8A8A8A">Situación {{dNum}} de 3</span>
+                <span style="border:1px solid #E3E3E1;border-radius:18px 18px 18px 4px;background:#FFFFFF;padding:16px 18px;font-size:16px;line-height:1.5;color:#111111">{{dQ}}</span>
                 <template v-for="o in dOpts">
-                  <button type="button" @click="o.pick" :class="`btn chip ${o.cls}`" style="font:inherit;font-size:15px;text-align:left;cursor:pointer;padding:14px 18px;border-radius:16px;border:1px solid #E2DACD">{{o.t}}</button>
+                  <button type="button" @click="o.pick" :class="`btn chip ${o.cls}`" style="font:inherit;font-size:15px;text-align:left;cursor:pointer;padding:14px 18px;border-radius:16px;border:1px solid #D6D6D4">{{o.t}}</button>
                 </template>
                 <template v-if="dPicked">
                   <div :class="`swap ${dMsgCls}`" style="display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:14px">
@@ -467,16 +463,16 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
             <template v-if="dEnd">
               <div class="swap" style="display:flex;flex-direction:column;gap:12px">
                 <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:26px;line-height:1.2;letter-spacing:-.02em">{{dEndTitle}}</span>
-                <span style="font-size:15px;line-height:1.6;color:#55514B">Casi nunca hay que elegir entre tu familia y tu trabajo, o entre tú y los demás. Casi siempre hay una opción que ayuda a varias dinámicas a la vez.</span>
-                <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #1B1A18;border-radius:999px;background:#2347C5;color:#FFFFFF">Ver cómo aplicarlo →</button>
-                <button type="button" @click="dReset" style="align-self:flex-start;font:inherit;font-size:14px;font-weight:500;color:#2347C5;background:none;border:none;padding:0;cursor:pointer">Jugar otra vez</button>
+                <span style="font-size:15px;line-height:1.6;color:#4A4A4A">Casi nunca hay que elegir entre tu familia y tu trabajo, o entre tú y los demás. Casi siempre hay una opción que ayuda a varias dinámicas a la vez.</span>
+                <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #111111;border-radius:999px;background:#111111;color:#FFFFFF">Ver cómo aplicarlo →</button>
+                <button type="button" @click="dReset" style="align-self:flex-start;font:inherit;font-size:14px;font-weight:500;color:#111111;background:none;border:none;padding:0;cursor:pointer">Jugar otra vez</button>
               </div>
             </template>
             </div>
             </template>
             <template v-if="step2">
-            <div class="apply" style="border-radius:18px;background:#1B1A18;color:#FAF7F2;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
-              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#A9BBF5">3 · Aplícalo hoy</span>
+            <div class="apply" style="border-radius:18px;background:#111111;color:#FFFFFF;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#DCEBD2">3 · Aplícalo hoy</span>
               <span style="font-size:15px;line-height:1.55">La próxima vez que dudes, pregúntate: ¿qué opción ayuda a más dinámicas? Y si ninguna te convence, comunica: suele aparecer una tercera.</span>
             </div>
             </template>
@@ -489,19 +485,19 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
         <div class="swap m-lesson" style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 30px 30px;align-items:flex-start">
           <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:16px">
             <svg width="320" height="300" viewBox="0 0 320 300" role="img" aria-label="Triángulo de afinidad, realidad y comunicación" style="max-width:100%;height:auto">
-              <polygon points="160,30 43.1,232.5 276.9,232.5" fill="none" stroke="#E2DACD" stroke-width="1" stroke-dasharray="3 6" stroke-linecap="round"></polygon>
+              <polygon points="160,30 43.1,232.5 276.9,232.5" fill="none" stroke="#D6D6D4" stroke-width="1" stroke-dasharray="3 6" stroke-linecap="round"></polygon>
               <g :class="shakeCls">
-                <polygon :points="triPts" fill="rgba(35,71,197,.1)" stroke="#2347C5" stroke-width="1.6" stroke-linejoin="round"></polygon>
+                <polygon :points="triPts" fill="#DCEBD2" fill-opacity=".9" stroke="#111111" stroke-width="1.6" stroke-linejoin="round"></polygon>
                 <circle :cx="pA.x" :cy="pA.y" :r="pA.r" :class="`vdot ${pA.cls}`"></circle>
                 <circle :cx="pR.x" :cy="pR.y" :r="pR.r" :class="`vdot ${pR.cls}`"></circle>
                 <circle :cx="pC.x" :cy="pC.y" :r="pC.r" :class="`vdot ${pC.cls}`"></circle>
               </g>
-              <text x="160" y="169" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" letter-spacing="1.5" fill="#1A36A0" :opacity="compOp">COMPRENSIÓN</text>
-              <text x="160" y="18" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#1B1A18">A · Afinidad</text>
-              <text x="43" y="258" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#1B1A18">R · Realidad</text>
-              <text x="277" y="258" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#1B1A18">C · Comunicación</text>
+              <text x="160" y="169" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" letter-spacing="1.5" fill="#333333" :opacity="compOp">COMPRENSIÓN</text>
+              <text x="160" y="18" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#111111">A · Afinidad</text>
+              <text x="43" y="258" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#111111">R · Realidad</text>
+              <text x="277" y="258" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#111111">C · Comunicación</text>
             </svg>
-            <div style="display:flex;gap:18px;font-size:13px;color:#55514B;font-variant-numeric:tabular-nums">
+            <div style="display:flex;gap:18px;font-size:13px;color:#4A4A4A;font-variant-numeric:tabular-nums">
               <span>A {{lvA}}</span><span>R {{lvR}}</span><span>C {{lvC}}</span>
             </div>
           </div>
@@ -510,9 +506,9 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
 
             <template v-if="step0">
               <div class="swap" style="display:flex;flex-direction:column;gap:14px">
-                <span style="font-size:16px;line-height:1.65;color:#55514B">Afinidad, Realidad y Comunicación son los tres componentes de la <span style="color:#1B1A18;font-weight:500">comprensión</span>. Toca cada una para verla en el triángulo.</span>
+                <span style="font-size:16px;line-height:1.65;color:#4A4A4A">Afinidad, Realidad y Comunicación son los tres componentes de la <span style="color:#111111;font-weight:500">comprensión</span>. Toca cada una para verla en el triángulo.</span>
                 <template v-for="k in arcCards">
-                  <button type="button" @click="k.pick" :class="`btn chip ${k.cls}`" style="font:inherit;text-align:left;cursor:pointer;padding:16px 18px;border-radius:18px;border:1px solid #E2DACD;display:flex;gap:14px;align-items:flex-start">
+                  <button type="button" @click="k.pick" :class="`btn chip ${k.cls}`" style="font:inherit;text-align:left;cursor:pointer;padding:16px 18px;border-radius:18px;border:1px solid #D6D6D4;display:flex;gap:14px;align-items:flex-start">
                     <span class="kletter" style="flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:15px">{{k.l}}</span>
                     <span style="display:flex;flex-direction:column;gap:4px">
                       <span style="font-size:16px;font-weight:500">{{k.t}}</span>
@@ -520,10 +516,10 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
                     </span>
                   </button>
                 </template>
-                <div style="border:1px solid #EAE3D8;border-radius:18px;background:#FAF7F2;padding:16px 18px;font-size:15px;line-height:1.6;color:#3A3733">
-                  <span style="font-weight:500;color:#1B1A18">La ley del triángulo:</span> las tres dependen unas de otras. Si sube una, suben las otras dos. Si baja una, bajan las tres. Cuando cae de golpe se llama <span style="font-weight:500;color:#1B1A18">ruptura de ARC</span>: ese enfado repentino con alguien.
+                <div style="border:1px solid #E3E3E1;border-radius:18px;background:#F6F6F4;padding:16px 18px;font-size:15px;line-height:1.6;color:#333333">
+                  <span style="font-weight:500;color:#111111">La ley del triángulo:</span> las tres dependen unas de otras. Si sube una, suben las otras dos. Si baja una, bajan las tres. Cuando cae de golpe se llama <span style="font-weight:500;color:#111111">ruptura de ARC</span>: ese enfado repentino con alguien.
                 </div>
-                <button type="button" @click="arcStart" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:none;border-radius:999px;background:#2347C5;color:#FFFFFF">Empezar el juego →</button>
+                <button type="button" @click="arcStart" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:none;border-radius:999px;background:#111111;color:#FFFFFF">Empezar el juego →</button>
               </div>
             </template>
 
@@ -531,10 +527,10 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
               <div class="swap" style="display:flex;flex-direction:column;gap:12px">
                 <template v-if="arcPlaying">
                   <div style="display:flex;flex-direction:column;gap:12px">
-                    <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8A847B">Situación {{arcNum}} de 3 · ¿Qué harías?</span>
-                    <span style="border:1px solid #EAE3D8;border-radius:18px 18px 18px 4px;background:#FAF7F2;padding:16px 18px;font-size:16px;line-height:1.5;color:#1B1A18">{{arcQ}}</span>
+                    <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8A8A8A">Situación {{arcNum}} de 3 · ¿Qué harías?</span>
+                    <span style="border:1px solid #E3E3E1;border-radius:18px 18px 18px 4px;background:#FFFFFF;padding:16px 18px;font-size:16px;line-height:1.5;color:#111111">{{arcQ}}</span>
                     <template v-for="o in arcOpts">
-                      <button type="button" @click="o.pick" :class="`btn chip ${o.cls}`" style="font:inherit;font-size:15px;text-align:left;cursor:pointer;padding:14px 18px;border-radius:16px;border:1px solid #E2DACD">{{o.t}}</button>
+                      <button type="button" @click="o.pick" :class="`btn chip ${o.cls}`" style="font:inherit;font-size:15px;text-align:left;cursor:pointer;padding:14px 18px;border-radius:16px;border:1px solid #D6D6D4">{{o.t}}</button>
                     </template>
                     <template v-if="arcHasMsg">
                       <div :class="`swap ${arcMsgCls}`" style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:14px">
@@ -548,18 +544,18 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
                 <template v-if="arcEnd">
                   <div class="swap" style="display:flex;flex-direction:column;gap:12px">
                     <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:26px;line-height:1.2;letter-spacing:-.02em">{{arcEndTitle}}</span>
-                    <span style="font-size:15px;line-height:1.6;color:#55514B">La comunicación es la esquina más importante: el triángulo empieza ahí. Habla de algo en lo que podáis estar de acuerdo y la afinidad sube sola.</span>
-                    <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #1B1A18;border-radius:999px;background:#2347C5;color:#FFFFFF">Ver cómo aplicarlo →</button>
-                    <button type="button" @click="arcReset" style="align-self:flex-start;font:inherit;font-size:14px;font-weight:500;color:#2347C5;background:none;border:none;padding:0;cursor:pointer">Jugar otra vez</button>
+                    <span style="font-size:15px;line-height:1.6;color:#4A4A4A">La comunicación es la esquina más importante: el triángulo empieza ahí. Habla de algo en lo que podáis estar de acuerdo y la afinidad sube sola.</span>
+                    <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #111111;border-radius:999px;background:#111111;color:#FFFFFF">Ver cómo aplicarlo →</button>
+                    <button type="button" @click="arcReset" style="align-self:flex-start;font:inherit;font-size:14px;font-weight:500;color:#111111;background:none;border:none;padding:0;cursor:pointer">Jugar otra vez</button>
                   </div>
                 </template>
-                <button type="button" @click="arcBack" style="align-self:flex-start;font:inherit;font-size:13px;color:#8A847B;background:none;border:none;padding:0;cursor:pointer">← Volver a la explicación</button>
+                <button type="button" @click="arcBack" style="align-self:flex-start;font:inherit;font-size:13px;color:#8A8A8A;background:none;border:none;padding:0;cursor:pointer">← Volver a la explicación</button>
               </div>
             </template>
 
             <template v-if="step2">
-            <div class="apply" style="border-radius:18px;background:#1B1A18;color:#FAF7F2;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
-              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#A9BBF5">3 · Aplícalo hoy</span>
+            <div class="apply" style="border-radius:18px;background:#111111;color:#FFFFFF;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#DCEBD2">3 · Aplícalo hoy</span>
               <span style="font-size:15px;line-height:1.55">Piensa en alguien con quien te llevas regular. Hoy habla con él de algo en lo que estéis de acuerdo, y escucha. Verás cómo sube la afinidad.</span>
             </div>
             </template>
@@ -572,13 +568,13 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
         <div class="swap m-lesson" style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 30px 30px;align-items:flex-start">
           <div style="flex:1 1 320px;min-width:0;display:flex;justify-content:center">
             <div style="position:relative;width:100%;max-width:340px">
-              <span aria-hidden="true" style="position:absolute;left:21px;top:22px;bottom:22px;width:1px;background:#E2DACD"></span>
-              <span aria-hidden="true" class="pill" :style="`position:absolute;left:0;right:0;height:44px;border-radius:999px;background:#FAF7F2;border:1px solid #E2DACD;top:${pillTop}px;opacity:${pillOp}`"></span>
+              <span aria-hidden="true" style="position:absolute;left:21px;top:22px;bottom:22px;width:1px;background:#D6D6D4"></span>
+              <span aria-hidden="true" class="pill" :style="`position:absolute;left:0;right:0;height:44px;border-radius:999px;background:#FFFFFF;border:1px solid #D6D6D4;top:${pillTop}px;opacity:${pillOp}`"></span>
               <template v-for="tn in tones">
-                <button type="button" @click="tn.pick" :class="`tone ${tn.cls}`" style="position:relative;font:inherit;cursor:pointer;width:100%;height:44px;display:flex;align-items:center;gap:14px;padding:0 16px 0 14px;border:none;background:transparent;color:#1B1A18;text-align:left">
+                <button type="button" @click="tn.pick" :class="`tone ${tn.cls}`" style="position:relative;font:inherit;cursor:pointer;width:100%;height:44px;display:flex;align-items:center;gap:14px;padding:0 16px 0 14px;border:none;background:transparent;color:#111111;text-align:left">
                   <span class="tdot" style="width:15px;height:15px;border-radius:50%;flex:0 0 auto"></span>
                   <span style="flex:1;font-size:16px">{{tn.name}}</span>
-                  <span style="font-size:13px;color:#8A847B;font-variant-numeric:tabular-nums">{{tn.v}}</span>
+                  <span style="font-size:13px;color:#8A8A8A;font-variant-numeric:tabular-nums">{{tn.v}}</span>
                 </button>
               </template>
             </div>
@@ -587,28 +583,28 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
             <span class="m-ltitle" style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:34px;line-height:1.1;letter-spacing:-.03em">La escala tonal</span>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <template v-for="sp in stepsUI">
-                <span :class="sp.cls" style="font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1.5px solid #1B1A18">{{sp.t}}</span>
+                <span :class="sp.cls" style="font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1.5px solid #111111">{{sp.t}}</span>
               </template>
             </div>
             <template v-if="step0">
               <div class="swap" style="display:flex;flex-direction:column;gap:18px">
-              <span style="font-size:16px;line-height:1.65;color:#55514B">Las emociones van en escalones, de la apatía al entusiasmo. Subir de uno en uno es mucho más fácil que querer saltar de golpe.</span>
-              <button type="button" @click="toStep1" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #1B1A18;border-radius:999px;background:#2347C5;color:#FFFFFF">Empezar el juego →</button>
+              <span style="font-size:16px;line-height:1.65;color:#4A4A4A">Las emociones van en escalones, de la apatía al entusiasmo. Subir de uno en uno es mucho más fácil que querer saltar de golpe.</span>
+              <button type="button" @click="toStep1" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #111111;border-radius:999px;background:#111111;color:#FFFFFF">Empezar el juego →</button>
               </div>
             </template>
             <template v-if="step1">
               <div class="swap" style="display:flex;flex-direction:column;gap:18px">
-              <span style="font-size:16px;line-height:1.65;color:#1B1A18;font-weight:500">¿En qué tono estás hoy? Tócalo en la escala.</span>
-              <div class="swap" style="border:1px solid #EAE3D8;border-radius:18px;background:#FAF7F2;padding:16px 18px;display:flex;flex-direction:column;gap:4px">
-              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#2347C5">{{toneTitle}}</span>
-              <span style="font-size:15px;line-height:1.55;color:#3A3733">{{toneText}}</span>
+              <span style="font-size:16px;line-height:1.65;color:#111111;font-weight:500">¿En qué tono estás hoy? Tócalo en la escala.</span>
+              <div class="swap" style="border:1px solid #E3E3E1;border-radius:18px;background:#F6F6F4;padding:16px 18px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#111111">{{toneTitle}}</span>
+              <span style="font-size:15px;line-height:1.55;color:#333333">{{toneText}}</span>
             </div>
-              <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #1B1A18;border-radius:999px;background:#2347C5;color:#FFFFFF">Ver cómo aplicarlo →</button>
+              <button type="button" @click="toStep2" class="btn btn-main" style="align-self:flex-start;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border:1.5px solid #111111;border-radius:999px;background:#111111;color:#FFFFFF">Ver cómo aplicarlo →</button>
               </div>
             </template>
             <template v-if="step2">
-            <div class="apply" style="border-radius:18px;background:#1B1A18;color:#FAF7F2;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
-              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#A9BBF5">3 · Aplícalo hoy</span>
+            <div class="apply" style="border-radius:18px;background:#111111;color:#FFFFFF;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#DCEBD2">3 · Aplícalo hoy</span>
               <span style="font-size:15px;line-height:1.55">{{toneApply}}</span>
             </div>
             </template>
@@ -617,21 +613,21 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
       </template>
       <div style="display:flex;gap:12px;align-items:center;padding:6px 18px 18px;flex-wrap:wrap">
         <template v-if="showPrev">
-          <button type="button" @click="goPrev" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px;border:1.5px solid #1B1A18;background:#FFFFFF;color:#1B1A18">← Anterior</button>
+          <button type="button" @click="goPrev" class="btn btn-line" style="font:inherit;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px;border:1.5px solid #111111;background:#FFFFFF;color:#111111">← Anterior</button>
         </template>
         <template v-if="showNext">
-          <button type="button" @click="goNext" class="btn btn-main" style="margin-left:auto;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px;border:1.5px solid #1B1A18;background:#2347C5;color:#FFFFFF">Siguiente lección: {{nextTitle}} →</button>
+          <button type="button" @click="goNext" class="btn btn-main" style="margin-left:auto;font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:13px 22px;border-radius:999px;border:1.5px solid #111111;background:#111111;color:#FFFFFF">Siguiente lección: {{nextTitle}} →</button>
         </template>
       </div>
     </div>
 
     <template v-if="allSeen">
-      <div class="swap m-badge" style="margin-top:16px;border:1px solid #2347C5;border-radius:28px;background:#FFFFFF;padding:28px 32px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+      <div class="swap m-badge" style="margin-top:16px;border:1px solid #111111;border-radius:28px;background:#FFFFFF;padding:28px 32px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
         <span style="display:flex;align-items:center;gap:16px;flex:1 1 420px;min-width:0">
-          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" style="flex:0 0 auto"><circle cx="22" cy="22" r="20.5" fill="none" stroke="#2347C5" stroke-width="1.2"></circle><path d="M14.5 22.5l5 5 10-11" fill="none" stroke="#2347C5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" style="flex:0 0 auto"><circle cx="22" cy="22" r="20.5" fill="none" stroke="#111111" stroke-width="1.2"></circle><path d="M14.5 22.5l5 5 10-11" fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           <span style="font-size:17px;line-height:1.5"><span style="font-weight:500">Ya conoces tres bases de Scientology.</span> Esto es solo un adelanto: en el curso aprendes a aplicarlas a fondo.</span>
         </span>
-        <a href="#curso" class="btn btn-main" style="padding:15px 26px;border-radius:999px;background:#2347C5;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero seguir aprendiendo</a>
+        <a href="#curso" class="btn btn-main" style="padding:15px 26px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero seguir aprendiendo</a>
       </div>
     </template>
   </div>
@@ -639,52 +635,52 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   
   <div id="curso" class="wrap m-sec m-gap" style="max-width:1200px;margin:0 auto;padding:0 32px 140px;display:flex;flex-wrap:wrap;gap:56px;align-items:center">
     <div class="reveal" style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:20px">
-      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">06 — Tu primer paso</span>
-      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Un curso corto para <span class="acc" style="font-weight:400;color:#2347C5">mejorar algo concreto.</span></h2>
-      <p style="margin:0;font-size:18px;line-height:1.7;color:#55514B">Sin compromiso de seguir después. Lo haces, lo aplicas y decides tú si quieres saber más.</p>
+      <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">06 — Tu primer paso</span>
+      <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">Un curso corto para <span class="acc mk6" style="font-weight:400;color:#111111">mejorar algo concreto.</span></h2>
+      <p style="margin:0;font-size:18px;line-height:1.7;color:#4A4A4A">Sin compromiso de seguir después. Lo haces, lo aplicas y decides tú si quieres saber más.</p>
     </div>
     <div style="flex:1 1 440px;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
       <template v-for="c in cursos">
-        <div class="card" style="border:1px solid #EAE3D8;border-radius:22px;background:#FFFFFF;padding:24px;display:flex;flex-direction:column;gap:12px">
-          <span style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:52px;line-height:1;letter-spacing:-.04em;color:#2347C5">{{c.n}}</span>
+        <div class="card ccard" style="border:1.5px solid #111111;border-radius:22px;background:#FFFFFF;padding:24px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:52px;line-height:1;letter-spacing:-.04em;color:#111111">{{c.n}}</span>
           <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:21px;line-height:1.25;letter-spacing:-.02em">{{c.t}}</span>
-          <span style="font-size:13px;color:#8A847B">{{c.s}}</span>
+          <span style="font-size:13px;color:#8A8A8A">{{c.s}}</span>
         </div>
       </template>
-      <a href="#contacto" class="btn btn-main" style="grid-column:1 / -1;text-align:center;padding:16px 26px;border-radius:999px;background:#2347C5;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero apuntarme</a>
+      <a href="#contacto" class="btn btn-main" style="grid-column:1 / -1;text-align:center;padding:16px 26px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Quiero apuntarme</a>
     </div>
   </div>
 
   
   <div id="contacto" class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
-    <div class="reveal m-contact blue" style="border:1px solid #EAE3D8;border-radius:32px;background:#FFFFFF;padding:60px 48px;display:flex;flex-wrap:wrap;gap:56px">
+    <div class="reveal m-contact blue" style="border:1px solid #E3E3E1;border-radius:32px;background:#FFFFFF;padding:60px 48px;display:flex;flex-wrap:wrap;gap:56px">
       <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:20px">
-        <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#2347C5">07 — Hablemos</span>
-        <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:60px;line-height:1.02;letter-spacing:-.04em">¿Te ha picado la curiosidad? <span style="font-weight:400">Escríbeme.</span></h2>
-        <p style="margin:0;font-size:17px;line-height:1.7;color:#55514B">Sin bots ni comerciales. Te respondo yo y, si quieres, quedamos para un café.</p>
-        <a href="#contacto" class="btn btn-line" style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;margin-top:6px;padding:14px 22px;border-radius:999px;border:1px solid #D9CFC0;color:#1B1A18;text-decoration:none;font-size:15px">
-          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17l1.2-3.6A7.5 7.5 0 1 1 7 16.2z" fill="none" stroke="#2347C5" stroke-width="1.2" stroke-linejoin="round"></path></svg>
+        <span class="slabel" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#111111">07 — Hablemos</span>
+        <h2 class="h2" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:60px;line-height:1.02;letter-spacing:-.04em">¿Te ha picado la curiosidad? <span class="acc mkw" style="font-weight:400">Escríbeme.</span></h2>
+        <p style="margin:0;font-size:17px;line-height:1.7;color:#4A4A4A">Sin bots ni comerciales. Te respondo yo y, si quieres, quedamos para un café.</p>
+        <a href="#contacto" class="btn btn-line" style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;margin-top:6px;padding:14px 22px;border-radius:999px;border:1px solid #CFCFCD;color:#111111;text-decoration:none;font-size:15px">
+          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17l1.2-3.6A7.5 7.5 0 1 1 7 16.2z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"></path></svg>
           WhatsApp [tu número]
         </a>
       </div>
       <div style="flex:1 1 380px;min-width:0">
         <template v-if="notSent">
           <div style="display:flex;flex-direction:column;gap:12px">
-            <label for="f-nombre" style="font-size:13px;color:#6E6A63">Tu nombre</label>
-            <input id="f-nombre" type="text" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #E2DACD;background:#FAF7F2;margin-top:-4px">
-            <label for="f-tel" style="font-size:13px;color:#6E6A63">Teléfono o email</label>
-            <input id="f-tel" type="text" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #E2DACD;background:#FAF7F2;margin-top:-4px">
-            <label for="f-msg" style="font-size:13px;color:#6E6A63">¿Qué te ha dado curiosidad?</label>
-            <textarea id="f-msg" rows="4" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #E2DACD;background:#FAF7F2;margin-top:-4px;resize:vertical"></textarea>
-            <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:#8A847B;margin-top:4px"><input type="checkbox" style="margin-top:3px;accent-color:#2347C5">Acepto la [política de privacidad] para que me contactéis.</label>
-            <button type="button" @click="send" class="btn btn-main" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:16px 26px;border:none;border-radius:999px;background:#2347C5;color:#FFFFFF;margin-top:6px">Enviar</button>
+            <label for="f-nombre" style="font-size:13px;color:#6B6B6B">Tu nombre</label>
+            <input id="f-nombre" type="text" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #D6D6D4;background:#FFFFFF;margin-top:-4px">
+            <label for="f-tel" style="font-size:13px;color:#6B6B6B">Teléfono o email</label>
+            <input id="f-tel" type="text" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #D6D6D4;background:#FFFFFF;margin-top:-4px">
+            <label for="f-msg" style="font-size:13px;color:#6B6B6B">¿Qué te ha dado curiosidad?</label>
+            <textarea id="f-msg" rows="4" style="font:inherit;padding:15px 16px;border-radius:14px;border:1px solid #D6D6D4;background:#FFFFFF;margin-top:-4px;resize:vertical"></textarea>
+            <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:#8A8A8A;margin-top:4px"><input type="checkbox" style="margin-top:3px;accent-color:#111111">Acepto la [política de privacidad] para que me contactéis.</label>
+            <button type="button" @click="send" class="btn btn-main" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:16px 26px;border:none;border-radius:999px;background:#111111;color:#FFFFFF;margin-top:6px">Enviar</button>
           </div>
         </template>
         <template v-if="sent">
-          <div class="swap" style="min-height:300px;border:1px solid #EAE3D8;border-radius:24px;background:#FAF7F2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:32px">
-            <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24.5" fill="none" stroke="#2347C5" stroke-width="1"></circle><path d="M17 26.5l6 6 12-13" fill="none" stroke="#2347C5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <div class="swap" style="min-height:300px;border:1px solid #E3E3E1;border-radius:24px;background:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:32px">
+            <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24.5" fill="none" stroke="#111111" stroke-width="1"></circle><path d="M17 26.5l6 6 12-13" fill="none" stroke="#111111" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
             <span style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:36px;letter-spacing:-.03em">Recibido.</span>
-            <span style="font-size:15px;color:#6E6A63">Te escribo yo en cuanto pueda. Gracias por tu curiosidad.</span>
+            <span style="font-size:15px;color:#6B6B6B">Te escribo yo en cuanto pueda. Gracias por tu curiosidad.</span>
           </div>
         </template>
       </div>
@@ -692,7 +688,7 @@ input:focus,textarea:focus{outline:1px solid #2347C5;outline-offset:2px}
   </div>
 
   
-  <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px 48px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:12px;line-height:1.6;color:#8A847B">
+  <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 32px 48px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:12px;line-height:1.6;color:#8A8A8A">
     <span>Web personal de Ramiro y Nora, scientologists. No es una web oficial de la Iglesia de Scientology.</span>
     <span>[Aviso legal] · [Privacidad]</span>
   </div>
@@ -738,9 +734,9 @@ class Component extends DCLogic {
     ];
     const asks = ASKS.map((q, i) => ({ t: q[0], cls: i === s.ask ? 'chip-on' : 'chip-off', pick: () => this.setState({ ask: i }) }));
     const STORIES = [
-      { name: '[Nombre], [edad]', tag: 'Madre de tres hijos', bg: '#2347C5', a: '[Antes: cómo estaba, en una frase. Ej.: qué problema tenía en casa.]', d: '[Después: qué cambió, en una frase concreta.]' },
-      { name: '[Nombre], [edad]', tag: 'Emprendedor', bg: '#E9B44C', a: '[Antes: cómo estaba, en una frase. Ej.: estrés, trabajo, relaciones.]', d: '[Después: qué cambió, en una frase concreta.]' },
-      { name: '[Nombre], [edad]', tag: 'Estudiante', bg: '#8FB7A3', a: '[Antes: cómo estaba, en una frase. Ej.: dudas, estudios, motivación.]', d: '[Después: qué cambió, en una frase concreta.]' }
+      { name: '[Nombre], [edad]', tag: 'Madre de tres hijos', bg: '#E6DAF0', a: '[Antes: cómo estaba, en una frase. Ej.: qué problema tenía en casa.]', d: '[Después: qué cambió, en una frase concreta.]' },
+      { name: '[Nombre], [edad]', tag: 'Emprendedor', bg: '#E6DAF0', a: '[Antes: cómo estaba, en una frase. Ej.: estrés, trabajo, relaciones.]', d: '[Después: qué cambió, en una frase concreta.]' },
+      { name: '[Nombre], [edad]', tag: 'Estudiante', bg: '#E6DAF0', a: '[Antes: cómo estaba, en una frase. Ej.: dudas, estudios, motivación.]', d: '[Después: qué cambió, en una frase concreta.]' }
     ];
     const st = STORIES[s.story];
     const go = (d) => () => this.setState({ story: (s.story + d + STORIES.length) % STORIES.length, after: false, stTick: s.stTick + 1 });
