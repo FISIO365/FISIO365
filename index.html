@@ -175,6 +175,8 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
 </style>
 
 <script async src="https://tally.so/widgets/embed.js"></script>
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="vue.js"></script>
 </head>
 <body>
@@ -539,6 +541,16 @@ const app = createApp({
 });
 app.config.compilerOptions.whitespace = 'preserve';
 app.mount('#app');
+document.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('a');
+  if (!a) return;
+  var h = a.getAttribute('href') || '';
+  if (h.indexOf('wa.me') < 0) return;
+  var where = a.classList.contains('wa-bar') ? 'barra-movil' : a.classList.contains('wa-float') ? 'boton-flotante' : ((a.closest('[id]') || {}).id || 'otro');
+  if (where === 'app') where = 'menu';
+  var path = '/clic-whatsapp/' + where;
+  try { window.va('pageview', { route: path, path: path }); } catch (err) {}
+}, true);
 </script>
 </body>
 </html>
