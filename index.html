@@ -193,9 +193,9 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
       <div class="fade" style="flex:999 1 500px;min-width:0;display:flex;flex-direction:column;gap:26px">
         <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1.5px solid #111111;border-radius:999px;background:#F6D9C4;font-size:13px;font-weight:500">Para cualquier persona, de cualquier edad</span>
         <h1 class="hero-title" style="margin:0;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:80px;line-height:1;letter-spacing:-.045em">Más calma, mejores relaciones y <span class="acc mk5" style="font-weight:400">más ganas de vivir.</span></h1>
-        <p style="margin:0;max-width:540px;font-size:19px;line-height:1.6;color:#4A4A4A">Scientology te da herramientas prácticas para tu día a día. Te lo cuento yo, en persona, con un café y sin ningún compromiso.</p>
+        <p style="margin:0;max-width:540px;font-size:19px;line-height:1.6;color:#4A4A4A">Scientology te da herramientas prácticas para tu día a día. Te lo cuento yo en una llamada o con un café, como prefieras. Sin ningún compromiso.</p>
         <div style="display:flex;flex-wrap:wrap;gap:12px">
-          <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:17px 30px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:16px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Te invito a un café</a>
+          <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:17px 30px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:16px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Hablemos: llamada o café</a>
           <a href="#test" class="btn btn-line" style="padding:17px 28px;border-radius:999px;border:1.5px solid #111111;color:#111111;text-decoration:none;font-weight:500;font-size:16px">Test de 1 minuto</a>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:10px 22px">
@@ -255,7 +255,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
           <span style="font-size:16px;line-height:1.65">{{recText}}</span>
           <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:6px">
             <a :href="waRec" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;background:#FFFFFF;color:#111111;text-decoration:none;font-weight:500;font-size:15px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Quiero este curso</a>
-            <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-line" style="padding:16px 26px;border-radius:999px;border:1.5px solid #6B6B6B;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Prefiero un café antes</a>
+            <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-line" style="padding:16px 26px;border-radius:999px;border:1.5px solid #6B6B6B;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:15px">Prefiero hablar antes</a>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"><button type="button" @click="goBack" style="font:inherit;font-size:14px;background:none;border:none;color:#B5B5B3;cursor:pointer;padding:8px 12px">← Atrás</button><button type="button" @click="resetQuiz" style="font:inherit;font-size:14px;background:none;border:none;color:#B5B5B3;cursor:pointer;padding:8px 12px">Empezar de nuevo</button></div>
         </div>
@@ -272,14 +272,14 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
       <div class="offer" style="border:1.5px solid #111111;border-radius:28px;background:#DCEBD2;padding:40px 36px;display:flex;flex-direction:column;gap:20px">
         <span style="align-self:flex-start;border:1.5px solid #111111;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;background:#FFFFFF">Recomendado para empezar</span>
-        <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:36px;letter-spacing:-.03em;line-height:1.1">Un café conmigo</span>
+        <span style="font-family:'Inter Tight',sans-serif;font-weight:300;font-size:36px;letter-spacing:-.03em;line-height:1.1">Una llamada o un café</span>
         <span style="font-family:'Inter Tight',sans-serif;font-weight:200;font-size:64px;letter-spacing:-.04em;line-height:1">Gratis</span>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <span class="trust"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1.2"></circle><path d="M5.5 9.2l2.3 2.3 4.7-5" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>20–30 minutos, en persona o por videollamada</span>
+          <span class="trust"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1.2"></circle><path d="M5.5 9.2l2.3 2.3 4.7-5" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>20–30 minutos, por teléfono o en persona</span>
           <span class="trust"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1.2"></circle><path d="M5.5 9.2l2.3 2.3 4.7-5" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>Me preguntas todo lo que quieras</span>
           <span class="trust"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#111111" stroke-width="1.2"></circle><path d="M5.5 9.2l2.3 2.3 4.7-5" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>Sin compromiso de nada</span>
         </div>
-        <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:17px 28px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:16px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Quiero mi café</a>
+        <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:17px 28px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:16px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Quiero hablar contigo</a>
       </div>
       <div class="offer" style="border:1.5px solid #111111;border-radius:28px;background:#FFFFFF;padding:40px 36px;display:flex;flex-direction:column;gap:20px">
         <span style="align-self:flex-start;border:1.5px solid #111111;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;background:#F2D4D4">Si ya lo tienes claro</span>
@@ -335,9 +335,9 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
   
   <div id="contacto" class="wrap m-sec" style="max-width:1200px;margin:0 auto;padding:0 32px 120px">
     <div class="reveal m-contact blue" style="border-radius:32px;padding:72px 48px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:24px">
-      <h2 class="h2" style="margin:0;max-width:760px;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">El primer paso es <span class="acc mkw" style="font-weight:400">un café.</span></h2>
-      <p style="margin:0;max-width:520px;font-size:18px;line-height:1.65">Escríbeme, quedamos cuando te venga bien y me preguntas todo lo que quieras. Sin compromiso.</p>
-      <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:12px;padding:18px 34px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:17px;margin-top:8px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Te invito a un café</a>
+      <h2 class="h2" style="margin:0;max-width:760px;font-family:'Inter Tight',sans-serif;font-weight:200;font-size:68px;line-height:1.02;letter-spacing:-.04em">El primer paso es <span class="acc mkw" style="font-weight:400">hablar.</span></h2>
+      <p style="margin:0;max-width:520px;font-size:18px;line-height:1.65">Escríbeme y te llamo, o quedamos para un café, cuando te venga bien. Me preguntas todo lo que quieras, sin compromiso.</p>
+      <a :href="waCafe" target="_blank" rel="noopener" class="btn btn-main" style="display:inline-flex;align-items:center;gap:12px;padding:18px 34px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-weight:500;font-size:17px;margin-top:8px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8.5 8.5 0 1 1 8 18.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9.2 9.3c.3 2.4 2 4.3 4.6 5.2l1.2-1.2 1.8.9-.4 1.4c-3.8.3-7.7-3.4-8-7.2l1.4-.5 1 1.8z" fill="currentColor"></path></svg>Hablemos: llamada o café</a>
     </div>
   </div>
 
@@ -399,7 +399,7 @@ class Component extends DCLogic {
     const rec = CURSOS[g.c];
     const cursos = CURSOS.map((t, i) => ({ t: t, cls: i === s.course ? 'chip-on' : 'chip-off', pick: () => this.setState({ course: i }) }));
     return {
-      waCafe: wa('Hola Ramiro, he visto tu web y me gustaría quedar para ese café.'),
+      waCafe: wa('Hola Ramiro, he visto tu web y me gustaría hablar contigo (por llamada o con un café).'),
       waDuda: wa('Hola Ramiro, he visto tu web y tengo una duda: '),
       waCurso: wa('Hola Ramiro, quiero apuntarme al curso «' + CURSOS[s.course] + '». ¿Cómo lo hago?'),
       waRec: wa('Hola Ramiro, he hecho el test de tu web y me recomienda el curso «' + rec + '». ¿Cómo me apunto?'),
