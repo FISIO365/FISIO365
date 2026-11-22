@@ -105,6 +105,7 @@ h1 .serif,h2 .serif,h3 .serif,.disp .serif{font-family:'Instrument Serif',serif}
 .dnav{display:none!important}
 .drow{flex-direction:column!important;align-items:stretch!important;padding-left:16px!important;padding-right:16px!important}
 .dfix{width:auto!important;flex:none!important}
+.chip{zoom:.78}
 .jtog{gap:10px!important;padding:6px 14px!important}
 .jtog .disp{font-size:16px!important}
 .vrow{justify-content:flex-start!important;margin:0 -20px;padding:0 20px 8px!important}
@@ -129,7 +130,7 @@ h1 .serif,h2 .serif,h3 .serif,.disp .serif{font-family:'Instrument Serif',serif}
 <script id="tpl" type="text/x-template">
 
 
-<div :style="`--o: ${v.accent}; --disp: ${v.dispFont}; font-family: 'DM Sans', system-ui, sans-serif; color: #16120F; background: #F7F1E8; width: 100%; overflow: hidden`">
+<div :style="`--o: ${v.accent}; --disp: ${v.dispFont}; font-family: 'DM Sans', system-ui, sans-serif; color: #16120F; background: #F7F1E8; width: 100%; overflow-x: clip`">
 
 <!-- NAV -->
 <header style="max-width: 1360px; margin: 0 auto; padding: 24px clamp(20px, 4vw, 48px); display: flex; align-items: center; justify-content: space-between; gap: 16px">
@@ -283,15 +284,7 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <div class="rv" style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px">
 <h2 style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.95; letter-spacing: -0.035em">Sin jugo<br>vs. <span class="serif" :style="`color: ${v.accent}`">con jugo.</span></h2>
 <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; max-width: 380px">
-<button type="button" class="jtog" @click="v.toggleJuice" :aria-pressed="v.juicePressed" aria-label="Cambiar entre web sin jugo y con jugo" style="display: inline-flex; align-items: center; gap: 18px; min-height: 64px; padding: 6px 22px; border-radius: 999px; border: 1.5px solid #16120F; background: #FFFFFF; cursor: pointer; font-family: inherit; color: #16120F">
-<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; opacity: ${v.offOp}; transition: opacity .3s`">Sin jugo</span>
-<span :style="`position: relative; width: 112px; height: 56px; border-radius: 999px; border: 1.5px solid #16120F; background: ${v.switchBg}; transition: background .3s; flex: none`">
-<span :style="`position: absolute; top: 5px; left: ${v.knobLeft}; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #16120F; background: #FFFFFF; transition: left .4s cubic-bezier(.2,1.6,.4,1); display: flex; align-items: center; justify-content: center`">
-<svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="38" r="20" :fill="v.knobFruit" stroke="#16120F" stroke-width="3" style="transition: fill .3s"></circle><g transform="rotate(-30 32 18)"><path d="M32 18 A10 10 0 0 1 48 18 A10 10 0 0 1 32 18 Z" fill="#F7F1E8" stroke="#16120F" stroke-width="3" stroke-linejoin="round"></path></g></svg>
-</span>
-</span>
-<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; color: ${v.onColor}; opacity: ${v.onOp}; transition: opacity .3s`">Con jugo</span>
-</button>
+
 
 <p style="margin: 0; font-size: 18px; line-height: 1.5">Elige un negocio y dale al interruptor: así cambia una web cuando le sacamos el jugo.</p>
 
@@ -484,6 +477,15 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 </template>
 </div>
 </div>
+<div class="jstick" style="position: sticky; bottom: 18px; z-index: 30; display: flex; justify-content: center; margin-top: 28px; pointer-events: none"><div style="pointer-events: auto"><button type="button" class="jtog" @click="v.toggleJuice" :aria-pressed="v.juicePressed" aria-label="Cambiar entre web sin jugo y con jugo" style="display: inline-flex; align-items: center; gap: 18px; min-height: 64px; padding: 6px 22px; background: #FFFFFF; box-shadow: 0 14px 34px rgba(22,18,15,.22); border-radius: 999px; border: 1.5px solid #16120F; background: #FFFFFF; cursor: pointer; font-family: inherit; color: #16120F">
+<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; opacity: ${v.offOp}; transition: opacity .3s`">Sin jugo</span>
+<span :style="`position: relative; width: 112px; height: 56px; border-radius: 999px; border: 1.5px solid #16120F; background: ${v.switchBg}; transition: background .3s; flex: none`">
+<span :style="`position: absolute; top: 5px; left: ${v.knobLeft}; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #16120F; background: #FFFFFF; transition: left .4s cubic-bezier(.2,1.6,.4,1); display: flex; align-items: center; justify-content: center`">
+<svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="38" r="20" :fill="v.knobFruit" stroke="#16120F" stroke-width="3" style="transition: fill .3s"></circle><g transform="rotate(-30 32 18)"><path d="M32 18 A10 10 0 0 1 48 18 A10 10 0 0 1 32 18 Z" fill="#F7F1E8" stroke="#16120F" stroke-width="3" stroke-linejoin="round"></path></g></svg>
+</span>
+</span>
+<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; color: ${v.onColor}; opacity: ${v.onOp}; transition: opacity .3s`">Con jugo</span>
+</button></div></div>
 </div>
 </section>
 
@@ -496,28 +498,25 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 </div>
 <div class="vrow rv" style="display: flex; justify-content: center; gap: clamp(16px, 3vw, 40px); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px">
 <figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
-<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #F3F5EC">
-<img src="/img/app_yuka.jpg" alt="App de yuka" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: 0s">
-<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #F3F5EC"></div>
-<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 390 / 844; border-radius: 36px; overflow: hidden; background: #F3F5EC">
+<img src="/img/appscr_yuka.jpg" alt="App de yuka" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block">
+<div style="position: absolute; left: 50%; top: 9px; width: 80px; height: 22px; margin-left: -40px; border-radius: 12px; background: #000000"></div>
 </div></div>
-<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">yuka</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Pedidos de fruta</span></figcaption>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">yuka</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Tu caja y tu reparto</span></figcaption>
 </figure>
 <figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
-<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #F6EDE1">
-<img src="/img/app_anana.jpg" alt="App de ananá" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: -4s">
-<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #F6EDE1"></div>
-<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 390 / 844; border-radius: 36px; overflow: hidden; background: #F6EDE1">
+<img src="/img/appscr_anana.jpg" alt="App de ananá" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block">
+<div style="position: absolute; left: 50%; top: 9px; width: 80px; height: 22px; margin-left: -40px; border-radius: 12px; background: #000000"></div>
 </div></div>
-<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ananá</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Tienda de bikinis</span></figcaption>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ananá</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Avisos y favoritos</span></figcaption>
 </figure>
 <figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
-<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #1C2541">
-<img src="/img/app_noqui.jpg" alt="App de ñoqui" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: -8s">
-<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #1C2541"></div>
-<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 390 / 844; border-radius: 36px; overflow: hidden; background: #1C2541">
+<img src="/img/appscr_noqui.jpg" alt="App de ñoqui" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block">
+<div style="position: absolute; left: 50%; top: 9px; width: 80px; height: 22px; margin-left: -40px; border-radius: 12px; background: #000000"></div>
 </div></div>
-<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ñoqui</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Suscripción de pienso</span></figcaption>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ñoqui</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Ración y envíos</span></figcaption>
 </figure>
 </div>
 </div>
