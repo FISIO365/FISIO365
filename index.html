@@ -98,11 +98,15 @@ h1 .serif,h2 .serif,h3 .serif,.disp .serif{font-family:'Instrument Serif',serif}
 @keyframes blink{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.1)}}
 .brow{transform-box:fill-box;transform-origin:center;animation:brow 3.2s ease-in-out infinite}
 @keyframes brow{0%,50%,100%{transform:none}58%,74%{transform:translateY(-3px) rotate(-10deg)}}
+@keyframes appscroll{0%,12%{transform:translateY(0)}48%,60%{transform:translateY(calc(-100% + 520px))}96%,100%{transform:translateY(0)}}
+.appscroll{animation:appscroll 14s cubic-bezier(.45,0,.25,1) infinite}
 @media (max-width:760px){
 .demo{height:auto!important;min-height:0!important}
 .dnav{display:none!important}
 .drow{flex-direction:column!important;align-items:stretch!important;padding-left:16px!important;padding-right:16px!important}
 .dfix{width:auto!important;flex:none!important}
+.jtog{gap:10px!important;padding:6px 14px!important}
+.jtog .disp{font-size:16px!important}
 .vrow{justify-content:flex-start!important;margin:0 -20px;padding:0 20px 8px!important}
 .vcard{width:62vw!important}
 .dcard2{width:100%!important;box-sizing:border-box;padding:18px!important}
@@ -158,14 +162,14 @@ Estudio creativo · por Nora
 <span class="crash d3" :style="`color: ${v.accent}`">jugo.</span>
 </h1>
 <p class="fade" style="margin: 36px 0 0; max-width: 560px; font-size: clamp(18px, 1.6vw, 22px); line-height: 1.5; font-weight: 400">
-Diseño webs, apps, paneles y vídeos que no solo quedan bonitos: <strong style="font-weight: 700">hacen crecer tu negocio.</strong>
+Diseño webs, apps, programas de gestión y vídeos que no solo quedan bonitos: <strong style="font-weight: 700">hacen crecer tu negocio.</strong>
 </p>
 <div class="fade" style="margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px">
 <a class="btn" href="#contacto" :style="`display: inline-flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 28px; border-radius: 999px; background: ${v.accent}; color: #16120F; text-decoration: none; font-weight: 700; font-size: 17px; border: 1.5px solid #16120F`">
 Quiero mi web
 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="#16120F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 </a>
-<a class="btn" href="#arma" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 28px; border-radius: 999px; background: transparent; color: #16120F; text-decoration: none; font-weight: 600; font-size: 17px; border: 1.5px solid #16120F">Arma tu mandarina</a>
+<a class="btn" href="#arma" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 28px; border-radius: 999px; background: transparent; color: #16120F; text-decoration: none; font-weight: 600; font-size: 17px; border: 1.5px solid #16120F">Crea tu mandarina</a>
 </div>
 </div>
 
@@ -223,7 +227,7 @@ Tócame
 <div style="display: flex; align-items: center; gap: 40px; padding-right: 40px; font-size: clamp(40px, 6vw, 84px); font-weight: 700; letter-spacing: -0.04em; white-space: nowrap">
 <span>Webs</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span style="color: #F7F1E8">Apps</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
-<span>Paneles</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
+<span>Gestión</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span style="color: #F7F1E8">V<span style="margin-left: 0.07em">í</span>deos</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span>SEO</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span class="serif" style="font-weight: 400; font-family: 'Instrument Serif', serif; font-size: 1.15em">con jugo</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
@@ -231,7 +235,7 @@ Tócame
 <div style="display: flex; align-items: center; gap: 40px; padding-right: 40px; font-size: clamp(40px, 6vw, 84px); font-weight: 700; letter-spacing: -0.04em; white-space: nowrap">
 <span>Webs</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span style="color: #F7F1E8">Apps</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
-<span>Paneles</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
+<span>Gestión</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span style="color: #F7F1E8">V<span style="margin-left: 0.07em">í</span>deos</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span>SEO</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
 <span class="serif" style="font-weight: 400; font-family: 'Instrument Serif', serif; font-size: 1.15em">con jugo</span><span style="width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #16120F; display: inline-block"></span>
@@ -279,6 +283,16 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <div class="rv" style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px">
 <h2 style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.95; letter-spacing: -0.035em">Sin jugo<br>vs. <span class="serif" :style="`color: ${v.accent}`">con jugo.</span></h2>
 <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; max-width: 380px">
+<button type="button" class="jtog" @click="v.toggleJuice" :aria-pressed="v.juicePressed" aria-label="Cambiar entre web sin jugo y con jugo" style="display: inline-flex; align-items: center; gap: 18px; min-height: 64px; padding: 6px 22px; border-radius: 999px; border: 1.5px solid #16120F; background: #FFFFFF; cursor: pointer; font-family: inherit; color: #16120F">
+<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; opacity: ${v.offOp}; transition: opacity .3s`">Sin jugo</span>
+<span :style="`position: relative; width: 112px; height: 56px; border-radius: 999px; border: 1.5px solid #16120F; background: ${v.switchBg}; transition: background .3s; flex: none`">
+<span :style="`position: absolute; top: 5px; left: ${v.knobLeft}; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #16120F; background: #FFFFFF; transition: left .4s cubic-bezier(.2,1.6,.4,1); display: flex; align-items: center; justify-content: center`">
+<svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="38" r="20" :fill="v.knobFruit" stroke="#16120F" stroke-width="3" style="transition: fill .3s"></circle><g transform="rotate(-30 32 18)"><path d="M32 18 A10 10 0 0 1 48 18 A10 10 0 0 1 32 18 Z" fill="#F7F1E8" stroke="#16120F" stroke-width="3" stroke-linejoin="round"></path></g></svg>
+</span>
+</span>
+<span class="disp" :style="`white-space: nowrap; font-size: 20px; font-weight: 700; color: ${v.onColor}; opacity: ${v.onOp}; transition: opacity .3s`">Con jugo</span>
+</button>
+
 <p style="margin: 0; font-size: 18px; line-height: 1.5">Elige un negocio y dale al interruptor: así cambia una web cuando le sacamos el jugo.</p>
 
 </div>
@@ -296,17 +310,7 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 </button>
 <span style="font-size: 13px; color: #5C5550; margin-left: 6px">Marcas inventadas, para que te hagas una idea.</span>
 </div>
-<div class="rv" style="display: flex; justify-content: center; margin-bottom: 20px">
-<button type="button" @click="v.toggleJuice" :aria-pressed="v.juicePressed" aria-label="Cambiar entre web sin jugo y con jugo" style="display: inline-flex; align-items: center; gap: 18px; min-height: 76px; padding: 10px 28px; border-radius: 999px; border: 1.5px solid #16120F; background: #FFFFFF; cursor: pointer; font-family: inherit; color: #16120F">
-<span class="disp" :style="`font-size: 20px; font-weight: 700; opacity: ${v.offOp}; transition: opacity .3s`">Sin jugo</span>
-<span :style="`position: relative; width: 112px; height: 56px; border-radius: 999px; border: 1.5px solid #16120F; background: ${v.switchBg}; transition: background .3s; flex: none`">
-<span :style="`position: absolute; top: 5px; left: ${v.knobLeft}; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #16120F; background: #FFFFFF; transition: left .4s cubic-bezier(.2,1.6,.4,1); display: flex; align-items: center; justify-content: center`">
-<svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="38" r="20" :fill="v.knobFruit" stroke="#16120F" stroke-width="3" style="transition: fill .3s"></circle><g transform="rotate(-30 32 18)"><path d="M32 18 A10 10 0 0 1 48 18 A10 10 0 0 1 32 18 Z" fill="#F7F1E8" stroke="#16120F" stroke-width="3" stroke-linejoin="round"></path></g></svg>
-</span>
-</span>
-<span class="disp" :style="`font-size: 20px; font-weight: 700; color: ${v.onColor}; opacity: ${v.onOp}; transition: opacity .3s`">Con jugo</span>
-</button>
-</div>
+
 <div class="rv" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch">
 <div style="flex: 1 1 100%; min-width: 0; border: 1.5px solid #16120F; border-radius: 28px; overflow: hidden; background: #FFFFFF">
 <div style="display: flex; align-items: center; gap: 6px; padding: 12px 16px; border-bottom: 1.5px solid #16120F">
@@ -314,15 +318,15 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <span style="margin-left: 12px; font-size: 12px; font-weight: 600">{{ v.brandUrl }}</span>
 </div>
 <template v-if="v.noJuice">
-<div class="pop demo" style="position: relative; height: 500px; background: #E9E9E9; padding: 24px; display: flex; flex-direction: column; gap: 14px; font-family: 'Times New Roman', serif; color: #555555">
-<span class="hintblink" :style="`position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); border: 1.5px solid #16120F; border-radius: 999px; background: ${v.accent}; color: #16120F; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; white-space: nowrap`">↑ Dale al interruptor para darle jugo</span>
-<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #CFCFCF; padding: 10px 14px"><span style="font-size: 14px">{{ v.brandName }}</span><span class="dnav" style="font-size: 12px">Inicio | Quiénes somos | Productos | Galería | Noticias | Contacto</span></div>
-<p style="margin: 8px 0 0; font-size: 26px; text-align: center">Bienvenidos a {{ v.brandName }}</p>
-<p style="margin: 0; font-size: 13px; text-align: center; line-height: 1.5">{{ v.brandOld }}</p>
-<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; flex: 1">
-<span style="background: #CFCFCF"></span><span style="background: #CFCFCF"></span><span style="background: #CFCFCF"></span>
-</div>
-<p style="margin: 0; font-size: 11px; text-align: center">Para más información, llame al teléfono de contacto</p>
+<div class="pop demo" style="position: relative; min-height: 500px; background: #EDEDED; padding: 20px; display: flex; flex-direction: column; gap: 12px; font-family: 'Times New Roman', serif; color: #333333">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; background: #C9C9C9; border: 1px solid #9A9A9A; padding: 8px 12px"><span style="font-size: 18px; font-weight: 700; color: #222">{{ v.brandName }}</span><span style="font-size: 12px; color: #1A0DAB; text-decoration: underline">Inicio | Quiénes somos | Productos | Contacto</span></div>
+<p style="margin: 0; font-size: 14px; font-weight: 700; color: #CC0000; text-align: center; letter-spacing: 0.04em">¡¡NUEVA PÁGINA WEB!! ¡¡VISITE NUESTRAS OFERTAS!!</p>
+<p style="margin: 0; font-size: 28px; text-align: center; color: #222; text-decoration: underline">Bienvenidos a {{ v.brandName }}</p>
+<p style="margin: 0; font-size: 15px; text-align: center; line-height: 1.5">{{ v.brandOld }}</p>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px"><span style="position: relative; height: 110px; border: 1px solid #9A9A9A; background: #DADADA; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 11px; color: #666; overflow: hidden"><svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true"><path d="M0 0 L100 100 M100 0 L0 100" stroke="#B5B5B5" stroke-width="1" vector-effect="non-scaling-stroke"></path></svg><span style="position: relative; background: #DADADA; padding: 0 4px">imagen.jpg</span></span><span style="position: relative; height: 110px; border: 1px solid #9A9A9A; background: #DADADA; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 11px; color: #666; overflow: hidden"><svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true"><path d="M0 0 L100 100 M100 0 L0 100" stroke="#B5B5B5" stroke-width="1" vector-effect="non-scaling-stroke"></path></svg><span style="position: relative; background: #DADADA; padding: 0 4px">imagen.jpg</span></span><span style="position: relative; height: 110px; border: 1px solid #9A9A9A; background: #DADADA; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 11px; color: #666; overflow: hidden"><svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true"><path d="M0 0 L100 100 M100 0 L0 100" stroke="#B5B5B5" stroke-width="1" vector-effect="non-scaling-stroke"></path></svg><span style="position: relative; background: #DADADA; padding: 0 4px">imagen.jpg</span></span></div>
+<p style="margin: 0; font-size: 15px; text-align: center"><span style="color: #1A0DAB; text-decoration: underline">Pinche aquí para descargar el catálogo (PDF)</span></p>
+<p style="margin: 0; font-size: 13px; text-align: center; color: #555">Para más información, llame al teléfono de contacto · Visitas: 000347 · © 2009</p>
+<span class="hintblink" :style="`align-self: center; margin-top: auto; border: 1.5px solid #16120F; border-radius: 999px; background: ${v.accent}; color: #16120F; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; white-space: nowrap`">↑ Dale al interruptor para darle jugo</span>
 </div>
 </template>
 
@@ -483,6 +487,42 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 </div>
 </section>
 
+<!-- APPS -->
+<section id="apps" style="border-top: 1.5px solid #16120F; background: #16120F; color: #F7F1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: clamp(72px, 10vw, 140px) clamp(20px, 4vw, 48px)">
+<div class="rv" style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 56px">
+<h2 style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.95; letter-spacing: -0.035em">Y cada marca,<br><span class="serif" :style="`color: ${v.accent}`">su app.</span></h2>
+<p style="margin: 0; max-width: 380px; font-size: 18px; line-height: 1.5">Además de la web, una app para que tus clientes pidan, reserven o compren desde el móvil. Con tu marca, tus colores y tu estilo.</p>
+</div>
+<div class="vrow rv" style="display: flex; justify-content: center; gap: clamp(16px, 3vw, 40px); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px">
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #F3F5EC">
+<img src="/img/app_yuka.jpg" alt="App de yuka" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: 0s">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #F3F5EC"></div>
+<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+</div></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">yuka</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Pedidos de fruta</span></figcaption>
+</figure>
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #F6EDE1">
+<img src="/img/app_anana.jpg" alt="App de ananá" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: -4s">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #F6EDE1"></div>
+<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+</div></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ananá</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Tienda de bikinis</span></figcaption>
+</figure>
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border-radius: 44px; padding: 9px; background: #000000; box-shadow: 0 0 0 1.5px #F7F1E855, 0 30px 60px rgba(0,0,0,.45)"><div style="position: relative; aspect-ratio: 9 / 19; border-radius: 36px; overflow: hidden; background: #1C2541">
+<img src="/img/app_noqui.jpg" alt="App de ñoqui" class="appscroll" style="position: absolute; left: 0; top: 40px; width: 100%; height: auto; display: block; animation-delay: -8s">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 40px; background: #1C2541"></div>
+<div style="position: absolute; left: 50%; top: 10px; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000000"></div>
+</div></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ñoqui</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Suscripción de pienso</span></figcaption>
+</figure>
+</div>
+</div>
+</section>
+
 <!-- SERVICIOS -->
 <section id="servicios" style="border-top: 1.5px solid #16120F; background: #FFFFFF">
 <div style="max-width: 1360px; margin: 0 auto; padding: clamp(72px, 10vw, 140px) clamp(20px, 4vw, 48px)">
@@ -532,10 +572,10 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <path d="M32.6 30.7L33.3 8.0A24 24 0 0 1 48.1 14.2Z"></path><path d="M33.3 31.4L49.8 15.9A24 24 0 0 1 56.0 30.7Z"></path><path d="M33.3 32.6L56.0 33.3A24 24 0 0 1 49.8 48.1Z"></path><path d="M32.6 33.3L48.1 49.8A24 24 0 0 1 33.3 56.0Z"></path><path d="M31.4 33.3L30.7 56.0A24 24 0 0 1 15.9 49.8Z"></path><path d="M30.7 32.6L14.2 48.1A24 24 0 0 1 8.0 33.3Z"></path><path d="M30.7 31.4L8.0 30.7A24 24 0 0 1 14.2 15.9Z"></path><path d="M31.4 30.7L15.9 14.2A24 24 0 0 1 30.7 8.0Z"></path></g></svg>
 </div>
 <h3 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05">Sistema completo</h3>
-<p style="margin: 0; font-size: 18px; line-height: 1.5">Web, app para tus clientes y panel para tu equipo. Todo tu negocio en un solo sitio.</p>
+<p style="margin: 0; font-size: 18px; line-height: 1.5">Web, app para tus clientes y programa de gestión para tu equipo. Todo tu negocio en un solo sitio.</p>
 <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 16px">
 <li style="display: flex; gap: 10px; align-items: center"><span :style="`width: 6px; height: 6px; border-radius: 50%; background: ${v.accent}; flex: none`"></span>App propia para tus clientes</li>
-<li style="display: flex; gap: 10px; align-items: center"><span :style="`width: 6px; height: 6px; border-radius: 50%; background: ${v.accent}; flex: none`"></span>Panel de gestión: tu oficina online</li>
+<li style="display: flex; gap: 10px; align-items: center"><span :style="`width: 6px; height: 6px; border-radius: 50%; background: ${v.accent}; flex: none`"></span>Programa de gestión: tu oficina online</li>
 <li style="display: flex; gap: 10px; align-items: center"><span :style="`width: 6px; height: 6px; border-radius: 50%; background: ${v.accent}; flex: none`"></span>Hecho a medida de cómo trabajas</li>
 </ul>
 <p style="margin: auto 0 0; padding-top: 22px; border-top: 1.5px solid #F7F1E8; font-size: 16px">A medida · <strong style="font-size: 22px">te lo presupuesto</strong></p>
@@ -623,7 +663,7 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <div style="max-width: 1360px; margin: 0 auto; padding: clamp(72px, 10vw, 140px) clamp(20px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: clamp(40px, 6vw, 96px); align-items: center">
 <div style="flex: 999 1 520px; min-width: 0">
 <p class="rv" style="margin: 0 0 20px; display: inline-flex; border: 1.5px solid #16120F; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; background: #FFFFFF">Juego · Monta tu pack</p>
-<h2 class="rv" style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.9; letter-spacing: -0.035em">Arma tu<br><span class="serif" :style="`color: ${v.accent}`">mandarina.</span></h2>
+<h2 class="rv" style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.9; letter-spacing: -0.035em">Crea tu<br><span class="serif" :style="`color: ${v.accent}`">mandarina.</span></h2>
 <p class="rv" style="margin: 24px 0 32px; max-width: 480px; font-size: 18px; line-height: 1.5">Toca los gajos que quieras para tu negocio y mira cómo se llena tu mandarina.</p>
 <div class="rv" style="display: flex; flex-wrap: wrap; gap: 10px">
 <template v-for="(item, $index) in v.chips">
@@ -674,7 +714,9 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <div class="rv" style="flex: 999 1 480px; min-width: 0">
 <h2 style="margin: 0; font-weight: 700; font-size: clamp(42px, 6.4vw, 100px); line-height: 1.04; letter-spacing: -0.035em">Hola,<br>soy <span class="serif" :style="`color: ${v.accent}`">Nora.</span></h2>
 <p style="margin: 32px 0 0; font-size: clamp(19px, 1.7vw, 23px); line-height: 1.5; max-width: 620px">Creadora nata y cofundadora de una clínica en Barcelona. Sé lo que necesita un negocio de verdad porque llevo uno: que el teléfono suene, que la agenda se llene y que todo funcione solo.</p>
-<p style="margin: 20px 0 0; font-size: clamp(19px, 1.7vw, 23px); line-height: 1.5; max-width: 620px">Por eso diseño con mucho estilo, pero sobre todo con cabeza.</p>
+<p style="margin: 20px 0 0; font-size: clamp(19px, 1.7vw, 23px); line-height: 1.5; max-width: 620px">Todo lo digital de mi clínica lo he creado yo: la web, la app para los pacientes, el programa con el que nos organizamos y hasta los vídeos de la pantalla de recepción. Ahora hago lo mismo para otros negocios.</p>
+<p style="margin: 20px 0 0; font-size: clamp(19px, 1.7vw, 23px); line-height: 1.5; max-width: 620px">Me encanta crear cosas que no se parecen a nada, pero nunca pierdo de vista lo importante: que te sirvan. Por eso diseño con mucho estilo, pero sobre todo con cabeza.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px"><span style="border: 1.5px solid #16120F; border-radius: 999px; padding: 10px 16px; font-size: 15px; font-weight: 600; background: #F7F1E8">Hablas siempre conmigo</span><span style="border: 1.5px solid #16120F; border-radius: 999px; padding: 10px 16px; font-size: 15px; font-weight: 600; background: #F7F1E8">Diseño 100% a medida</span><span style="border: 1.5px solid #16120F; border-radius: 999px; padding: 10px 16px; font-size: 15px; font-weight: 600; background: #F7F1E8">Webs en 2 o 3 semanas</span></div>
 </div>
 </div>
 </section>
@@ -828,7 +870,7 @@ Escríbeme por WhatsApp
 <footer style="border-top: 1.5px solid #16120F; background: #16120F; color: #F7F1E8">
 <div style="max-width: 1360px; margin: 0 auto; padding: 40px clamp(20px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center">
 <p class="disp" style="margin: 0; font-size: clamp(30px, 4.4vw, 54px); font-weight: 600; letter-spacing: -0.02em; line-height: 1">mandarina<span :style="`color: ${v.accent}`">.</span></p>
-<p style="margin: 0; font-size: 14px; color: #CFC7BD">Webs, apps, paneles y vídeos · por Nora · Barcelona</p>
+<p style="margin: 0; font-size: 14px; color: #CFC7BD">Webs, apps, programas de gestión y vídeos · por Nora · Barcelona</p>
 </div>
 </footer>
 
@@ -844,7 +886,7 @@ var FONTS = { 'Syne': "'Syne'", 'Outfit': "'Outfit'", 'Fraunces': "'Fraunces'", 
 var dispFont = FONTS[this.props.tipografia] || "'Syne'";
 var s = this.state || {};
 var self = this;
-var L = ['Webs', 'Apps', 'Panel de gestión', 'V\u200Aídeos', 'SEO', 'Reels', 'Automatizaciones', 'Reservas online'];
+var L = ['Webs', 'Apps', 'Programa de gestión', 'V\u200Aídeos', 'SEO', 'Reels', 'Automatizaciones', 'Reservas online'];
 var v = { accent: a, dispFont: dispFont };
 
 // Pela la mandarina
@@ -860,8 +902,8 @@ v.peelDone = peeled >= 8;
 v.showHint = peeled === 0;
 v.peelBar = [0, 1, 2, 3, 4, 5, 6, 7].map(function (k) { return { bg: k < peeled ? a : '#FFFFFF' }; });
 v.peelStep = peeled === 0 ? 'Un juego · 8 gajos' : (peeled < 8 ? 'Gajo ' + peeled + ' de 8' : '8 de 8 · ¡Completa!');
-v.peelTitle = peeled === 0 ? 'Descubre los 8 gajos' : (peeled < 8 ? L[peeled - 1] : '¡Mandarina completa!');
-v.peelDesc = peeled === 0 ? 'Cada gajo es algo que puedo hacer por tu negocio. Tócala y ve llenándola, gajo a gajo.' : (peeled < 8 ? D[peeled - 1] : 'Webs, apps, paneles, vídeos y mucho más. Todo esto, para tu negocio.');
+v.peelTitle = peeled === 0 ? 'Clica los 8 gajos' : (peeled < 8 ? L[peeled - 1] : '¡Mandarina completa!');
+v.peelDesc = peeled === 0 ? 'Cada gajo es algo que puedo hacer por tu negocio. Tócala y ve llenándola, gajo a gajo.' : (peeled < 8 ? D[peeled - 1] : 'Webs, apps, programas de gestión, vídeos y mucho más. Todo esto, para tu negocio.');
 v.hintClass = peeled === 0 ? 'wiggle' : '';
 v.peel = function () { var p = (self.state && self.state.peeled) || 0; self.setState({ peeled: Math.min(8, p + 1) }); };
 v.resetPeel = function () { self.setState({ peeled: 0 }); };
@@ -1031,7 +1073,7 @@ v.juicePoints = juice ? [
 var G = [
 ['Webs', 'Tu escaparate en internet', 'Diseño tu web desde cero, a medida de tu negocio y sin plantillas. Rápida, preciosa en el móvil y fácil de actualizar.', 'no tienes web, o la que tienes ya no te representa.', 'Una peluquería con sus servicios, precios, fotos y un botón para pedir cita.'],
 ['Apps', 'Tu negocio en el móvil de tus clientes', 'Una app propia que tus clientes se instalan en el móvil: reservas, avisos, su historial o lo que necesites. Te tienen siempre a mano.', 'quieres que tus clientes vuelvan y estén conectados contigo.', 'Una clínica cuyos pacientes ven en la app sus ejercicios y su próxima cita.'],
-['Panel de gestión', 'Tu oficina online, privada', 'Una página privada, solo para ti y tu equipo, desde donde llevas el negocio: agenda, clientes, cobros, tareas… Todo en un sitio, y hecho a tu manera.', 'vives entre papeles, hojas de cálculo y mil WhatsApps.', 'Un centro que ve en una pantalla las citas del día, quién ha pagado y qué tiene que hacer cada persona del equipo.'],
+['Programa de gestión', 'Tu oficina online, privada', 'Una página privada, solo para ti y tu equipo, desde donde llevas el negocio: agenda, clientes, cobros, tareas… Todo en un sitio, y hecho a tu manera.', 'vives entre papeles, hojas de cálculo y mil WhatsApps.', 'Un centro que ve en una pantalla las citas del día, quién ha pagado y qué tiene que hacer cada persona del equipo.'],
 ['V\u200Aídeos', 'Animaciones que paran a la gente', 'Vídeos animados con tu marca para la pantalla de tu local, tu web o tus redes. Mucho movimiento y poca letra.', 'tienes una tele en el local o quieres llamar la atención.', 'Un bucle para la pantalla de recepción con tus servicios y consejos.'],
 ['SEO', 'Que Google te encuentre', 'Cuido la estructura, los textos y la velocidad de tu web para que Google la entienda y se la enseñe a quien busca lo que ofreces.', 'quieres clientes nuevos sin pagar anuncios.', 'Que salgas cuando alguien busca «fisioterapeuta en mi barrio».'],
 ['Reels', 'Contenido para Instagram', 'Reels verticales animados, a juego con tu web, para que tus redes tengan el mismo estilo.', 'nunca sabes qué publicar o te da pereza.', 'Una serie de reels con tus servicios explicados en 15 segundos.'],
@@ -1046,7 +1088,7 @@ toggle: function () { self.setState({ openGajo: (self.state || {}).openGajo === 
 });
 
 // Test
-var Q = ['¿Ya tienes web?', '¿Te gustaría destacar en redes o en la pantalla de tu local?', '¿Te vendría bien una app para tus clientes o un panel para organizar tu negocio?'];
+var Q = ['¿Ya tienes web?', '¿Te gustaría destacar en redes o en la pantalla de tu local?', '¿Te vendría bien una app para tus clientes o un programa para organizar tu negocio?'];
 var ans = s.ans || {};
 v.quiz = Q.map(function (q, i) {
 var r = ans[i];
@@ -1062,7 +1104,7 @@ v.quizDone = answered === 3;
 v.quizPending = answered < 3;
 v.quizProgress = answered === 0 ? 'Empieza por la primera.' : 'Llevas ' + answered + ' de 3. ¡Ya casi!';
 var start = ans[0] ? 'Renovamos tu web' : 'Empezamos de cero';
-if (ans[2]) { v.quizTitle = 'Gajo 03 · Sistema completo'; v.quizText = start + ' y le sumamos la app o el panel para que tu negocio funcione casi solo.'; }
+if (ans[2]) { v.quizTitle = 'Gajo 03 · Sistema completo'; v.quizText = start + ' y le sumamos la app o el programa de gestión para que tu negocio funcione casi solo.'; }
 else if (ans[1]) { v.quizTitle = 'Gajo 02 · Web + vídeo'; v.quizText = start + ' y la acompañamos de vídeos y reels con tu marca para que tu negocio no pase desapercibido.'; }
 else { v.quizTitle = 'Gajo 01 · Web'; v.quizText = start + ': una web clara, preciosa y pensada para que te escriban. Y si quieres, con SEO.'; }
 v.quizReset = function () { self.setState({ ans: {} }); };
