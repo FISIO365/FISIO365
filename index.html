@@ -447,7 +447,7 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <p style="margin: 0; align-self: stretch; display: flex; justify-content: space-between; align-items: center"><span style="font-size: 17px; font-weight: 600">¿Cómo es tu perro?</span><span style="border: 1.5px solid #F2B705; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 600; color: #F2B705">Calculadora</span></p>
 <div class="dstage" style="flex: 1; min-height: 210px; position: relative; align-self: stretch">
 <span style="position: absolute; left: 22%; right: 22%; bottom: 6px; height: 14px; border-radius: 50%; background: #1C2541; opacity: 0.6"></span>
-<img class="pop" :src="v.dogImg" :alt="v.dogAlt" :style="`position: absolute; left: 38%; bottom: 10px; transform: translateX(-50%); height: ${v.dogH}px; width: auto; transition: height .5s cubic-bezier(.2,1.4,.4,1)`">
+<img src="/img/perro-pequeno.png" alt="Perro pequeño" :style="`position: absolute; left: 38%; bottom: 10px; height: 140px; width: auto; transform-origin: 50% 100%; opacity: ${v.dogOp0}; transform: translateX(-50%) scale(${v.dogSc0}); transition: opacity .2s, transform .45s cubic-bezier(.2,1.4,.4,1)`"><img src="/img/perro-mediano.png" alt="Perro mediano" :style="`position: absolute; left: 38%; bottom: 10px; height: 170px; width: auto; transform-origin: 50% 100%; opacity: ${v.dogOp1}; transform: translateX(-50%) scale(${v.dogSc1}); transition: opacity .2s, transform .45s cubic-bezier(.2,1.4,.4,1)`"><img src="/img/perro-grande.png" alt="Perro grande" :style="`position: absolute; left: 38%; bottom: 10px; height: 196px; width: auto; transform-origin: 50% 100%; opacity: ${v.dogOp2}; transform: translateX(-50%) scale(${v.dogSc2}); transition: opacity .2s, transform .45s cubic-bezier(.2,1.4,.4,1)`">
 <svg viewBox="0 0 120 60" style="position: absolute; right: 2px; bottom: 8px; width: 92px; height: 46px; overflow: visible" aria-hidden="true">
 <g class="kibble" fill="#C8782A" stroke="#1C2541" stroke-width="1.2">
 <circle cx="46" cy="16" r="6"></circle><circle cx="60" cy="12" r="6"></circle><circle cx="74" cy="16" r="6"></circle>
@@ -500,7 +500,7 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 <figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ananá</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Bikinis · reel de 8 s</span></figcaption>
 </figure>
 <figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
-<div style="border: 1.5px solid #F7F1E8; border-radius: 36px; padding: 8px; background: #16120F"><video src="/img/noqui.mp4" autoplay muted loop playsinline preload="auto" style="display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 28px; background: #1C2541; object-fit: cover"></video></div>
+<div style="border: 1.5px solid #F7F1E8; border-radius: 36px; padding: 8px; background: #16120F"><video src="/img/noqui2.mp4" autoplay muted loop playsinline preload="auto" style="display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 28px; background: #1C2541; object-fit: cover"></video></div>
 <figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ñoqui</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Pienso · reel de 8 s</span></figcaption>
 </figure>
 </div>
@@ -1037,7 +1037,7 @@ var NZ = ['Pequeño', 'Mediano', 'Grande'];
 v.noquiSizes = NZ.map(function (l, i) { return { label: l, pressed: i === nz ? 'true' : 'false', bg: i === nz ? '#F2B705' : 'transparent', color: i === nz ? '#1C2541' : '#FFF4D6', pick: function () { self.setState({ noqui: i }); } }; });
 v.noquiMop = nz >= 1 ? 1 : 0;
 v.noquiLop = nz >= 2 ? 1 : 0;
-v.dogImg = ['/img/perro-pequeno.png', '/img/perro-mediano.png', '/img/perro-grande.png'][nz]; v.dogAlt = ['Perro pequeño', 'Perro mediano', 'Perro grande'][nz]; v.dogH = [140, 170, 196][nz];
+[0, 1, 2].forEach(function (i) { v['dogOp' + i] = i === nz ? 1 : 0; v['dogSc' + i] = i === nz ? 1 : 0.7; });
 v.noquiPlan = 'Plan ' + NZ[nz];
 v.showKiwi = juice && cur.id === 'kiwi'; v.showAnana = juice && cur.id === 'anana'; v.showYuka = juice && cur.id === 'yuka'; v.showNoqui = juice && cur.id === 'noqui';
 v.toggleJuice = function () { self.setState({ juice: !((self.state || {}).juice) }); };
