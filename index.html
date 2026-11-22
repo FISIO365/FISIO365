@@ -181,14 +181,14 @@ Quiero mi web
 <circle cx="150" cy="150" r="140" fill="none" stroke="#16120F" stroke-width="1" stroke-dasharray="2 7" stroke-linecap="round" class="spin"></circle>
 <circle cx="150" cy="150" r="128" fill="#FFFFFF" stroke="#16120F" stroke-width="1.5" ></circle>
 <g stroke="#16120F" stroke-width="1.5" stroke-linejoin="round">
-<path :class="`pw ${v.u0}`" d="M152.5 144.0L154.1 42.1A108 108 0 0 1 223.4 70.8Z" :style="`fill: ${v.f0}`"></path>
-<path :class="`pw ${v.u1}`" d="M156.0 147.5L229.2 76.6A108 108 0 0 1 257.9 145.9Z" :style="`fill: ${v.f1}`"></path>
-<path :class="`pw ${v.u2}`" d="M156.0 152.5L257.9 154.1A108 108 0 0 1 229.2 223.4Z" :style="`fill: ${v.f2}`"></path>
-<path :class="`pw ${v.u3}`" d="M152.5 156.0L223.4 229.2A108 108 0 0 1 154.1 257.9Z" :style="`fill: ${v.f3}`"></path>
-<path :class="`pw ${v.u4}`" d="M147.5 156.0L145.9 257.9A108 108 0 0 1 76.6 229.2Z" :style="`fill: ${v.f4}`"></path>
-<path :class="`pw ${v.u5}`" d="M144.0 152.5L70.8 223.4A108 108 0 0 1 42.1 154.1Z" :style="`fill: ${v.f5}`"></path>
-<path :class="`pw ${v.u6}`" d="M144.0 147.5L42.1 145.9A108 108 0 0 1 70.8 76.6Z" :style="`fill: ${v.f6}`"></path>
-<path :class="`pw ${v.u7}`" d="M147.5 144.0L76.6 70.8A108 108 0 0 1 145.9 42.1Z" :style="`fill: ${v.f7}`"></path>
+<path data-g="0" :class="`pw ${v.u0}`" d="M152.5 144.0L154.1 42.1A108 108 0 0 1 223.4 70.8Z" :style="`fill: ${v.f0}`"></path>
+<path data-g="1" :class="`pw ${v.u1}`" d="M156.0 147.5L229.2 76.6A108 108 0 0 1 257.9 145.9Z" :style="`fill: ${v.f1}`"></path>
+<path data-g="2" :class="`pw ${v.u2}`" d="M156.0 152.5L257.9 154.1A108 108 0 0 1 229.2 223.4Z" :style="`fill: ${v.f2}`"></path>
+<path data-g="3" :class="`pw ${v.u3}`" d="M152.5 156.0L223.4 229.2A108 108 0 0 1 154.1 257.9Z" :style="`fill: ${v.f3}`"></path>
+<path data-g="4" :class="`pw ${v.u4}`" d="M147.5 156.0L145.9 257.9A108 108 0 0 1 76.6 229.2Z" :style="`fill: ${v.f4}`"></path>
+<path data-g="5" :class="`pw ${v.u5}`" d="M144.0 152.5L70.8 223.4A108 108 0 0 1 42.1 154.1Z" :style="`fill: ${v.f5}`"></path>
+<path data-g="6" :class="`pw ${v.u6}`" d="M144.0 147.5L42.1 145.9A108 108 0 0 1 70.8 76.6Z" :style="`fill: ${v.f6}`"></path>
+<path data-g="7" :class="`pw ${v.u7}`" d="M147.5 144.0L76.6 70.8A108 108 0 0 1 145.9 42.1Z" :style="`fill: ${v.f7}`"></path>
 </g>
 <circle cx="150" cy="150" r="7" fill="#F7F1E8" stroke="#16120F" stroke-width="1.5"></circle>
 <g class="leaf"><g transform="rotate(-30 150 22)"><path d="M150 22 A42 42 0 0 1 220 22 A42 42 0 0 1 150 22 Z" fill="#F7F1E8" stroke="#16120F" stroke-width="1.5" stroke-linejoin="round"></path><path d="M154 22 L216 22" stroke="#16120F" stroke-width="1" stroke-linecap="round"></path></g></g>
@@ -889,23 +889,32 @@ var L = ['Webs', 'Apps', 'Programa de gestión', 'Tienda online', 'SEO', 'Landin
 var v = { accent: a, dispFont: dispFont };
 
 // Pela la mandarina
-var peeled = s.peeled || 0;
 var D = ['Tu escaparate abierto 24 horas, precioso en el móvil.', 'Tu negocio en el bolsillo de tus clientes.', 'Tu oficina online: agenda, clientes, cobros y equipo en un solo sitio.', 'Vende online sin depender de nadie.', 'Para que te encuentren en Google.', 'Una sola página que hace que te escriban.', 'WhatsApps, recordatorios y emails que trabajan solos.', 'Que te reserven sin tener que llamar.'];
+var got = s.got || [];
+var peeled = got.length;
+var cur = (s.cur === undefined || s.cur === null) ? -1 : s.cur;
 for (var i = 0; i < 8; i++) {
-
-v['f' + i] = i < peeled ? a : '#FFFFFF';
-v['u' + i] = i < peeled ? (i === peeled - 1 ? 'fresh' : '') : 'un';
+v['f' + i] = got.indexOf(i) >= 0 ? a : '#FFFFFF';
+v['u' + i] = got.indexOf(i) >= 0 ? (i === cur ? 'fresh' : '') : 'un';
 }
 v.wholeClass = peeled >= 8 ? 'whole' : '';
 v.peelDone = peeled >= 8;
 v.showHint = peeled === 0;
 v.peelBar = [0, 1, 2, 3, 4, 5, 6, 7].map(function (k) { return { bg: k < peeled ? a : '#FFFFFF' }; });
 v.peelStep = peeled === 0 ? 'Un juego · 8 gajos' : (peeled < 8 ? 'Gajo ' + peeled + ' de 8' : '8 de 8 · ¡Completa!');
-v.peelTitle = peeled === 0 ? 'Clica los 8 gajos' : (peeled < 8 ? L[peeled - 1] : '¡Mandarina completa!');
-v.peelDesc = peeled === 0 ? 'Cada gajo es algo que puedo hacer por tu negocio. Tócala y ve llenándola, gajo a gajo.' : (peeled < 8 ? D[peeled - 1] : 'Webs, apps, programas de gestión y mucho más. Todo esto, para tu negocio.');
+v.peelTitle = peeled === 0 ? 'Clica los 8 gajos' : (peeled < 8 ? L[cur] : '¡Mandarina completa!');
+v.peelDesc = peeled === 0 ? 'Cada gajo es algo que puedo hacer por tu negocio. Tócala y ve llenándola, gajo a gajo.' : (peeled < 8 ? D[cur] : 'Webs, apps, programas de gestión y mucho más. Todo esto, para tu negocio.');
 v.hintClass = peeled === 0 ? 'wiggle' : '';
-v.peel = function () { var p = (self.state && self.state.peeled) || 0; self.setState({ peeled: Math.min(8, p + 1) }); };
-v.resetPeel = function () { self.setState({ peeled: 0 }); };
+v.peel = function (e) {
+var st = self.state || {}; var g0 = (st.got || []).slice();
+var t = e && e.target && e.target.getAttribute ? e.target.getAttribute('data-g') : null;
+var g = t === null ? -1 : parseInt(t, 10);
+if (g < 0) { for (var k = 0; k < 8; k++) { if (g0.indexOf(k) < 0) { g = k; break; } } }
+if (g < 0) return;
+if (g0.indexOf(g) < 0) g0.push(g);
+self.setState({ got: g0, cur: g });
+};
+v.resetPeel = function () { self.setState({ got: [], cur: -1 }); };
 
 // Arma tu mandarina
 var picked = s.picked || {};
