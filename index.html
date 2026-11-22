@@ -103,6 +103,8 @@ h1 .serif,h2 .serif,h3 .serif,.disp .serif{font-family:'Instrument Serif',serif}
 .dnav{display:none!important}
 .drow{flex-direction:column!important;align-items:stretch!important;padding-left:16px!important;padding-right:16px!important}
 .dfix{width:auto!important;flex:none!important}
+.vrow{justify-content:flex-start!important;margin:0 -20px;padding:0 20px 8px!important}
+.vcard{width:62vw!important}
 .dcard2{width:100%!important;box-sizing:border-box;padding:18px!important}
 .dcircle{width:290px!important;height:290px!important;align-self:center;margin:0 auto}
 .dcircle svg.bob{width:190px!important;height:218px!important}
@@ -477,6 +479,30 @@ No hago webs bonitas.<br>Hago webs que <span class="serif" :style="`color: ${v.a
 </div>
 </template>
 </div>
+</div>
+</div>
+</section>
+
+<!-- VIDEOS -->
+<section id="videos" style="border-top: 1.5px solid #16120F; background: #16120F; color: #F7F1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: clamp(72px, 10vw, 140px) clamp(20px, 4vw, 48px)">
+<div class="rv" style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 56px">
+<h2 style="margin: 0; font-weight: 700; font-size: clamp(38px, 5.8vw, 92px); line-height: 0.9; letter-spacing: -0.035em">Y cada marca,<br><span class="serif" :style="`color: ${v.accent}`">su vídeo.</span></h2>
+<p style="margin: 0; max-width: 380px; font-size: 18px; line-height: 1.5">Animaciones cortas para Instagram, WhatsApp o la pantalla de tu local. Con tu marca, tus colores y tu estilo.</p>
+</div>
+<div class="vrow rv" style="display: flex; justify-content: center; gap: clamp(16px, 3vw, 40px); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px">
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border: 1.5px solid #F7F1E8; border-radius: 36px; padding: 8px; background: #16120F"><video src="/img/yuka.mp4" autoplay muted loop playsinline preload="auto" style="display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 28px; background: #F3F5EC; object-fit: cover"></video></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">yuka</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Fruta y verdura · reel de 8 s</span></figcaption>
+</figure>
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border: 1.5px solid #F7F1E8; border-radius: 36px; padding: 8px; background: #16120F"><video src="/img/anana.mp4" autoplay muted loop playsinline preload="auto" style="display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 28px; background: #F6EDE1; object-fit: cover"></video></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ananá</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Bikinis · reel de 8 s</span></figcaption>
+</figure>
+<figure class="vcard" style="margin: 0; flex: 0 0 auto; width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px">
+<div style="border: 1.5px solid #F7F1E8; border-radius: 36px; padding: 8px; background: #16120F"><video src="/img/noqui.mp4" autoplay muted loop playsinline preload="auto" style="display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 28px; background: #1C2541; object-fit: cover"></video></div>
+<figcaption style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px"><span class="serif" style="font-size: 26px">ñoqui</span><span style="font-size: 13px; font-weight: 600; opacity: 0.75">Pienso · reel de 8 s</span></figcaption>
+</figure>
 </div>
 </div>
 </section>
@@ -1113,6 +1139,7 @@ const app = createApp({
 });
 app.config.compilerOptions.whitespace = 'preserve';
 app.mount('#app');
+document.querySelectorAll('video').forEach(function (v) { v.muted = true; var p = v.play(); if (p) p.catch(function () {}); });
 </script>
 </body>
 </html>
