@@ -375,7 +375,7 @@ input:focus,textarea:focus{outline:1px solid #111111;outline-offset:2px}
     </div>
     <template v-if="showMoreQ">
       <div style="margin-top:20px;display:flex;justify-content:center">
-        <button type="button" @click="moreQ" class="btn btn-line" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border-radius:999px;border:1.5px solid #111111;background:#FFFFFF;color:#111111">Ver más preguntas (6)</button>
+        <button type="button" @click="moreQ" class="btn btn-line" style="font:inherit;font-weight:500;font-size:15px;cursor:pointer;padding:14px 26px;border-radius:999px;border:1.5px solid #111111;background:#FFFFFF;color:#111111">Ver más preguntas ({{moreCount}})</button>
       </div>
     </template>
     <div style="margin-top:44px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;text-align:center">
@@ -423,7 +423,6 @@ class Component extends DCLogic {
     const DUDAS = [
       { q: '¿Es una secta?', a: 'Es lo primero que nos preguntan y lo entendemos: se ha publicado mucho, también críticas. En España está inscrita como confesión religiosa desde 2007, tras una sentencia de la Audiencia Nacional. Nuestra experiencia: vamos porque nos aporta. Ven, pregúntanos lo que quieras y júzgalo tú.' },
       { q: '¿Por qué es una religión?', a: 'Porque se ocupa de lo mismo que cualquier religión: de ti como ser espiritual, no solo como cuerpo y mente, y de tu relación con la vida, con los demás y con el infinito. La diferencia es que no te pide fe ciega: se trata de aplicarlo y comprobar por ti mismo si te funciona.' },
-      { q: '¿Es verdad lo de los extraterrestres?', a: 'Es lo que más circula por internet y lo entendemos: suena raro. Hace referencia a materiales de niveles muy avanzados, que se estudian años después y son confidenciales. Para empezar no tienes que creer nada de eso: lo básico va de tu día a día, de comunicarte mejor y de llevarte mejor con los tuyos.' },
       { q: '¿Qué es la auditación?', a: 'Es la práctica central. Una persona formada, el auditor, te hace preguntas muy concretas para que localices y superes lo que te frena: experiencias dolorosas, preocupaciones o problemas que se repiten. Se usa un aparato llamado E-metro como ayuda. Tú hablas; el auditor no te juzga ni te dice qué pensar.' },
       { q: '¿Cuánto cuesta y por qué?', a: 'Los cursos de introducción tienen un precio bajo, y los servicios más avanzados se pagan como donación, que es como se financia la iglesia. Los precios te los decimos claros desde el principio, sin sorpresas: [PRECIOS].' },
       { q: '¿Y lo que he leído en internet?', a: 'Hay de todo: críticas, polémicas y también datos que no son correctos. No te pedimos que no lo leas. Te pedimos que también escuches a quien lo vive desde dentro y saques tus propias conclusiones.' },
@@ -520,6 +519,7 @@ class Component extends DCLogic {
       closeText: n ? 'Me has contado ' + n + (n === 1 ? ' cosa que te pasa' : ' cosas que te pasan') + '. Tiene solución. Escríbenos y te llamamos, o quedamos para un café, cuando te venga bien.' : 'Escríbenos y te llamamos, o quedamos para un café, cuando te venga bien. Nos preguntas todo lo que quieras, sin compromiso.',
       dudas: dudas,
       showMoreQ: !s.moreQ,
+      moreCount: DUDAS.length - 6,
       moreQ: () => this.setState({ moreQ: true }),
       steps: [0, 1, 2, 3].map((i) => ({ cls: i < s.q ? 'seg-on' : 'seg-off' })),
       qGoal: s.q === 0,
