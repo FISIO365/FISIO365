@@ -1,6 +1,6 @@
 /* Demo del panel de FISIO365 para Mandarina: datos inventados, no se guarda nada. */
 (function(){
-try{localStorage.setItem('f365_panel_sesion',JSON.stringify({n:'Laura',p:'demo'}));localStorage.setItem('f365_curso_av',new Date().toISOString().slice(0,10));}catch(e){}
+try{localStorage.setItem('f365_panel_sesion',JSON.stringify({n:'Laura',p:'demo'}));localStorage.setItem('f365_panel_avisos_no',String(Date.now()));localStorage.setItem('f365_curso_av',new Date().toISOString().slice(0,10));}catch(e){}
 try{if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.reject(new Error('demo'))};}}catch(e){}
 
 var R=function(n){var s=n;return function(){s=(s*9301+49297)%233280;return s/233280}};
@@ -47,5 +47,5 @@ window.fetch=function(u,o){var url=String(u&&u.url||u);if(url.indexOf('/api/')<0
  var m=(o&&o.method)||'GET',d=data(url,m.toUpperCase(),o&&o.body);
  if(m.toUpperCase()!=='GET'&&!/\/api\/fisios/.test(url)&&!/seg-agenda-dia/.test(url))try{window.__demoAviso&&window.__demoAviso()}catch(e){}
  return new Promise(function(res){setTimeout(function(){res(d===null?new Response('',{status:404}):new Response(JSON.stringify(d),{status:200,headers:{'Content-Type':'application/json'}}))},120)})};
-window.__demoAviso=function(){var t=document.getElementById('demoToast');if(!t){t=document.createElement('div');t.id='demoToast';t.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99999;background:#16120F;color:#fff;font:600 14px/1.3 Poppins,system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:opacity .3s';document.body.appendChild(t)}t.textContent='Es una demo: no se guarda nada';t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(function(){t.style.opacity=0},2200)};
+window.__demoAviso=function(){if(performance.now()<5000)return;var t=document.getElementById('demoToast');if(!t){t=document.createElement('div');t.id='demoToast';t.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99999;background:#16120F;color:#fff;font:600 14px/1.3 Poppins,system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:opacity .3s';document.body.appendChild(t)}t.textContent='Es una demo: no se guarda nada';t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(function(){t.style.opacity=0},2200)};
 })();
