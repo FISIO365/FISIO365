@@ -496,7 +496,7 @@ class Component extends DCLogic {
             let otra = '';
             ((payload && payload.fields) || []).forEach((f) => { if (f.type === 'TEXTAREA' && f.value) otra = String(f.value); });
             const extra = otra ? (myLine ? ' Y también: ' : ' Me pasa que: ') + otra.trim() : '';
-            const url = wa('Hola Ramiro y Nora, he visto vuestra web.' + myLine + extra + ' ¿Me ayudas?');
+            const url = wa('Hola Ramiro y Nora, he visto vuestra web.' + myLine + extra + ' ¿Me ayudáis?');
             setTimeout(() => { window.location.href = url; }, 700);
           }
         });
@@ -506,7 +506,7 @@ class Component extends DCLogic {
       sitAnim: s.tick % 2 ? 'cA' : 'cB',
       sitTitle: n === 0 ? 'Toca las que te pasen' : (n === 1 ? 'Te pasa 1 de estas.' : 'Te pasan ' + n + ' de estas.'),
       sitText: n === 0 ? 'Verás que no eres el único, y que tiene solución.' : (n < 3 ? 'Tiene solución, y es más sencillo de lo que crees. Cuéntanoslo y lo vemos juntos.' : 'No eres el único: le pasa a mucha gente, y se puede cambiar. Cuéntanoslo y te decimos por dónde empezar.'),
-      waSit: wa('Hola Ramiro y Nora, he visto vuestra web.' + (myLine || ' ') + ' ¿Me ayudas?'),
+      waSit: wa('Hola Ramiro y Nora, he visto vuestra web.' + (myLine || ' ') + ' ¿Me ayudáis?'),
       closeText: n ? 'Me has contado ' + n + (n === 1 ? ' cosa que te pasa' : ' cosas que te pasan') + '. Tiene solución. Escríbenos y te llamamos, o quedamos para un café, cuando te venga bien.' : 'Escríbenos y te llamamos, o quedamos para un café, cuando te venga bien. Nos preguntas todo lo que quieras, sin compromiso.',
       dudas: dudas,
       steps: [0, 1, 2, 3].map((i) => ({ cls: i < s.q ? 'seg-on' : 'seg-off' })),
