@@ -4233,7 +4233,7 @@ module.exports = async function handler(req, res) {
   if (action === 'talleres-app') { // «Talleres y cursos» en la app del paciente: los próximos, con plazas libres
     const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     const L = (await talleresTodos()).filter(T => T.activo !== false && T.fecha >= hoy).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
-    const out = []; for (const T of L) { const ins = await tallerInscritos(T).catch(() => ({ total: 0 })); out.push({ id: T.id, tipo: T.tipo || 'taller', titulo: T.titulo, sub: T.sub || '', fecha: T.fecha, hora: T.hora || '', fin: T.fin || '', precio: Number(T.precio) || 0, plazas: Number(T.plazas) || 0, quedan: Math.max(0, (Number(T.plazas) || 0) - ins.total), fisio: T.fisio || '', practica: T.practica || [], llevar: T.llevar || '', url: `${APPU()}/taller/${T.id}-pagar` }); }
+    const out = []; for (const T of L) { const ins = await tallerInscritos(T).catch(() => ({ total: 0 })); out.push({ id: T.id, tipo: T.tipo || 'taller', titulo: T.titulo, sub: T.sub || '', fecha: T.fecha, hora: T.hora || '', fin: T.fin || '', precio: Number(T.precio) || 0, plazas: Number(T.plazas) || 0, quedan: T.completo ? 0 : Math.max(0, (Number(T.plazas) || 0) - ins.total), completo: !!T.completo, fisio: T.fisio || '', practica: T.practica || [], llevar: T.llevar || '', url: `${APPU()}/taller/${T.id}-pagar` }); }
     res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ ok: true, talleres: out });
   }
   if (action === 'taller-datos') { // datos de las personas apuntadas a un taller (tras pagar)
@@ -4293,7 +4293,7 @@ module.exports = async function handler(req, res) {
     const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
     if (hoy > T.fin) return res.status(200).send(pagina('Este taller ya se hizo', '¡Gracias por el interés! Escríbenos y te avisamos del próximo.', waL('Hola, avisadme del próximo ' + T.nombre) + 'Avisadme del próximo</a>'));
     if (!mPa) { // /taller/<id>: la página del taller (toda la info) con el botón para reservar → /taller/<id>-pagar
-      const R = T.raw, e = escHtml, quedan = Math.max(0, T.plazas - (await tallerInscritos(R).catch(() => ({ total: 0 }))).total), base = `${APPU()}/taller/${id}`;
+      const R = T.raw, e = escHtml, quedan = R.completo ? 0 : Math.max(0, T.plazas - (await tallerInscritos(R).catch(() => ({ total: 0 }))).total), base = `${APPU()}/taller/${id}`;
       const cuando = T.cuando.replace(/^./, c => c.toUpperCase()), pr = String(R.precio).replace('.', ',') + ' €', tipo = R.tipo === 'curso' ? 'Curso' : 'Taller';
       const desc = `${cuando} en FISIO365 (Gran de Sant Andreu 163, Barcelona). ${pr} por persona · solo ${T.plazas} plazas.`;
       const IC = { cal: '<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>', per: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/>', eur: '<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.2a3.2 3.2 0 1 0 0 5.6M8 11h5M8 13.2h5"/>', bol: '<path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' };
@@ -4365,7 +4365,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
       { const L0 = await ajuste('taller_' + id, null); if (L0 && L0.id && !L0.off) { await stripeApi('payment_links/' + L0.id, { active: 'false' }).catch(() => {}); await guardarAjuste('taller_' + id, Object.assign({}, L0, { off: 1 }), 'taller'); } }
       // Plazas ya pagadas (o con el pago abierto ahora mismo) de este taller
       if (!T.activo) return res.status(200).send(pagina('Inscripciones cerradas', 'Ahora mismo no se puede reservar. Escríbenos y te contamos.', waL('Hola, quiero información del ' + T.nombre) + 'Escribir por WhatsApp</a>'));
-      const quedan = T.plazas - (await tallerInscritos(T.raw, true)).total;
+      const quedan = T.raw.completo ? 0 : T.plazas - (await tallerInscritos(T.raw, true)).total; // «Completo» marcado a mano en el panel
       if (quedan <= 0) return res.status(200).send(pagina('Plazas agotadas', `El ${T.nombre.toLowerCase()} ya está completo. Si se libera alguna plaza o hacemos otro, te avisamos.`, waL('Hola, quiero apuntarme a la lista de espera del ' + T.nombre) + 'Apúntame a la lista de espera</a>'));
       const base = `${APPU()}/taller/${id}`;
       const f = { mode: 'payment', 'line_items[0][quantity]': '1', 'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': String(T.precio),
@@ -6372,7 +6372,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const slug = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
           let id = x.id && L.some(y => y.id === x.id) ? x.id : ''; if (!id) { id = slug(x.titulo) || 'taller'; if (L.some(y => y.id === id)) id = (id + '-' + x.fecha.slice(5).replace('-', '')).slice(0, 38); let k = 2; const b = id; while (L.some(y => y.id === id)) id = b + '-' + k++; }
           const prev = L.find(y => y.id === id) || {};
-          const T = { id, tipo: x.tipo === 'curso' ? 'curso' : 'taller', titulo: t(x.titulo, 120), sub: t(x.sub, 400), fecha: x.fecha, hora: /^\d{2}:\d{2}$/.test(x.hora || '') ? x.hora : '', fin: /^\d{2}:\d{2}$/.test(x.fin || '') ? x.fin : '', precio: Math.max(0, Math.round((Number(String(x.precio).replace(',', '.')) || 0) * 100) / 100), plazas: Math.max(1, Math.min(200, Math.round(Number(x.plazas) || 1))), fisio: t(x.fisio, 60), practica: (Array.isArray(x.practica) ? x.practica : String(x.practica || '').split('\n')).map(v => t(v, 120)).filter(Boolean).slice(0, 10), llevar: t(x.llevar, 200), activo: x.activo !== false, desde: prev.desde || hoyF };
+          const T = { id, tipo: x.tipo === 'curso' ? 'curso' : 'taller', titulo: t(x.titulo, 120), sub: t(x.sub, 400), fecha: x.fecha, hora: /^\d{2}:\d{2}$/.test(x.hora || '') ? x.hora : '', fin: /^\d{2}:\d{2}$/.test(x.fin || '') ? x.fin : '', precio: Math.max(0, Math.round((Number(String(x.precio).replace(',', '.')) || 0) * 100) / 100), plazas: Math.max(1, Math.min(200, Math.round(Number(x.plazas) || 1))), fisio: t(x.fisio, 60), practica: (Array.isArray(x.practica) ? x.practica : String(x.practica || '').split('\n')).map(v => t(v, 120)).filter(Boolean).slice(0, 10), llevar: t(x.llevar, 200), activo: x.activo !== false, completo: !!x.completo, desde: prev.desde || hoyF };
           if (prev.id) L = L.map(y => y.id === id ? T : y); else L.push(T);
           await guardarAjuste('talleres', L, t(q.quien, 60)); delete _tallerCache[id];
           return res.status(200).json({ ok: true, taller: T });

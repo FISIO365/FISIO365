@@ -1786,9 +1786,9 @@ function htmlAnuncio(A){const k=talEsc(A.id);
   <div class="an-acc">${A.boton||''}</div>${A.nota?`<div class="tl-nt">${talEsc(A.nota)}</div>`:''}
   ${mas?`<div class="an-mas">${mas}</div>`:''}${panels}</div></div>`;}
 function anPanel(b,id){const p=document.getElementById('anp_'+id);if(!p)return;const on=!p.classList.contains('on');b.parentNode.parentNode.querySelectorAll('.an-pan').forEach(x=>x.classList.remove('on'));b.parentNode.querySelectorAll('button').forEach(x=>x.classList.remove('on'));if(on){p.classList.add('on');b.classList.add('on');}}
-function htmlTaller(T){const pct=T.plazas?Math.round((T.plazas-T.quedan)*100/T.plazas):0,eur=String(T.precio).replace('.',',');
+function htmlTaller(T){const pct=T.quedan<=0?100:T.plazas?Math.round((T.plazas-T.quedan)*100/T.plazas):0,eur=String(T.precio).replace('.',',');
  const det=`${T.practica&&T.practica.length?`<div class="tl-h">Qué vas a practicar</div><ul class="tl-l">${T.practica.map(x=>`<li>${talEsc(x)}</li>`).join('')}</ul>`:''}${T.llevar?`<div class="tl-h">Qué traer</div><p class="tl-s">${talEsc(T.llevar)}</p>`:''}`;
- return htmlAnuncio({id:T.id,video:{src:`/img/talleres/${T.id}.mp4`,poster:`/img/talleres/${T.id}.jpg`},tipo:T.tipo==='curso'?'Curso':'Taller',etiqueta:eur+' €',titulo:T.titulo,
+ return htmlAnuncio({id:T.id,video:{src:`/img/talleres/${T.id}.mp4`,poster:`/img/talleres/${T.id}.jpg`},tipo:T.tipo==='curso'?'Curso':'Taller',etiqueta:T.quedan>0?eur+' €':'Sold out',destaca:T.quedan<=0,titulo:T.titulo,
   meta:[talEsc(talFechaApp(T)),T.fisio?`Con ${talEsc(T.fisio)} · FISIO365`:''],texto:T.sub,
   barra:{pct,txt:T.quedan>0?(T.quedan===1?'Queda 1 plaza':`Quedan ${T.quedan} plazas`):'Completo'},
   boton:T.quedan>0?`<a class="tl-bt" href="${talEsc(T.url)}" target="_blank" rel="noopener">Reservar plaza</a>`:`<a class="tl-bt sec" href="https://wa.me/34672893949?text=${encodeURIComponent('Hola, quiero apuntarme a la lista de espera de: '+T.titulo)}" target="_blank" rel="noopener">Apúntame a la lista de espera</a>`,
