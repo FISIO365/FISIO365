@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ñoqui · web de ejemplo hecha por Mandarina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scrollbar-width:none}html::-webkit-scrollbar{display:none}
+body{margin:0;background:#1C2541;color:#FFF4D6;font-family:'DM Sans',sans-serif;letter-spacing:-.02em;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;letter-spacing:inherit}
+a{color:inherit;text-decoration:none}
+.wrap{padding:0 22px}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:rgba(28,37,65,.94);backdrop-filter:blur(8px);border-bottom:1px solid #FFF4D61A}
+.logo{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:24px;color:#F2B705}
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:12px 22px;font-size:15px;font-weight:700;background:#F2B705;color:#1C2541;transition:transform .15s}
+.btn:active{transform:scale(.96)}
+.btn.sm{padding:8px 15px;font-size:13px}
+.btn.line{background:transparent;color:#FFF4D6;border:1.5px solid #FFF4D6}
+.burger{width:40px;height:40px;border-radius:50%;border:1.5px solid #FFF4D655;display:flex;align-items:center;justify-content:center}
+h1{margin:0;font-size:46px;line-height:.95;font-weight:700;letter-spacing:-.035em}
+h2{margin:0;font-size:32px;line-height:1;font-weight:700;letter-spacing:-.03em}
+.y{color:#F2B705}
+.lead{margin:16px 0 0;font-size:16px;line-height:1.5;color:#E8DFC4}
+.sec{padding-top:46px;scroll-margin-top:60px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:#F2B705;text-transform:uppercase;margin-bottom:10px}
+.card{border:1.5px solid #F2B705;border-radius:26px;background:#26305A;padding:18px}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chip{min-height:42px;border-radius:14px;border:1.5px solid #F2B705;font-size:14px;font-weight:700;transition:background .2s,color .2s}
+.chip.on{background:#F2B705;color:#1C2541}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin:16px 0 8px}
+.stage{position:relative;height:200px}
+.stage img{position:absolute;left:42%;bottom:12px;width:auto;transform-origin:50% 100%;transition:opacity .25s,transform .45s cubic-bezier(.2,1.5,.4,1)}
+.shadow{position:absolute;left:20%;right:20%;bottom:6px;height:14px;border-radius:50%;background:#1C2541;opacity:.6}
+.bowl{position:absolute;right:4px;bottom:8px;width:90px;height:46px;overflow:visible}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:9px;background:#FFF4D633;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#F2B705;border:3px solid #1C2541;box-shadow:0 0 0 1.5px #F2B705}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#F2B705;border:3px solid #1C2541}
+.res{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:16px;border-top:1.5px dashed #FFF4D633}
+.big{font-size:34px;font-weight:700;line-height:1}
+.steps{display:grid;gap:12px}
+.step{display:flex;gap:14px;align-items:center;border:1.5px solid #FFF4D633;border-radius:22px;padding:16px}
+.num{width:40px;height:40px;border-radius:50%;background:#F2B705;color:#1C2541;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;border-radius:999px;border:1.5px solid #FFF4D6;padding:9px 16px;font-size:14px;font-weight:600}
+.tab.on{background:#FFF4D6;color:#1C2541}
+.flav{margin-top:14px;border-radius:26px;background:#FFF4D6;color:#1C2541;padding:20px;transition:background .3s}
+.bar{height:8px;border-radius:9px;background:#1C254122;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:#1C2541;border-radius:9px;transition:width .5s}
+.faq{border-bottom:1.5px solid #FFF4D622}
+.faq button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 0;text-align:left;font-size:16px;font-weight:600}
+.faq .pl{width:26px;height:26px;border-radius:50%;border:1.5px solid #F2B705;color:#F2B705;display:flex;align-items:center;justify-content:center;flex:none;transition:transform .25s}
+.faq.open .pl{transform:rotate(45deg)}
+.faq p{margin:0;max-height:0;overflow:hidden;font-size:15px;line-height:1.5;color:#E8DFC4;transition:max-height .3s,padding .3s}
+.faq.open p{max-height:140px;padding-bottom:16px}
+.foot{margin-top:46px;padding:30px 22px 40px;background:#151C33;font-size:13px;color:#E8DFC4;line-height:1.7}
+.menu{position:fixed;inset:0;z-index:40;background:#1C2541;padding:18px 22px;display:none;flex-direction:column}
+.menu.on{display:flex;animation:fd .25s ease}
+@keyframes fd{from{opacity:0}to{opacity:1}}
+.menu a{font-size:30px;font-weight:700;padding:12px 0;border-bottom:1.5px solid #FFF4D61A}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;transition:.3s;background:#FFF4D6;color:#1C2541;padding:11px 18px;border-radius:999px;font-size:14px;font-weight:700;white-space:nowrap;z-index:50;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.paw{width:30px;height:30px}
+</style>
+</head>
+<body>
+<header class="top">
+<a class="logo" href="#inicio"><svg class="paw" viewBox="0 0 40 40" aria-hidden="true"><path d="M10 30 A10 10 0 0 1 30 30 A6 6 0 0 1 24 36 L16 36 A6 6 0 0 1 10 30 Z" fill="#F2B705"/><ellipse cx="7.5" cy="19" rx="3.6" ry="4.6" fill="#F2B705"/><ellipse cx="15" cy="11" rx="3.8" ry="5" fill="#F2B705"/><ellipse cx="25" cy="11" rx="3.8" ry="5" fill="#F2B705"/><ellipse cx="32.5" cy="19" rx="3.6" ry="4.6" fill="#F2B705"/></svg>ñoqui</a>
+<div style="display:flex;gap:8px;align-items:center"><a class="btn sm" href="#calcula">Suscríbete</a><button class="burger" id="bm" aria-label="Menú"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 8H20M4 16H20" stroke="#FFF4D6" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+</header>
+<nav class="menu" id="menu"><div style="display:flex;justify-content:flex-end"><button class="burger" id="bc" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 6L18 18M18 6L6 18" stroke="#FFF4D6" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+<a href="#calcula">Calcula su ración</a><a href="#como">Cómo funciona</a><a href="#sabores">Sabores</a><a href="#dudas">Dudas</a></nav>
+
+<main id="inicio">
+<section class="wrap" style="padding-top:30px">
+<h1>Comida de verdad<br>para tu <span class="y">peludo.</span></h1>
+<p class="lead">Pienso natural con la ración justa para él, en tu puerta cada mes. Sin compromiso: pausas cuando quieras.</p>
+<div style="display:flex;gap:10px;margin-top:22px"><a class="btn" href="#calcula">Empezar ahora</a><a class="btn line" href="#como">Cómo va</a></div>
+</section>
+
+<section class="wrap sec" id="calcula">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:18px;font-weight:700">¿Cómo es tu perro?</span><span style="border:1.5px solid #F2B705;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700;color:#F2B705">Calculadora</span></div>
+<div class="stage">
+<span class="shadow"></span>
+<img id="d0" src="/img/perro-pequeno.png" alt="Perro pequeño" style="height:120px">
+<img id="d1" src="/img/perro-mediano.png" alt="Perro mediano" style="height:150px">
+<img id="d2" src="/img/perro-grande.png" alt="Perro grande" style="height:178px">
+<svg class="bowl" viewBox="0 0 120 60" aria-hidden="true"><g id="kib" fill="#C8782A" stroke="#1C2541" stroke-width="1.2"><circle cx="46" cy="16" r="6"/><circle cx="60" cy="12" r="6"/><circle cx="74" cy="16" r="6"/><g id="k1"><circle cx="53" cy="6" r="6"/><circle cx="67" cy="6" r="6"/></g><g id="k2"><circle cx="38" cy="8" r="6"/><circle cx="82" cy="8" r="6"/><circle cx="60" cy="-2" r="6"/></g></g><path d="M14 22 L106 22 A46 30 0 0 1 14 22 Z" fill="#F2B705" stroke="#FFF4D6" stroke-width="1.5" stroke-linejoin="round"/></svg>
+</div>
+<div class="lbl" style="margin-top:6px">Tamaño</div>
+<div class="chips" id="sz"><button class="chip">Pequeño</button><button class="chip on">Mediano</button><button class="chip">Grande</button></div>
+<div class="lbl">Edad</div>
+<div class="chips" id="ed"><button class="chip">Cachorro</button><button class="chip on">Adulto</button><button class="chip">Senior</button></div>
+<div class="lbl" style="display:flex;justify-content:space-between"><span>Actividad</span><span id="actT" style="opacity:1;color:#F2B705">Media</span></div>
+<input type="range" id="act" min="0" max="2" step="1" value="1" aria-label="Actividad">
+<div class="res"><div><div style="font-size:12px;opacity:.7;font-weight:600">Su ración</div><div class="big"><span id="gr">240</span> g<span style="font-size:15px;opacity:.7"> /día</span></div></div>
+<div style="text-align:right"><div style="font-size:12px;opacity:.7;font-weight:600">Al mes</div><div class="big y"><span id="eu">39</span> €</div></div></div>
+<button class="btn" id="quiero" style="width:100%;margin-top:18px">Lo quiero</button>
+</div>
+</section>
+
+<section class="wrap sec" id="como">
+<div class="eyebrow">Cómo funciona</div>
+<h2>Tres pasos <span class="y">y listo.</span></h2>
+<div class="steps" style="margin-top:18px">
+<div class="step"><span class="num">1</span><div><b style="font-size:16px">Nos cuentas cómo es</b><div style="font-size:14px;opacity:.75;margin-top:2px">Tamaño, edad y cuánto se mueve.</div></div></div>
+<div class="step"><span class="num">2</span><div><b style="font-size:16px">Calculamos su ración</b><div style="font-size:14px;opacity:.75;margin-top:2px">Justa para él, ni más ni menos.</div></div></div>
+<div class="step"><span class="num">3</span><div><b style="font-size:16px">Te llega cada mes</b><div style="font-size:14px;opacity:.75;margin-top:2px">A tu puerta. Pausas cuando quieras.</div></div></div>
+</div>
+</section>
+
+<section class="wrap sec" id="sabores">
+<div class="eyebrow">Sabores</div>
+<h2>Elige <span class="y">su favorito.</span></h2>
+<div class="tabs" id="tabs" style="margin-top:18px"><button class="tab on">Pollo y arroz</button><button class="tab">Salmón</button><button class="tab">Cordero</button></div>
+<div class="flav" id="flav"></div>
+</section>
+
+<section class="wrap sec" id="dudas">
+<div class="eyebrow">Dudas</div>
+<h2>Lo que más <span class="y">nos preguntan.</span></h2>
+<div style="margin-top:10px" id="faqs"></div>
+</section>
+</main>
+<footer class="foot"><div class="logo" style="font-size:20px">ñoqui</div>Pienso natural para perros, en tu puerta cada mes.<br>Web de ejemplo hecha por Mandarina: la marca es inventada.</footer>
+<div class="toast" id="toast"></div>
+<script>
+function $(q){return document.querySelector(q)}function $$(q){return [].slice.call(document.querySelectorAll(q))}
+var tt;function toast(t){var e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('on')},1900)}
+$('#bm').onclick=function(){$('#menu').classList.add('on')};$('#bc').onclick=function(){$('#menu').classList.remove('on')};
+$$('#menu a').forEach(function(a){a.onclick=function(){$('#menu').classList.remove('on')}});
+var S=1,E=1,A=1,BASE=[110,240,420],ED=[1.25,1,.85],AC=[.85,1,1.2],ACT=['Tranquilo','Media','Mucha'];
+function calc(){
+  [0,1,2].forEach(function(i){var d=$('#d'+i);d.style.opacity=i===S?1:0;d.style.transform='translateX(-50%) scale('+(i===S?1:.6)+')'});
+  $('#k1').style.opacity=S>=1?1:0;$('#k2').style.opacity=S>=2?1:0;
+  var g=Math.round(BASE[S]*ED[E]*AC[A]/5)*5;$('#gr').textContent=g;$('#eu').textContent=Math.round(g*30/1000*5.4);$('#actT').textContent=ACT[A];
+}
+function chips(id,set){$$('#'+id+' .chip').forEach(function(b,i){b.onclick=function(){$$('#'+id+' .chip').forEach(function(x,j){x.classList.toggle('on',j===i)});set(i);calc()}})}
+chips('sz',function(i){S=i});chips('ed',function(i){E=i});$('#act').oninput=function(){A=+this.value;calc()};calc();
+$('#quiero').onclick=function(){toast('Es una demo: aquí empezaría la suscripción')};
+var F=[['Pollo y arroz','#FFF4D6','Suave y fácil de digerir. El favorito de casi todos.',[70,20,10]],['Salmón','#FBE3D3','Con omega 3 para un pelo brillante.',[65,25,10]],['Cordero','#E9EEDB','Para estómagos sensibles. Sin cereales.',[72,18,10]]];
+function flav(i){var f=F[i];$('#flav').style.background=f[1];$('#flav').innerHTML='<div style="font-size:24px;font-weight:700">'+f[0]+'</div><div style="font-size:15px;line-height:1.45;margin-top:6px;opacity:.85">'+f[2]+'</div>'+['Carne o pescado','Verdura y fruta','Aceites y minerales'].map(function(n,j){return '<div style="margin-top:12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between"><span>'+n+'</span><span>'+f[3][j]+' %</span></div><div class="bar"><i style="width:'+f[3][j]+'%"></i></div>'}).join('')}
+$$('#tabs .tab').forEach(function(b,i){b.onclick=function(){$$('#tabs .tab').forEach(function(x,j){x.classList.toggle('on',j===i)});flav(i)}});flav(0);
+var Q=[['¿Puedo pausar o cancelar?','Sí, cuando quieras y sin llamar a nadie: desde tu cuenta, en un toque.'],['¿Cuánto tarda en llegar?','Entre 24 y 48 horas en península. Te avisamos cuando sale.'],['¿Y si no le gusta?','Te cambiamos el sabor en el siguiente envío, sin coste.']];
+$('#faqs').innerHTML=Q.map(function(q){return '<div class="faq"><button><span>'+q[0]+'</span><span class="pl">+</span></button><p>'+q[1]+'</p></div>'}).join('');
+$$('.faq button').forEach(function(b){b.onclick=function(){b.parentNode.classList.toggle('open')}});
+</script>
+</body>
+</html>
