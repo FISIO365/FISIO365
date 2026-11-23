@@ -2279,7 +2279,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .com-adjr .adj-w{margin-top:8px}
 </style>
 <script src="/demo-panel/visor.js?v=1"></script>
-<style>#avisoPanel,#cursoAv,.ag-rev,.ag-fac,.sb-grp{display:none!important}[id^=sb-]:not(#sb-agenda):not(#sb-pac):not(#sb-msg):not(#sb-ejer){display:none!important}</style></head>
+<style>#avisoPanel,#cursoAv,.fx-aviso{display:none!important}</style></head>
 <body>
 
 <!-- LOGIN -->
@@ -3100,7 +3100,7 @@ async function renderTalleres(wrap){
    c.querySelectorAll('.tal-pg.cen').forEach(g=>{const sid=g.dataset.sid,X=(T.inscritos||[]).find(z=>z.sid===sid)||{};
     const q_=g.querySelector('.tal-qt');if(q_)q_.onclick=async()=>{if(!await pregunta(`¿Quitamos a ${capTit(X.pagador||'esta persona')} del ${T.tipo==='curso'?'curso':'taller'}? Su plaza queda libre.`,{si:'Quitar',no:'Cancelar'}))return;q_.disabled=true;const r=await agPost('seg-agenda-taller-apuntar',{id:T.id,quitar:sid,quien:miNombreCorto()}).catch(()=>({}));if(r.ok){toast('Quitado',true);cargar();}else{q_.disabled=false;toast(r.error||'No se ha podido quitar',false);}};
     const pd=g.querySelector('.tal-pagd');if(pd)pd.onclick=async()=>{const pago=await talElegirPago(false);if(!pago)return;pd.disabled=true;const r=await agPost('seg-agenda-taller-apuntar',{id:T.id,pagado:sid,pago,quien:miNombreCorto()}).catch(()=>({}));if(r.ok){toast('Apuntado como pagado',true);cargar();}else{pd.disabled=false;toast(r.error||'No se ha podido guardar',false);}};});
-   c.querySelector('.tal-wa').onclick=()=>waAbrir('',`${T.tipo==='curso'?'Curso':'Taller'}: *${T.titulo}*\n${talFecha(T)} en FISIO365 (Gran de Sant Andreu 163)${T.fisio?'\nCon '+T.fisio:''}\n${String(T.precio).replace('.',',')} € por persona · solo ${T.plazas} plazas${T.sub?'\n\n'+T.sub:''}\n\nReserva tu plaza aquí:\n${T.url}`);});};
+   c.querySelector('.tal-wa').onclick=()=>waAbrir('',`${T.tipo==='curso'?'Curso':'Taller'}: *${T.titulo}*\n${talFecha(T)} en FISIO365 (Calle Mayor 12)${T.fisio?'\nCon '+T.fisio:''}\n${String(T.precio).replace('.',',')} € por persona · solo ${T.plazas} plazas${T.sub?'\n\n'+T.sub:''}\n\nReserva tu plaza aquí:\n${T.url}`);});};
  box.innerHTML='<div class="fac-vacio">Cargando…</div>';cargar();}
 // «Para el próximo taller»: apuntar (o cambiar) a mano a alguien que quiere venir al próximo
 function talInteresEditar(q,L,onSave){const x=q?{t:q.t||'',titulo:q.titulo||'',nombre:q.n||'',tel:q.tel||'',email:q.email||'',pacienteId:q.pid||'',dias:(q.dias||[]).slice(),franjas:(q.franjas||[]).slice(),nota:q.nota||''}:{t:'',titulo:'',nombre:'',tel:'',email:'',pacienteId:'',dias:[],franjas:[],nota:''};
@@ -6616,7 +6616,7 @@ function _generarPDF(pacNom,informe,tipoLabel,fisioNom,colNum,fecha,modo,codigo)
  const n=doc.getNumberOfPages();
  for(let i=1;i<=n;i++){
   doc.setPage(i);
-  set(7.5,'normal',GRIS);txt('FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com',ml,H-14);
+  set(7.5,'normal',GRIS);txt('FISIO365 · Calle Mayor, 12 · Barcelona · 600 000 000 · fisioterapia365.com',ml,H-14);
   if(codigo){set(7.5,'medium',GRIS);txt('Nº '+codigo,ml,H-9.5);}
   if(n>1)txt(`${i} / ${n}`,W-mr,H-14,{align:'right'});
  }
@@ -6829,7 +6829,7 @@ async function pdfEntreno(pacNom,ejsIn,mensaje,fisioNom){
   y+=3;
  });
  // Pie
- const pie=[marca,C.dirCorta||(marca==='FISIO365'?'Gran de Sant Andreu, 163 · Barcelona':''),C.tel||(marca==='FISIO365'?'672 89 39 49':''),C.web||(marca==='FISIO365'?'fisioterapia365.com':'')].filter(Boolean).join(' · ');
+ const pie=[marca,C.dirCorta||(marca==='FISIO365'?'Calle Mayor, 12 · Barcelona':''),C.tel||(marca==='FISIO365'?'600 000 000':''),C.web||(marca==='FISIO365'?'fisioterapia365.com':'')].filter(Boolean).join(' · ');
  const np=doc.getNumberOfPages();
  for(let i=1;i<=np;i++){doc.setPage(i);set(7.5,'normal',GRIS);doc.text(pie,ml,H-11);if(np>1)doc.text(`${i} / ${np}`,W-mr,H-11,{align:'right'});}
  doc.save('Ejercicios_'+String(pacNom||'paciente').trim().replace(/\s+/g,'_')+'.pdf');
@@ -6881,7 +6881,7 @@ function avrModal(pac,a,pinta){
 // ── CALL-IN: buscar pacientes por etiqueta de estado (varias = tiene todas) ──
 let callSel=[];
 // ══ AGENDA: el día de cada fisio (tabla CITAS: una fila = una hora). Dar, mover, cancelar y bloquear citas ══
-const AG_FISIOS=['Ramiro','Jonathan','Sara','Paola','Juan','ELENA'];
+const AG_FISIOS=['Laura','Marc','Ana','Ana','Pol','ELENA'];
 // Horario de la clínica (Administración › Ajustes): de qué hora a qué hora sale la agenda
 const agDesde=()=>{const v=Number(CONF&&CONF.agenda&&CONF.agenda.desde);return v>=5&&v<=14?v:7;},agHasta=()=>{const v=Number(CONF&&CONF.agenda&&CONF.agenda.hasta);return v>=12&&v<=23?v:21;};
 const AG_NOFISIO=/^(NO HAY FISIO|TODOS|\?\?|FIESTA ANIVERSARIO|JULES|NORA)$/i;
@@ -6900,8 +6900,8 @@ async function agPost(a,b){const r=await (await fetch('/api/schedule?action='+a,
 async function agCargarDia(f){return (await fetch(`/api/schedule?action=seg-agenda-dia&pwd=${encodeURIComponent(apiPwd)}&fecha=${f}`)).json();}
 // Columnas de la agenda: los fisios en activo (rol fisio) del equipo, con el nombre de pila como en la agenda (Administración los da de alta y de baja)
 function agEquipo(){const eq=[];(fisios||[]).filter(f=>String(f.role||'fisio').toLowerCase()==='fisio').forEach(f=>{const p=String(f.nombre||f.name||'').trim().split(' ')[0];if(!p)return;const ya=AG_FISIOS.find(n=>n.toLowerCase()===p.toLowerCase());const n=ya||(p.charAt(0).toUpperCase()+p.slice(1));if(!eq.includes(n))eq.push(n);});
- if(!eq.length)return (window.CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?[]:['Ramiro','Jonathan','Sara','Juan'];eq.forEach((n,i)=>{if(!AG_COL[n])AG_COL[n]=['#db2777','#0d9488','#7c3aed','#b45309','#4f46e5','#059669'][i%6];if(!AG_FISIOS.includes(n))AG_FISIOS.push(n);});return eq;}
-let AG_COL={Ramiro:'#8b5cf6',Jonathan:'#0891b2',Sara:'#ea7a2a',Juan:'#16a34a',Paola:'#ca8a04',ELENA:'#2563eb'};
+ if(!eq.length)return (window.CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365')?[]:['Laura','Marc','Ana','Pol'];eq.forEach((n,i)=>{if(!AG_COL[n])AG_COL[n]=['#db2777','#0d9488','#7c3aed','#b45309','#4f46e5','#059669'][i%6];if(!AG_FISIOS.includes(n))AG_FISIOS.push(n);});return eq;}
+let AG_COL={Laura:'#8b5cf6',Marc:'#0891b2',Ana:'#ea7a2a',Pol:'#16a34a',Ana:'#ca8a04',ELENA:'#2563eb'};
 const AG_PER=[['prox7','Próximos 7 días'],['hoy','Hoy'],['manana','Mañana'],['semana','Esta semana'],['semanaP','Semana pasada'],['ult7','Últimos 7 días'],['mes','Este mes'],['mesP','Mes pasado'],['ult30','Últimos 30 días'],['desdehoy','Desde hoy'],['todo','Todo (desde el principio)'],['rango','Elegir fechas…']];
 // Tipo de sesión de cada cita (Administración › Listas). Cada tipo con su color en la agenda; suelo pélvico y diástasis además en rosa
 let AG_SESIONES=['Fisioterapia convencional','Fisioterapia avanzada','Suelo pélvico','Diástasis','Readaptación deportiva','ATM','Hernia/Protusión'];
@@ -7321,7 +7321,7 @@ async function agRecordatorios(onDone,modoIni,encFIni){
   body.innerHTML=`${tabs()}<div class="fp-blk rec-top"><div class="ag-pf ag-busca rec-bus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb" placeholder="Buscar otro paciente…" autocomplete="off"><div class="ag-pr"></div></div>
    ${resBus?`<div class="res-bus">${fila(resBus,'b').replace(/<\/div>$/,'<button type="button" class="res-bx" aria-label="Quitar">✕</button></div>')}</div>`:''}
    <div class="rec-modo-l" style="margin-top:2px">Mensaje</div><div class="sev-ch c4 res-var">${RES_VAR.map(([k,t])=>`<button type="button" data-v="${k}" class="${resVar===k?'on':''}">${t}</button>`).join('')}</div>
-   <div class="res-prev">${escH(resTexto({pila:'Laura',fisio:'Sara'})).replace(/\n/g,'<br>').replace(RESENA_GOOGLE,'<i>enlace de Google</i>')}</div>
+   <div class="res-prev">${escH(resTexto({pila:'Laura',fisio:'Ana'})).replace(/\n/g,'<br>').replace(RESENA_GOOGLE,'<i>enlace de Google</i>')}</div>
    <div class="rec-pr" style="margin-top:12px"><div><b>${ped}</b> de ${L.length} con la reseña pedida</div></div><small class="fp-mu" style="display:block;font-size:12px;margin-top:6px">Salen los que han tenido sesión los últimos 7 días.</small></div>
    ${!L.length?'<div class="fac-vacio">Nadie ha tenido sesión estos días</div>':`<div class="fp-blk rec-lista">${L.map((c,i)=>fila(c,i)).join('')}</div>`}`;
   atarTabs();
@@ -7559,7 +7559,7 @@ function agPdfHuecos(){
   if(y>262){doc.addPage();y=22;}
   y=Math.max(y+6,250);doc.setDrawColor(239,235,229);doc.line(X,y,W-X,y);y+=8;
   doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...N);doc.text('¿Te va bien alguna? Escríbenos o llámanos y te la reservamos.',X,y);y+=6;
-  const C=(CONF&&CONF.clinica)||{};doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(`${C.tel||'672 89 39 49'} · ${C.direccion||'C/ Gran de Sant Andreu, 163 · Barcelona'}`,X,y);y+=5.5;doc.text('También puedes reservar desde la app de FISIO365.',X,y);
+  const C=(CONF&&CONF.clinica)||{};doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...G);doc.text(`${C.tel||'600 000 000'} · ${C.direccion||'C/ Calle Mayor, 12 · Barcelona'}`,X,y);y+=5.5;doc.text('También puedes reservar desde la app de FISIO365.',X,y);
   const nom=`Huecos libres FISIO365 ${t1.getDate()}-${t1.getMonth()+1}${fisSel.length===1?' '+fisSel[0]:''}.pdf`;
   return {blob:doc.output('blob'),nom};}
  contar();
@@ -8359,7 +8359,7 @@ const comAprueban=()=>[...new Set((fisios||[]).filter(f=>String(f.role||'').toLo
 const comDireccion=()=>[...new Set((fisios||[]).filter(f=>f.direccion).map(f=>pilaEq(f.nombre)))];
 const COM_APRUEBAN_X=null;
 // Quien hace las tareas de administración (consentimientos, huecos de la lista de espera, tarjetas regalo): el Puesto «Administración»
-const ADMIN_NOM=()=>comAprueban()[0]||comDireccion()[0]||''; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Nora, va a Ramiro) // quién aprueba vacaciones, días libres y cambios de horario
+const ADMIN_NOM=()=>comAprueban()[0]||comDireccion()[0]||''; // administración: aprueba vacaciones y recibe lo confidencial (si lo pide Laura, va a Laura) // quién aprueba vacaciones, días libres y cambios de horario
 const comTipoTxt=t=>({School:'School · formación',Comunicado:'Informe',Aviso:'Informe',Ausencia:'Vacaciones y horarios',Incidencia:'Para administración',Ayuda:'Necesito ayuda'})[t]||t;
 const comRol=n=>{if(/^fisio365$/i.test(n||''))return 'Resumen automático del panel';if(/^school$/i.test(n||''))return 'Formación del equipo';const f=(fisios||[]).find(x=>String(x.nombre||'').split(' ')[0].toLowerCase()===String(n||'').toLowerCase());if(!f)return /^(nora|ramiro)$/i.test(n||'')?'Dirección · FISIO365':'Fisioterapeuta · FISIO365';return (f.role==='admin'?'Administración':'Fisioterapeuta')+(f.direccion?' · Dirección':'')+' · FISIO365';};
 const comFechaDia=f=>{if(!f)return '';const t=new Date(f+'T12:00:00');return ['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]+' '+t.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][t.getMonth()];};
@@ -8413,11 +8413,11 @@ const comDia=iso=>{if(!iso)return '';const d=new Date(iso),h=new Date(),ay=new D
 const comHora=iso=>iso?new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
 
 // ── BUZÓN DE SUGERENCIAS ─────────────────────────────────────────────────────
-// Todo el equipo envía (App · Clínica · Otro) y ve sus Enviadas con la respuesta. Leen y responden las Recibidas quienes tienen el acceso «Leer sugerencias» (las de App, solo Nora).
+// Todo el equipo envía (App · Clínica · Otro) y ve sus Enviadas con la respuesta. Leen y responden las Recibidas quienes tienen el acceso «Leer sugerencias» (las de App, solo Laura).
 const SUG_IC={app:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',cli:'<path d="M3.5 20.5h17M5 20.5V9l7-5 7 5v11.5"/><path d="M10 20.5v-5h4v5M12 8.5v4M10 10.5h4"/>',otro:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',bombilla:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',clip:'<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/>',buzon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>'};
 const sugIco=k=>`<svg viewBox="0 0 24 24">${SUG_IC[k]}</svg>`;
 const sugAp=()=>{const otra=typeof CLINICA!=='undefined'&&CLINICA&&CLINICA.marca&&CLINICA.marca!=='FISIO365';
- return [['App','app',otra?'Mejoras o fallos de la app. Les llega a los creadores de la app, que te responden aquí.':'Cambios, mejoras o fallos de la app. Le llega a Nora',otra?'A los creadores de la app':'App'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];};
+ return [['App','app',otra?'Mejoras o fallos de la app. Les llega a los creadores de la app, que te responden aquí.':'Cambios, mejoras o fallos de la app. Le llega a dirección',otra?'A los creadores de la app':'App'],['Clínica','cli','Organización, material, instalaciones, trato…'],['Otro','otro','Cualquier otra idea']];};
 let SUG={tab:'',d:null,n:{rec:0,mias:0},resp:null,f:{apartado:'',tipo:'Mejora',texto:'',cap:null}};
 try{const g=JSON.parse(sessionStorage.getItem('f365_sug')||'{}');if(g.tab)SUG.tab=g.tab;}catch(e){}
 const sugGuarda=()=>{try{sessionStorage.setItem('f365_sug',JSON.stringify({tab:SUG.tab}));}catch(e){}};
@@ -8680,7 +8680,7 @@ async function comHilo(wrap,id){
    ${sello}${ficha}${h.tipo==='Tareas'?'':fichaEsp}
    ${D.resumen&&D.html?`<div class="com-res">${D.html}</div>`:m0.cuerpo?`<div class="com-cu">${comCuHtml(m0.cuerpo)}</div>`:''}${adjHtml(m0.adjuntos)}${h.tipo==='Tareas'?fichaEsp:''}
    ${firma(m0.de)}
-   <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Fourth Dynamic, S.L. · Gran de Sant Andreu 163, Barcelona</footer>
+   <footer class="com-pie"><span class="com-logo"><span>FISIO</span>365</span>Clínica Demo, S.L. · Calle Mayor 12, Barcelona</footer>
   </article>
   ${resp.map(m=>{const resp1=t=>`<article class="com-carta com-r${m.de===yo?' mio':''}"><div class="com-mh">${comAv(m.de)}<div><b>${escH(m.de)}</b><span>${escH(comFecha(m.fecha))}</span></div></div><div class="com-cu">${comCuHtml(t)}</div>${adjHtml(m.adjuntos)}</article>`;
    const ev=comEvento(m.cuerpo);if(!ev)return resp1(String(m.cuerpo||''));
@@ -8826,7 +8826,7 @@ function comNueva(onOk,paraIni){
  pintaTareas();pinta();
 }
 
-// ══ ESTADÍSTICAS DEL CENTRO (solo dirección: Nora y Ramiro) ══
+// ══ ESTADÍSTICAS DEL CENTRO (solo dirección: Laura y Laura) ══
 // Dirección = la marca «Dirección» de su ficha en Dirección › Equipo (no por nombre)
 const esDireccion=()=>{const A=(fisioActual&&fisioActual.accesos)||{};return !!((fisioActual&&fisioActual.direccion)||A.admin);};
 let ST={sem:null,met:'sesiones',d:null,vista:'sem',dN:0,fis:(()=>{try{return sessionStorage.getItem('f365_st_fis')||'';}catch(e){return '';}})()};
@@ -9768,7 +9768,7 @@ const CLUB_GR=[{k:'por',t:'Por contactar',est:['POR CONTACTAR'],c:''},{k:'marcha
 const CLUB_MEDIO=['Llamada','WhatsApp','Email','Visita','Instagram'];
 let clubF={g:'por',q:'',dep:''};
 const clubMovil=t=>{const m=String(t||'').split('/').map(x=>x.replace(/\D/g,'').replace(/^34(?=\d{9}$)/,'')).find(x=>/^[67]\d{8}$/.test(x));return m||'';};
-function clubTexto(c,mail){const yo=miNombreCorto(),n=c.contacto?' '+String(c.contacto).split(/[\s,]/)[0]:'';return `Hola${n}, ¿qué tal? Soy ${yo||'…'}, de FISIO365, el centro de fisioterapia de Gran de Sant Andreu, 163.\n\nNos gustaría ser el fisio de referencia de ${c.nombre}. Tratamos a vuestros jugadores con sesiones de 1 hora y fisios especializados en deporte y readaptación, y cada uno tiene nuestra app con su programa de ejercicios en vídeo, su racha diaria y el chat con su fisio.\n\nY hemos creado «Mi equipo»: desde el móvil, cada entrenador ve cómo va la recuperación de sus jugadores, cuándo vuelven, qué pueden hacer mientras tanto y si hacen sus ejercicios, y puede escribir directamente a su fisio. La historia clínica no se comparte, y solo si el jugador lo acepta.\n\nAsí lo vería un entrenador: ${APP_URL}/?demo=1\n\n¿Os iría bien que os lo enseñemos? Son diez minutos.${mail?'\n\nUn saludo,\n'+(yo||'')+'\nFISIO365 · Gran de Sant Andreu, 163 · 672 89 39 49':''}`;}
+function clubTexto(c,mail){const yo=miNombreCorto(),n=c.contacto?' '+String(c.contacto).split(/[\s,]/)[0]:'';return `Hola${n}, ¿qué tal? Soy ${yo||'…'}, de FISIO365, el centro de fisioterapia de Calle Mayor, 12.\n\nNos gustaría ser el fisio de referencia de ${c.nombre}. Tratamos a vuestros jugadores con sesiones de 1 hora y fisios especializados en deporte y readaptación, y cada uno tiene nuestra app con su programa de ejercicios en vídeo, su racha diaria y el chat con su fisio.\n\nY hemos creado «Mi equipo»: desde el móvil, cada entrenador ve cómo va la recuperación de sus jugadores, cuándo vuelven, qué pueden hacer mientras tanto y si hacen sus ejercicios, y puede escribir directamente a su fisio. La historia clínica no se comparte, y solo si el jugador lo acepta.\n\nAsí lo vería un entrenador: ${APP_URL}/?demo=1\n\n¿Os iría bien que os lo enseñemos? Son diez minutos.${mail?'\n\nUn saludo,\n'+(yo||'')+'\nFISIO365 · Calle Mayor, 12 · 600 000 000':''}`;}
 const IC_TEL='<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',IC_MAIL='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>',IC_WEB='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>';
 const CAP_DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],CAP_FRANJA=['Mañana','Mediodía','Tarde'];
 const CAP_MEDIO=['LLAMADA','WHATSAPP','POR LA PUERTA','REDES','EMAIL'];let CAP_MOTIVO=['Busca ecografía','Sanitas','Adeslas','Otros seguros','No tenemos disponibilidad','Pide precios','Solo pide info','Quiere algo que no tenemos'];
@@ -9814,7 +9814,7 @@ const capDiaNom=f=>CAP_DIAS[new Date(f+'T12:00:00').getDay()-1]||'';
 // Horario «17:00-21:00» (desde-hasta; un lado vacío = sin límite). Si no tiene, se usa la franja antigua (mañana/mediodía/tarde)
 const capHor=x=>{const m=String((x&&x.horario)||'').match(/^(\d{2}:\d{2})?-(\d{2}:\d{2})?$/);return m&&(m[1]||m[2])?{d:m[1]||'',h:m[2]||''}:null;};
 const capEnHora=(x,hora)=>{const r=capHor(x),hh=String(hora||'').replace(/^(\d):/,'0$1:').slice(0,5);if(r)return (!r.d||hh>=r.d)&&(!r.h||hh<r.h);return !(x.franja||[]).length||x.franja.includes(capFranjaDe(hora));};
-// Texto «lun 26/10 18:00 · Sara» de una línea guardada
+// Texto «lun 26/10 18:00 · Ana» de una línea guardada
 const capHTxt=l=>{const m=String(l).match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) ?(.*)$/);if(!m)return l;const t=new Date(m[1]+'T12:00:00');return `${['dom','lun','mar','mié','jue','vie','sáb'][t.getDay()]} ${t.getDate()}/${t.getMonth()+1} ${m[2]}${m[3]?' · '+capNomF(m[3]):''}`;};
 // Varias franjas: «Lunes,Martes=09:00-13:00|Jueves=16:00-» (cada franja con sus días y su horario). Lo antiguo (días + un horario) sigue valiendo
 const CAP_FR_R={'Mañana':['','13:00'],'Mediodía':['13:00','16:00'],'Tarde':['16:00','']};
@@ -10358,7 +10358,7 @@ async function renderCaptacion(wrap){
     <div class="cap-a">${n.tel?`<button type="button" class="cap-ic wa cap-wa" title="WhatsApp">${IC_WA}</button>`:''}<button type="button" class="cap-ic cap-ed" title="Editar">${IC_ED}</button><button type="button" class="cap-b cap-vis">Visitado</button></div></div>`).join('')}</div>`:'<div class="fac-vacio">Ningún negocio apuntado</div>'}`;
   body.querySelector('.cap-add').onclick=()=>editNegocio(null);
   body.querySelectorAll('.cap-it').forEach(r=>{const n=D.negocios.find(e=>e.id===r.dataset.id);
-   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(n.tel,`¡Hola${n.contacto?' '+capNomF(String(n.contacto).split(' ')[0]):''}! Os escribimos de FISIO365, el centro de fisioterapia de Gran de Sant Andreu. `);
+   const wa=r.querySelector('.cap-wa');if(wa)wa.onclick=()=>waAbrir(n.tel,`¡Hola${n.contacto?' '+capNomF(String(n.contacto).split(' ')[0]):''}! Os escribimos de FISIO365, el centro de fisioterapia de Calle Mayor. `);
    r.querySelector('.cap-ed').onclick=()=>editNegocio(n);
    r.querySelector('.cap-vis').onclick=()=>visitaNegocio(n);});}
  function visitaNegocio(n){
@@ -10459,7 +10459,7 @@ async function renderCaptacion(wrap){
    b.disabled=true;try{await capGuardar('club',Object.assign({estado:est,contacto:con||c.contacto||'',ultimo:D.hoy,proximo:cf.value||'',historial:[String(c.historial||'').trim(),linea+(perm?' · da permiso para email':'')].filter(Boolean).join('\n')},perm?{permiso:perm}:{}),c.id);toast('Apuntado',true);m.remove();
     if(perm){Object.assign(c,{permiso:perm,contacto:con||c.contacto||''});clubEnviarModal(c,recargar);}else recargar();}catch(err){b.disabled=false;toast(err.message,false);}};}
  // Email a un club: la presentación solo con su permiso (si no, se apunta cómo lo han dado)
- // Email a un club: la presentación sale desde info@fisioterapia365.com (por Brevo)
+ // Email a un club: la presentación sale desde info@clinica-demo.es (por Brevo)
  function clubEmail(c){
   if(c.baja){toast('Pidió no recibir más correos nuestros',false);return;}
   clubEnviarModal(c,recargar);}
@@ -10467,7 +10467,7 @@ async function renderCaptacion(wrap){
  function clubPendDifusion(L){const vistos=new Set(L.filter(c=>c.enviado).map(c=>String(c.email||'').trim().toLowerCase()));return L.filter(c=>{const e=String(c.email||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)||c.baja||c.enviado||vistos.has(e))return false;vistos.add(e);return true;});}
  function clubDifusion(L){const pend=clubPendDifusion(L),yo=String((fisioActual&&(fisioActual.email||fisioActual.EMAIL))||'');
   const m=hzModal(`<div class="hz-top"><div><small>Difusión por email</small><b>Enviar la presentación a ${pend.length} clubs</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-   <p class="eq-ex" style="margin:0 0 10px">Sale el correo de FISIO365 para clubs desde info@fisioterapia365.com, firmado por Ramiro, con el enlace para darse de baja. Uno por email: si dos clubs comparten dirección, solo le llega una vez.</p>
+   <p class="eq-ex" style="margin:0 0 10px">Sale el correo de FISIO365 para clubs desde info@clinica-demo.es, firmado por Laura, con el enlace para darse de baja. Uno por email: si dos clubs comparten dirección, solo le llega una vez.</p>
    <div class="cd-l">${pend.map(c=>`<div><b>${escH(c.nombre)}</b><span>${escH(c.email)}</span></div>`).join('')}</div>
    <div class="ce-pr"><span>Antes, mándate una prueba</span><div><input type="email" class="ce-pe" placeholder="Tu email" value="${escH(yo)}"><button type="button" class="ce-pb">Mandarme una prueba</button></div></div>
    <div class="cd-pg" hidden><div class="cd-bar"><i></i></div><small></small></div>
@@ -10486,7 +10486,7 @@ async function renderCaptacion(wrap){
  function clubEscribir(c,alAcabar){
   const m=hzModal(`<div class="hz-top"><div><small>Email a</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="ce-to">${IC_MAIL}<div><small>Para</small><b>${escH(c.email)}</b></div></div>
-   <div class="ce-to ce-de"><svg viewBox="0 0 24 24"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg><div><small>Desde</small><b>info@fisioterapia365.com</b></div></div>
+   <div class="ce-to ce-de"><svg viewBox="0 0 24 24"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg><div><small>Desde</small><b>info@clinica-demo.es</b></div></div>
    <div class="hz-lab">Asunto</div>${capIn('cw-as','Asunto','Colaboración con '+c.nombre+' · FISIO365')}
    <div class="hz-lab">Mensaje</div><textarea class="seg-n cw-tx" rows="12">${escH(clubTexto(c,1))}</textarea>
    <div class="hz-bts"><button type="button" class="hz-ok">Enviar desde info@</button></div>`);
@@ -10508,8 +10508,8 @@ async function renderCaptacion(wrap){
   const yo=String((fisioActual&&(fisioActual.email||fisioActual.EMAIL))||'');
   const m=hzModal(`<div class="hz-top"><div><small>Enviar la presentación</small><b>${escH(c.nombre)}</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
    <div class="ce-to">${IC_MAIL}<div><small>Para</small><b>${escH(c.email)}</b></div></div>
-   <div class="ce-to ce-de"><svg viewBox="0 0 24 24"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg><div><small>Desde</small><b>info@fisioterapia365.com</b></div></div>
-   <p class="eq-ex" style="margin:10px 0 0">El correo de FISIO365 para clubs: quiénes somos, la app con los ejercicios en vídeo y Mi equipo para sus entrenadores. Firmado por Ramiro; si contestan, la respuesta os llega a info@${c.contacto?', y empieza con «Hola '+escH(String(c.contacto).split(/[\s,]+/)[0])+'»':''}.</p>
+   <div class="ce-to ce-de"><svg viewBox="0 0 24 24"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg><div><small>Desde</small><b>info@clinica-demo.es</b></div></div>
+   <p class="eq-ex" style="margin:10px 0 0">El correo de FISIO365 para clubs: quiénes somos, la app con los ejercicios en vídeo y Mi equipo para sus entrenadores. Firmado por Laura; si contestan, la respuesta os llega a info@${c.contacto?', y empieza con «Hola '+escH(String(c.contacto).split(/[\s,]+/)[0])+'»':''}.</p>
    ${c.enviado?`<div class="eq-est" style="margin-top:10px"><span>Ya se lo enviasteis el ${escH(capFe(c.enviado))}.</span></div>`:''}
    <div class="ce-pr"><span>¿Quieres verlo antes?</span><div><input type="email" class="ce-pe" placeholder="Tu email" value="${escH(yo)}"><button type="button" class="ce-pb">Mandarme una prueba</button></div></div>
    <div class="hz-bts"><button type="button" class="hz-re ce-nor">Escribir otro email</button><button type="button" class="hz-ok">${c.enviado?'Enviar otra vez':'Enviar ahora'}</button></div>`);
@@ -10559,8 +10559,8 @@ async function guardarEstados(pacienteId,ids){
  const d=await (await fetch('/api/schedule?action=estado-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,pacienteId,estados:ids})})).json();
  if(!d.ok)throw new Error(d.error||'Error');const p=(pacs||[]).find(x=>x.id===pacienteId);if(p)p.estados=ids;
 }
-// ── TAREAS: lo que tiene pendiente cada fisio (y Nora ve las de todos) ──
-let TAR_NOMBRES=['Nora','Sara','Jonathan','Juan','Ramiro'];
+// ── TAREAS: lo que tiene pendiente cada fisio (y Laura ve las de todos) ──
+let TAR_NOMBRES=['Laura','Ana','Marc','Pol','Laura'];
 function miNombreCorto(){const n=String((fisioActual&&fisioActual.nombre)||'').split(' ')[0];return TAR_NOMBRES.find(x=>x.toLowerCase()===n.toLowerCase())||n;}
 function esJefe(){return !!fisioActual&&(fisioActual.role==='admin'||!!(fisioActual.accesos||{}).rendimiento);}
 const deQuienSeg=x=>x.responsable||x.fisio||'';
@@ -10830,7 +10830,7 @@ const REG_NEG=[['Gracias','Si alguna vez podemos ayudaros a vosotros o a vuestro
  ['Os recomendamos','Y por supuesto, cuando alguno de nuestros pacientes necesite lo que hacéis vosotros, le hablaremos de vosotros.'],
  ['Sesión regalo','Como agradecimiento, nos encantaría regalar una sesión de fisioterapia a alguien de vuestro equipo: solo tenéis que escribirnos para reservarla.'],
  ['10% a sus clientes','Además, vuestros clientes tendrán un 10% de descuento en su primera sesión con nosotros: solo tienen que decir que vienen de vuestra parte.']];
-const msgNegocio=i=>`¡Hola! Somos FISIO365, el centro de fisioterapia de Gran de Sant Andreu. Nos ha llegado un paciente nuevo recomendado por vosotros y queríamos daros las gracias de corazón: es la mejor forma de crecer.\n\n${REG_NEG[i][1]}\n\n¡Muchas gracias!`;
+const msgNegocio=i=>`¡Hola! Somos FISIO365, el centro de fisioterapia de Calle Mayor. Nos ha llegado un paciente nuevo recomendado por vosotros y queríamos daros las gracias de corazón: es la mejor forma de crecer.\n\n${REG_NEG[i][1]}\n\n¡Muchas gracias!`;
 // Recomendaciones ya resueltas: para deshacer lo que se marcó sin querer
 async function verResueltas(onDone){
  const m=hzModal(`<div class="hz-top"><div><small>Tarjetas regalo y negocios</small><b>Ya resueltas</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="rs-l"><div class="fac-vacio">Cargando…</div></div>`);
@@ -11149,7 +11149,7 @@ async function sevFormulario(ctx,casoAbierto){
 function sevHecho(ctx,caso,onDone){
  const m=sevModal('¿Cómo sigues con '+String(ctx.P.nombre||'').split(' ')[0]+'?');
  m.body.innerHTML=`<div class="fp-blk"><div class="sev-f"><label>Decisión</label><div class="sev-ch c5">${SEV_DEC.map(o=>`<button type="button">${escH(o)}</button>`).join('')}</div></div>
-  <div class="sev-f"><label>¿Qué vas a hacer? <i>*</i></label><textarea class="fp-ta sev-nota" rows="4" placeholder="Ej.: comentado con Sara, probamos 2 sesiones con ejercicio de carga progresiva y si no, derivamos a trauma"></textarea></div>
+  <div class="sev-f"><label>¿Qué vas a hacer? <i>*</i></label><textarea class="fp-ta sev-nota" rows="4" placeholder="Ej.: comentado con Ana, probamos 2 sesiones con ejercicio de carga progresiva y si no, derivamos a trauma"></textarea></div>
   <small class="fp-mu" style="font-size:12px">Al guardar, la tarea queda hecha. Si sigue sin mejorar, vuelve a marcar «Sin evolución».</small></div>
   <div class="sev-pie"><button type="button" class="sev-b sev-can">Cancelar</button><button type="button" class="sev-b ok sev-ok">Tarea hecha</button></div>`;
  m.body.querySelectorAll('.sev-ch button').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');m.body.querySelectorAll('.sev-ch button').forEach(x=>x.classList.remove('on'));b.classList.toggle('on',on);});
@@ -11468,7 +11468,7 @@ function campoTxt(lbl,k,val,tipo){return `<div class="fp-f" data-k="${k}"><span>
   const modD=P.historialMod?isoMadrid(new Date(P.historialMod)):'';
   const par=t=>String(t||'').split(/\n{2,}/).map(x=>`<p>${mdSimple(x.trim())}</p>`).join('');
   // Línea del tiempo: detecta cada sesión aunque el fisio la escriba distinto
-  // («04/09/26 - SARA - 1a», «Primera sesión Jony 01/10/2026», «JONATHAN 14/10/2026», «9a ss Jonathan 13/09», «**`23/10/2026`**»…)
+  // («04/09/26 - SARA - 1a», «Primera sesión Marc 01/10/2026», «JONATHAN 14/10/2026», «9a ss Marc 13/09», «**`23/10/2026`**»…)
   const NOMS=['sara','jony','jonathan','juan','nora','ramiro','paola',...(fisios||[]).map(f=>String(f.nombre||f.name||'').split(' ')[0].toLowerCase()).filter(Boolean)];
   const ORD='primera|segunda|tercera|cuarta|quarta|quinta|sexta|s[eé]ptima|octava|novena|d[eé]cima|1a|2a|3a|4a|5a|6a|7a|8a|9a|10a';
   const FEC=/(\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{1,2}[\/.-]\d{4})(?!\d)/;
@@ -11910,7 +11910,7 @@ async function _datosTareasTodas(fresco){
 }
 // ── SEGUIMIENTO: pacientes a los que hay que llamar ──
 const SEG_RES=['Cita recuperada','Volver a llamar','No contesta','Pendiente de respuesta','Alta','No volver a llamar'];
-const QUIEN_NOM={NORA:'Nora',SARA:'Sara',JONY:'Jonathan',JUAN:'Juan',RAMIRO:'Ramiro'};
+const QUIEN_NOM={NORA:'Laura',SARA:'Ana',JONY:'Marc',JUAN:'Pol',RAMIRO:'Laura'};
 const resTxtG=r=>{r=String(r||'').toUpperCase();if(/^NO VOLVER/.test(r))return 'No volver a llamar';return /RECUPERADA/.test(r)?'Cita recuperada':/^ALTA/.test(r)?'Alta':/^NC/.test(r)?'No contesta':/^VOLVER/.test(r)?'Volver a llamar':/PENDIENTE/.test(r)?'Pendiente de respuesta':(r?r.charAt(0)+r.slice(1).toLowerCase():'');};
 const quienNom=q=>QUIEN_NOM[String(q||'').trim().toUpperCase()]||q||'';
 const ahoraTxt=()=>new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid',weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -12301,7 +12301,7 @@ function abrirClasificar({fisio,fecha,dif,reg,onSave,conBanco=true,explica=false
   <div class="hz-lab">${explica?'¿Qué pasó?':'¿Qué fue?'}</div><div class="hz-tipos">${HZ_TIPOS.map(t=>`<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
   ${hechas!=null&&toca!=null&&!isNaN(hechas)?`<div class="hz-dia">${hechas===0?(explica?`Este día no viniste: tenías ${toca} h de horario`:`Este día no vino: tenía ${toca} h de horario`):(explica?`Este día hiciste <b>${hechas} h</b> de ${toca} h`:`Este día hizo <b>${hechas} h</b> de ${toca} h`)}${explica?'<b class="hz-hv"></b>':''}</div>`:''}${explica?'':`<div class="hz-row"><div><div class="hz-lab">Horas que cuentan</div><div class="hz-step"><button type="button" data-d="-0.5">−</button><b class="hz-hv"></b><button type="button" data-d="0.5">+</button></div><small class="hz-hint">Ya viene puesto. Cámbialo solo si no es correcto (rojo = de menos, verde = de más).</small></div>`}
    ${!explica&&conBanco?`<label class="hz-sw"><input type="checkbox" ${banco?'checked':''}><i></i><span class="hz-swt"></span></label>`:''}${explica?'':'</div>'}
-  <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="hz-nota" rows="2" placeholder="Ej.: médico, se cambió con Jonathan…">${reg?escH(reg.nota):''}</textarea>
+  <div class="hz-lab">Nota <span>(opcional)</span></div><textarea class="hz-nota" rows="2" placeholder="Ej.: médico, se cambió con Marc…">${reg?escH(reg.nota):''}</textarea>
   <div class="hz-bts">${reg?'<button type="button" class="hz-del">Quitar</button>':''}<button type="button" class="hz-ok">${explica?'Enviar a dirección':valida?'Validar':'Guardar'}</button></div>`);
  const pinta=()=>{m.querySelectorAll('.hz-tipos button').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));{const dd=m.querySelector('.hz-dia'),tp=m.querySelector('.hz-tipos');if(dd&&tp&&tp.previousElementSibling)tp.previousElementSibling.before(dd);}const hv=m.querySelector('.hz-hv');hv.textContent=explica?(horas?` · ${Math.abs(horas)} h ${horas<0?'de menos':'de más'}`:''):(horas>0?'+':horas<0?'−':'')+Math.abs(horas)+' h';hv.className='hz-hv '+(horas>0?'mas':horas<0?'menos':'');{const sw=m.querySelector('.hz-swt');if(sw)sw.innerHTML=horas<0?'Restar del<br>banco de horas':'Sumar al<br>banco de horas'};};pinta();
  m.querySelectorAll('.hz-tipos button').forEach(b=>b.onclick=()=>{tipo=b.dataset.v;pinta();});
@@ -12631,7 +12631,7 @@ function pendResolver(o,hecho){const T=PCA_T.find(t=>t[0]===o.k)||PCA_T.find(t=>
     else{rr=await agPost('nota-reagenda',{pacienteId:p.id,nota:'Reserva por la app',fisio:yoN});if(rr&&rr.ok)try{await avrPost('seg-avr-guardar',{pacienteId:p.id,nombre:p.nombre||'',fecha:segIso(14)});}catch(_){}}
     if(!rr||!rr.ok)throw new Error((rr&&rr.error)||'No se ha podido guardar');
     listo(k==='alta'?'De alta':k==='seg'?'A seguimiento (en 1 semana)':'Se cita por la app');}catch(e){toast(e.message,false);b.disabled=false;}return;}
-  if(k==='mio'||k==='recep'){const N=k==='recep'?[ADMIN_NOM()||'Nora']:TAR_NOMBRES.filter(n=>n.toLowerCase()!==yo.toLowerCase());
+  if(k==='mio'||k==='recep'){const N=k==='recep'?[ADMIN_NOM()||'Dirección']:TAR_NOMBRES.filter(n=>n.toLowerCase()!==yo.toLowerCase());
    mas.hidden=false;mas.innerHTML=`<div class="pr-lab">¿De quién es?</div><div class="pr-chips">${N.map(n=>`<button type="button" data-n="${escH(n)}">${escH(n)}</button>`).join('')}</div><button type="button" class="hz-ok pr-ok" disabled>Pasárselo</button>`;
    let q=N.length===1?N[0]:'';const pr=()=>{mas.querySelectorAll('.pr-chips button').forEach(x=>x.classList.toggle('on',x.dataset.n===q));mas.querySelector('.pr-ok').disabled=!q;};pr();
    mas.querySelectorAll('.pr-chips button').forEach(x=>x.onclick=()=>{q=x.dataset.n;pr();});
@@ -12967,7 +12967,7 @@ async function renderRendimiento(wrap,solo){
   banco:' El banco son las horas que dirección ha guardado para compensar más adelante.'};
  const box=ce('div','rend'+(solo?' rend-solo':''));
  box.innerHTML=`<div class="rend-tot"><div class="rt" data-k="ayer"><span>Ayer</span><b>…</b><i></i></div><div class="rt" data-k="semana"><span>Esta semana</span><b>…</b><i></i></div><div class="rt" data-k="mes"><span>Este mes</span><b>…</b><i></i></div></div>
-  <div class="rend-sub">${solo?'Tus sesiones':'Ocupación del equipo (Sara, Jonathan y Juan)'}${infoI(I.ocup)}</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['rango','Elegir fechas…']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
+  <div class="rend-sub">${solo?'Tus sesiones':'Ocupación del equipo'}${infoI(I.ocup)}</div><div class="rend-chips">${[['hoy','Hoy'],['ayer','Ayer'],['semana','Esta semana'],['semanaPasada','Semana pasada'],['mes','Este mes'],['mesPasado','Mes pasado'],['rango','Elegir fechas…']].map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('')}</div>
   <div class="rend-res"></div>`;
  wrap.appendChild(box);
  const res=box.querySelector('.rend-res');
@@ -13428,7 +13428,7 @@ function infEntregaBloque(inf,o){
    return;}
   const E=inf.entrega;
   b.innerHTML=`<div class="ient-h">Dárselo con recibí firmado</div><div class="ient-s">${E&&E.canal&&inf.recibiPide?(E.canal==='app'?'Compartido en su app el ':'Enlace '+({whatsapp:'para WhatsApp',email:'para email'}[E.canal]||'')+' creado el ')+infFechaHora(E.enviado)+(E.abierto?' · lo abrió el '+infFechaHora(E.abierto):' · todavía no lo ha abierto')+'. Falta su firma. Puedes volver a mandarlo.':'El paciente firma que lo ha recibido. Queda guardado con la fecha y la hora.'}</div>
-   <div class="ient-ops"><button type="button" data-c="whatsapp"><b>Enlace por WhatsApp</b><small>Le llega un enlace seguro, no el PDF</small></button><button type="button" data-c="email"><b>Enlace por email</b><small>Se envía desde info@fisioterapia365.com</small></button><button type="button" data-c="app"><b>En su app</b><small>Firma al abrirlo en «Mis documentos»</small></button><button type="button" data-c="mano"><b>En mano</b><small>Firma ahora en esta pantalla</small></button></div><div class="ient-res"></div>`;
+   <div class="ient-ops"><button type="button" data-c="whatsapp"><b>Enlace por WhatsApp</b><small>Le llega un enlace seguro, no el PDF</small></button><button type="button" data-c="email"><b>Enlace por email</b><small>Se envía desde info@clinica-demo.es</small></button><button type="button" data-c="app"><b>En su app</b><small>Firma al abrirlo en «Mis documentos»</small></button><button type="button" data-c="mano"><b>En mano</b><small>Firma ahora en esta pantalla</small></button></div><div class="ient-res"></div>`;
   b.querySelectorAll('.ient-ops button').forEach(bt=>bt.onclick=()=>dar(bt.dataset.c,bt));
  };
  const dar=async(canal,bt)=>{
@@ -13444,13 +13444,13 @@ function infEntregaBloque(inf,o){
   let link='';
   if(canal==='whatsapp'){if(!d.tel){res.innerHTML='<div class="ient-err">No tiene teléfono en la ficha. Copia el mensaje y mándaselo como puedas.</div>';}else link=`https://wa.me/${d.tel}?text=${encodeURIComponent(msg)}`;}
   if(canal==='email'){pinta();const r3=b.querySelector('.ient-res');
-   r3.innerHTML=`<div class="ient-s" style="margin:0 0 6px">Se envía desde <b>info@fisioterapia365.com</b>, con un botón «Abrir mi informe».</div><input class="ient-em" type="email" inputmode="email" placeholder="Email del paciente" value="${escH(d.email||'')}"><button type="button" class="ient-go">Enviar email</button><div class="ient-err" hidden></div>`;
+   r3.innerHTML=`<div class="ient-s" style="margin:0 0 6px">Se envía desde <b>info@clinica-demo.es</b>, con un botón «Abrir mi informe».</div><input class="ient-em" type="email" inputmode="email" placeholder="Email del paciente" value="${escH(d.email||'')}"><button type="button" class="ient-go">Enviar email</button><div class="ient-err" hidden></div>`;
    const ie=r3.querySelector('.ient-em'),go=r3.querySelector('.ient-go'),er=r3.querySelector('.ient-err');
    go.onclick=async()=>{const to=ie.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){er.hidden=false;er.textContent='Revisa el email';ie.focus();return;}
     go.disabled=true;go.textContent='Enviando…';er.hidden=true;
     const x=await post('seg-inf-email',{id:inf.id,to,pila:d.pila,yo,verif:d.verif});
     if(!x.ok){go.disabled=false;go.textContent='Enviar email';er.hidden=false;er.textContent=x.error||'No se ha podido enviar';return;}
-    r3.innerHTML=`<div class="ient-hecho">✓ Email enviado a ${escH(to)} desde info@fisioterapia365.com</div>`;toast('Email enviado',true);};
+    r3.innerHTML=`<div class="ient-hecho">✓ Email enviado a ${escH(to)} desde info@clinica-demo.es</div>`;toast('Email enviado',true);};
    return;}
   pinta();const r2=b.querySelector('.ient-res');
   r2.innerHTML=`<div class="ient-msg">${escH(msg).replace(/\n/g,'<br>')}</div>${link?`<a class="ient-go ${canal}" href="${link}" target="_blank" rel="noopener">${canal==='whatsapp'?'Abrir WhatsApp':'Abrir el correo'}</a>`:''}<button type="button" class="ient-cp">Copiar mensaje</button>`;
@@ -13480,7 +13480,7 @@ function infDocEditor(texto,o,onCambio){
  el.innerHTML=`<div class="idoc-cab"><img src="/informe/logo.png" alt="FISIO365"><span>${esTto?'Informe fisioterapéutico':'Informe de valoración'} · ${escH(fecha)}</span></div>
   <div class="idoc-dat"><div><small>Paciente</small><b>${escH(o.pacNom||'—')}</b></div><div><small>${esTto?'Fecha':'Zona valorada'}</small><b>${escH(esTto?fecha:(o.tipo||'—'))}</b></div><div><small>Fisioterapeuta</small><b>${escH(o.fisioNom||'—')}</b>${col?`<i>Colegiado nº ${escH(col)}</i>`:''}</div></div>
   <div class="idoc-txt" contenteditable="true" spellcheck="true"></div>
-  <div class="idoc-pie">FISIO365 · Gran de Sant Andreu, 163 · Barcelona · 672 89 39 49 · fisioterapia365.com</div>`;
+  <div class="idoc-pie">FISIO365 · Calle Mayor, 12 · Barcelona · 600 000 000 · fisioterapia365.com</div>`;
  const tx=el.querySelector('.idoc-txt');
  // Cada línea es un bloque; tras un título sin texto se deja una línea vacía para escribir
  const ls=String(texto||'').replace(/\r/g,'').split('\n').map(l=>l.trim());const out=[];
@@ -14225,7 +14225,7 @@ const NOVEDADES=[
  {f:'2026-11-20',dir:1,t:'Panel de control › Llamadas y tareas atrasadas: toca el teléfono de un fisio para ver solo sus llamadas, o el check para ver solo sus tareas.'},
  {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes › Llamadas y tareas atrasadas: las tareas salen separadas por tipo (historias, ejercicios, app, consentimientos, cobros, citas sin marcar…), en total y en cada fisio, y entra todo lo que sigue sin hacer del último mes.'},
  {f:'2026-11-20',t:'Mi día carga más rápido.'},
- {f:'2026-11-20',adm:1,t:'Facturación: las ventas que hagáis en Holded (p. ej., las facturas de Vilfer de CerraPoint) entran solas en el panel al abrir Facturación, sin tener que traerlas a mano.'},
+ {f:'2026-11-20',adm:1,t:'Facturación: las ventas que hagáis en Holded (p. ej., las facturas de Taller Norte de Actividad 2) entran solas en el panel al abrir Facturación, sin tener que traerlas a mano.'},
  {f:'2026-11-20',t:'Ficha › Historia › Archivos: ya se pueden subir PDFs y fotos de hasta 25 MB (antes, 3 MB).'},
  {f:'2026-11-20',aviso:1,t:'Mi día › Pendientes › «Sin próxima cita»: ahora salen todos tus pacientes sin resolver de los últimos 3 meses, y cada uno tiene botones rápidos: Alta, Seguimiento (te lo pone para llamar en 1 semana) o App (reserva por la app, con recordatorio en 2 semanas). Para lo demás, «Explicar».',ver:{sec:'tar',pasos:[{el:'.tk-rap',txt:'Ciérralo con un toque.'}]}},
  {f:'2026-11-20',dir:1,t:'Panel de control › Pacientes: en «Sin reagendar: sin resolver ahora» toca un fisio y cierra cada paciente con un toque: Alta, Seguimiento (para su fisio, en 1 semana) o App (reserva por la app, con recordatorio en 2 semanas). Y la pestaña carga al momento.',ver:{sec:'ctrl',pasos:[{el:'.rnr4',txt:'Toca un fisio para ver sus pacientes.'}]}},
@@ -14248,9 +14248,9 @@ const NOVEDADES=[
  {f:'2026-11-17',dir:1,t:'Facturación › Comparar con Holded: al abrir un día, los tickets que se quedaron sin su copia se arreglan solos (se unen a la que ya había o se hacen) y los «Borrador» cogen el número que les dio Holded.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: una factura hecha a mano a un paciente (se le reconoce por DNI, email o móvil) sale también en su ficha › Facturas y en su app.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: «Banco» tiene ahora su propio botón arriba (antes estaba dentro de Gastos), porque lleva tanto los pagos como los cobros.',ver:{sec:'fx'}},
- {f:'2026-11-17',dir:1,t:'Facturación: lo traído de Holded se reparte venta a venta (las de Vilfer, a CerraPoint; el resto, a la clínica), aunque estén en la misma serie.',ver:{sec:'fx'}},
+ {f:'2026-11-17',dir:1,t:'Facturación: lo traído de Holded se reparte venta a venta (las de Taller Norte, a Actividad 2; el resto, a la clínica), aunque estén en la misma serie.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Gestoría: el IVA de los gastos se calcula con prorrata general (como lo lleva la gestoría). Se puede cambiar ahí mismo.',ver:{sec:'fx'}},
- {f:'2026-11-17',dir:1,t:'Facturación › Gastos: los gastos son de la SL por defecto («La SL (de todo)»). Solo se marca «FISIO365» o «CerraPoint» si el gasto es solo de esa actividad. Las compras traídas de Holded ya están como de la SL.',ver:{sec:'fx'}},
+ {f:'2026-11-17',dir:1,t:'Facturación › Gastos: los gastos son de la SL por defecto («La SL (de todo)»). Solo se marca «FISIO365» o «Actividad 2» si el gasto es solo de esa actividad. Las compras traídas de Holded ya están como de la SL.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Ajustes › «Traer lo de Holded»: ahora también trae el PDF o la foto de cada compra (botón «Traer los archivos de las compras»).',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Ajustes › «Traer lo de Holded» más claro: un resumen con las ventas de cada actividad y las compras, y las series se cambian de actividad solo si hace falta.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: las copias de prueba que se habían quedado sin QR ya lo llevan (se registran solas en VeriFactu de pruebas en cuanto tienen su número de Holded).',ver:{sec:'fx'}},
@@ -14269,12 +14269,12 @@ const NOVEDADES=[
  {f:'2026-11-17',dir:1,t:'Facturación › VeriFactu: ya se puede subir el certificado de la empresa (.p12/.pfx). Con él, cada factura se manda sola a Hacienda (de momento, al entorno de pruebas) y ves qué ha aceptado y qué no. También está la declaración responsable del programa.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: facturas que se repiten (Facturas › «Se repiten»: se hacen solas y, si quieres, se mandan por email), aviso de gastos que se repiten y aún no han llegado, vista de Proveedores, y una simplificada se puede cambiar por una completa con los datos del cliente («Con datos del cliente»).',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Resultados: lo que entra y lo que sale cada mes y por actividad. En Gestoría › «Año entero» están el 347 y las retenciones del año, y puedes dejar puesto el email de la gestoría para que se lo mande solo cada trimestre. Antes de cada fecha del IVA os llega un aviso al móvil.',ver:{sec:'fx'}},
- {f:'2026-11-17',dir:1,t:'Facturación: el IVA de los gastos ahora se calcula bien. Cada gasto dice de qué es (clínica, CerraPoint o de las dos) y en Gestoría eliges cómo se desgrava (sectores diferenciados o prorrata). Los proveedores de fuera de España (Google, Canva…) se apuntan aparte, y en Banco un pago puede cuadrar con varias facturas o con parte de una.',ver:{sec:'fx'}},
+ {f:'2026-11-17',dir:1,t:'Facturación: el IVA de los gastos ahora se calcula bien. Cada gasto dice de qué es (clínica, Actividad 2 o de las dos) y en Gestoría eliges cómo se desgrava (sectores diferenciados o prorrata). Los proveedores de fuera de España (Google, Canva…) se apuntan aparte, y en Banco un pago puede cuadrar con varias facturas o con parte de una.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación › Gestoría: el trimestre resumido (IVA repercutido y soportado, retenciones y los dos libros) y tres botones para mandárselo a la gestoría: resumen en PDF, Excel con los libros y las facturas de gastos en un ZIP.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas y los presupuestos se envían desde el panel, por email (con el PDF) o por WhatsApp (con un enlace). Y en Facturas › «Por cobrar» está lo que os deben, con «Recordar» y «Cobrada».',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: Gastos y Banco. En «Gastos» subes la foto o el PDF de una factura de proveedor y se rellena sola. En «Banco» subes el extracto de cada cuenta (Excel o Norma 43) y cada movimiento se cruza con sus facturas y gastos: un «Sí» y queda cuadrado. Los cobros con tarjeta del TPV se cuadran juntos y la comisión se apunta como gasto.',ver:{sec:'fx'}},
  {f:'2026-11-17',dir:1,t:'Facturación: presupuestos y clientes guardados. En «Presupuestos» haces uno, lo marcas aceptado o rechazado y con «Hacer la factura» se convierte en factura con todo relleno. Al escribir el nombre en una factura nueva salen los clientes ya usados y se rellenan sus datos.',ver:{sec:'fx'}},
- {f:'2026-11-17',dir:1,t:'Facturación: ahora hay actividades. Arriba eliges FISIO365 o CerraPoint; cada una tiene sus series, su logo, su color y su IVA (CerraPoint, 21 %). Mismo NIF y misma cadena VeriFactu.'},
+ {f:'2026-11-17',dir:1,t:'Facturación: ahora hay actividades. Arriba eliges FISIO365 o Actividad 2; cada una tiene sus series, su logo, su color y su IVA (Actividad 2, 21 %). Mismo NIF y misma cadena VeriFactu.'},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas dicen si están pagadas (y cómo) o pendientes de pago, y llevan notas. Al hacer una a mano eliges si ya está pagada, y desde la factura la marcas como pagada.'},
  {f:'2026-11-17',dir:1,t:'Facturación: las facturas ahora son un PDF de verdad (se ven bien en el móvil y se pueden guardar), con un diseño nuevo.'},
  {f:'2026-11-17',dir:1,t:'Facturación: al tocar una factura puedes rectificarla (devolver todo o una parte, con su motivo), y en cada serie eliges el formato del número y por qué número sigue.'},
@@ -14819,7 +14819,7 @@ function enviarRecepcion(pacNom, informe, fecha, fisioNom){
  `Por favor, imprímelo y tenlo listo para cuando el paciente pase por recepción.\n\n` +
  `FISIO365`
  );
- window.open(`mailto:fisio365gestion@gmail.com?subject=${asunto}&body=${cuerpo}`, '_blank');
+ window.open(`mailto:direccion@clinica-demo.es?subject=${asunto}&body=${cuerpo}`, '_blank');
 }
 
 function renderFormacion(wrap, ruta){
@@ -15313,11 +15313,11 @@ function renderFormacion(wrap, ruta){
  {t:'La sala · Material y organización',sub:'Cada cosa en su sitio',
  cards:[
  {ti:'El material no se mueve',icon:'',body:`Cada sala tiene su propio material y debe permanecer siempre en su sitio. Mover material entre salas genera pérdidas de tiempo, confusión y puede dejar a un compañero sin lo que necesita en medio de una sesión.`},
- {ti:'Si algo falta o está roto',icon:'',body:`Si falta algún material, hay un aparato roto o cualquier elemento que no esté en buen estado — avisa a Nora lo antes posible. Ese aviso debe hacerse siempre <strong>por escrito</strong> para que quede registrado y no se olvide.`},
+ {ti:'Si algo falta o está roto',icon:'',body:`Si falta algún material, hay un aparato roto o cualquier elemento que no esté en buen estado — avisa a dirección lo antes posible. Ese aviso debe hacerse siempre <strong>por escrito</strong> para que quede registrado y no se olvide.`},
  {ti:'Por qué importa',icon:'',body:`Una sala bien organizada permite trabajar con fluidez y transmite profesionalidad. El desorden no es solo un problema estético — afecta directamente a la calidad de la atención y a la experiencia del paciente.`}
  ],
  qs:[
- {q:'Si falta material en tu sala, ¿qué haces?',opts:['Lo buscas en otra sala','Lo comentas de palabra','Avisas a Nora por escrito'],ok:2,fb:['Mover material entre salas genera problemas para todos.','De palabra puede olvidarse — siempre por escrito.','¡Correcto! Siempre por escrito para que quede registrado.']},
+ {q:'Si falta material en tu sala, ¿qué haces?',opts:['Lo buscas en otra sala','Lo comentas de palabra','Avisas a dirección por escrito'],ok:2,fb:['Mover material entre salas genera problemas para todos.','De palabra puede olvidarse — siempre por escrito.','¡Correcto! Siempre por escrito para que quede registrado.']},
  {q:'¿El material de una sala puede moverse a otra?',opts:['Sí, si hace falta','No — cada sala tiene el suyo','Solo en urgencias'],ok:1,fb:['No — eso genera desorganización.','¡Correcto! El material permanece en su sala.','Aunque sea urgente, avisar es siempre mejor que mover material.']}
  ]
  },
@@ -15376,7 +15376,7 @@ function renderFormacion(wrap, ruta){
  {ti:'Si hay un imprevisto',icon:'',body:`Si vas a llegar tarde, avisa siempre con la máxima antelación posible. Recepción necesita saberlo para gestionar al paciente. Un aviso a tiempo permite solucionar — sin aviso, solo genera mala experiencia.`}
  ],
  qs:[
- {q:'¿Quién es responsable de mantener el uniforme limpio?',opts:['La clínica lo gestiona','Cada fisioterapeuta','Nora'],ok:1,fb:['Es responsabilidad individual.','¡Correcto! Cada fisio es responsable de su uniforme.','Nora gestiona otras cosas.']},
+ {q:'¿Quién es responsable de mantener el uniforme limpio?',opts:['La clínica lo gestiona','Cada fisioterapeuta','Dirección'],ok:1,fb:['Es responsabilidad individual.','¡Correcto! Cada fisio es responsable de su uniforme.','Laura gestiona otras cosas.']},
  {q:'¿Cuándo empieza la sesión de un paciente?',opts:['Cuando el fisio está listo','A la hora de la cita','Cuando el paciente llega'],ok:1,fb:['El fisio debe estar listo antes de que llegue el paciente.','¡Correcto! A la hora acordada.','El paciente puede llegar puntual y no tiene que esperar.']},
  {q:'¿Por qué se evitan los perfumes fuertes?',opts:['Por normativa sanitaria','Pueden molestar a pacientes sensibles en un espacio cerrado','Solo en verano'],ok:1,fb:['No hay normativa específica — es sentido común.','¡Correcto! Los olores fuertes pueden generar malestar.','No depende de la época del año.']}
  ]
@@ -16688,12 +16688,12 @@ function renderFormacion(wrap, ruta){
  {ti:'En cada paciente de la lista',body:`Llamar, <b>WhatsApp</b>, cambiarle el estado, añadirle a seguimiento o apuntar el resultado.<br><br>Si eliges varios estados, salen solo los que los tienen todos.`},
  {ti:'Alguien preguntó y no se citó',body:`En <b>Captación › No citados</b> está la gente que apuntasteis con el + de la Agenda (Alguien pregunta): por dónde preguntó y <b>por qué no se citó</b>.<br><br>Desde ahí: WhatsApp, Editar, Archivar o <b>Se citó</b> si al final viene.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
  {ti:'Clubs deportivos de la zona',body:`En <b>Captación › Clubs</b> están los clubs y centros deportivos cerca de la clínica, con teléfono, email y web, para proponerles colaborar (condiciones para jugadores, charlas de prevención, readaptación…).<br><br>Llama o escribe con los botones (el WhatsApp y el email ya salen escritos). Al acabar, toca <b>Contactado</b>: cómo, con quién, qué se dijo, <b>en qué se ha quedado</b> y cuándo volver a contactar. Así cualquiera del equipo sabe por dónde va cada club.<br><br>Arriba filtras por <b>Por contactar</b>, <b>En marcha</b>, <b>Colaborando</b> o <b>Toca hoy</b>. ¿Falta uno? <b>+ Club</b>.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs button[data-t="clubs"]',txt:'Aquí están los clubs.'}]}},
- {ti:'Mi equipo: el parte para su club',body:`Si un paciente juega en un club que tiene <b>Mi equipo</b>, su entrenador puede ver en la app cómo va su recuperación, <b>solo si el paciente lo acepta</b> en su app (si tiene menos de 16 años, su padre, madre o tutor).<br><br>Si está en tratamiento, su ficha te pregunta <b>¿Juega en algún club?</b> (en Resumen y en Historia): <b>Sí, añadir</b> y eliges el club y su equipo, o <b>No juega</b> y no vuelve a salir. Si no está en tratamiento, abajo sale <b>Añadir a un club</b>. Le llega un aviso para aceptarlo. Después rellenas el parte: <b>¿Puede entrenar?</b> (no entrena · con limitaciones · puede jugar), la fase, qué le pasa en palabras sencillas, la <b>previsión de vuelta</b>, qué puede y qué no puede hacer y cómo empezar a entrenar. En <b>Cómo va hoy</b> apuntas la evolución.<br><br><b>En cada sesión, desde la Historia:</b> en Resumen y debajo de «Pedir reseña» sale la tarjeta <b>Parte para el club</b> › <b>Rellenar</b>. Tocas el semáforo, la fase y escribes cómo va hoy: en diez segundos. Si no lo has actualizado tras la última sesión, la tarjeta te lo dice. Lo demás (diagnóstico, vuelta, qué puede hacer, compartir sus ejercicios) está en <b>Más detalles</b>; arriba, <b>Equipo › Cambiar</b> si ha cambiado de equipo, dentro de la misma ventana; ahí abajo también tienes <b>Ver como el entrenador</b> y <b>Ya no juega aquí (o cambió de club)</b>.<br><br>Con <b>Ver como el entrenador</b> abres la app tal como la verá él. Al guardar, al entrenador le llega un aviso. También ve su <b>racha</b> (los días que hace sus ejercicios en casa). Si activas <b>Compartir sus ejercicios con el club</b>, ve también su programa con los vídeos, para que lo haga en los entrenos (déjalo apagado si el programa dice demasiado de su lesión, como en suelo pélvico). Nunca ve la historia clínica: solo este parte y su racha.<br><br><b>Mensajes del entrenador:</b> desde la app puede escribir al fisio que lleva al jugador (el último que ha actualizado su parte; si no hay, a dirección). Te llega un aviso y en <b>Chat</b> sale arriba, en «Entrenadores». Se contesta dentro de la ventana del parte, en <b>Mensajes con su entrenador</b>. Tú también puedes escribirle primero: en la ficha, debajo de «Parte para el club», toca <b>Escribir a su entrenador</b> (le llega un aviso): por ejemplo, para avisar de que mañana ya puede entrenar. El jugador no ve estos mensajes; habla solo del parte y de la vuelta, nunca de la historia clínica.<br><br><b>Enviar la presentación por email:</b> el sobre de cada club la envía desde info@fisioterapia365.com, firmada por Ramiro (con <b>Mandarme una prueba</b> la ves antes; con <b>Escribir otro email</b> escribes uno tuyo). Arriba, <b>Enviar la presentación a todos</b> la manda a los clubs con email que aún no la tienen. Queda en su historial y en la lista sale «Presentación enviada»; el filtro <b>Correo enviado</b> los junta. Si al llamar os dan permiso para escribirles, márcalo en «Contactado». Si un club pide la baja desde el correo, sale «No quiere emails» y ya no se le puede enviar. Cuando el club abre el correo sale <b>Correo abierto</b>; si su email no existe, <b>Email no válido · llamar</b> (filtros «Lo han abierto» y «Email no válido»). <b>Seguimiento:</b> arriba, el resumen (entregados, abiertos, han tocado un enlace, seguimiento de hoy; tocando cada número ves esos clubs). En el lápiz de cada club, el correo paso a paso: cuándo le llegó, cuántas veces lo ha abierto y qué enlaces ha tocado. Si lo abre, al día siguiente sale en «Toca hoy» para llamarle (hasta que apuntes el contacto); si en 4 días no lo ha abierto, sale para mandarle un WhatsApp. A dirección le llega un aviso al móvil la primera vez que un club lo abre o toca un enlace.<br><br><b>WhatsApp:</b> el botón abre un mensaje con la propuesta (fisio de referencia y Mi equipo) y el enlace al ejemplo de cómo lo ve un entrenador.`},
+ {ti:'Mi equipo: el parte para su club',body:`Si un paciente juega en un club que tiene <b>Mi equipo</b>, su entrenador puede ver en la app cómo va su recuperación, <b>solo si el paciente lo acepta</b> en su app (si tiene menos de 16 años, su padre, madre o tutor).<br><br>Si está en tratamiento, su ficha te pregunta <b>¿Juega en algún club?</b> (en Resumen y en Historia): <b>Sí, añadir</b> y eliges el club y su equipo, o <b>No juega</b> y no vuelve a salir. Si no está en tratamiento, abajo sale <b>Añadir a un club</b>. Le llega un aviso para aceptarlo. Después rellenas el parte: <b>¿Puede entrenar?</b> (no entrena · con limitaciones · puede jugar), la fase, qué le pasa en palabras sencillas, la <b>previsión de vuelta</b>, qué puede y qué no puede hacer y cómo empezar a entrenar. En <b>Cómo va hoy</b> apuntas la evolución.<br><br><b>En cada sesión, desde la Historia:</b> en Resumen y debajo de «Pedir reseña» sale la tarjeta <b>Parte para el club</b> › <b>Rellenar</b>. Tocas el semáforo, la fase y escribes cómo va hoy: en diez segundos. Si no lo has actualizado tras la última sesión, la tarjeta te lo dice. Lo demás (diagnóstico, vuelta, qué puede hacer, compartir sus ejercicios) está en <b>Más detalles</b>; arriba, <b>Equipo › Cambiar</b> si ha cambiado de equipo, dentro de la misma ventana; ahí abajo también tienes <b>Ver como el entrenador</b> y <b>Ya no juega aquí (o cambió de club)</b>.<br><br>Con <b>Ver como el entrenador</b> abres la app tal como la verá él. Al guardar, al entrenador le llega un aviso. También ve su <b>racha</b> (los días que hace sus ejercicios en casa). Si activas <b>Compartir sus ejercicios con el club</b>, ve también su programa con los vídeos, para que lo haga en los entrenos (déjalo apagado si el programa dice demasiado de su lesión, como en suelo pélvico). Nunca ve la historia clínica: solo este parte y su racha.<br><br><b>Mensajes del entrenador:</b> desde la app puede escribir al fisio que lleva al jugador (el último que ha actualizado su parte; si no hay, a dirección). Te llega un aviso y en <b>Chat</b> sale arriba, en «Entrenadores». Se contesta dentro de la ventana del parte, en <b>Mensajes con su entrenador</b>. Tú también puedes escribirle primero: en la ficha, debajo de «Parte para el club», toca <b>Escribir a su entrenador</b> (le llega un aviso): por ejemplo, para avisar de que mañana ya puede entrenar. El jugador no ve estos mensajes; habla solo del parte y de la vuelta, nunca de la historia clínica.<br><br><b>Enviar la presentación por email:</b> el sobre de cada club la envía desde info@clinica-demo.es, firmada por Laura (con <b>Mandarme una prueba</b> la ves antes; con <b>Escribir otro email</b> escribes uno tuyo). Arriba, <b>Enviar la presentación a todos</b> la manda a los clubs con email que aún no la tienen. Queda en su historial y en la lista sale «Presentación enviada»; el filtro <b>Correo enviado</b> los junta. Si al llamar os dan permiso para escribirles, márcalo en «Contactado». Si un club pide la baja desde el correo, sale «No quiere emails» y ya no se le puede enviar. Cuando el club abre el correo sale <b>Correo abierto</b>; si su email no existe, <b>Email no válido · llamar</b> (filtros «Lo han abierto» y «Email no válido»). <b>Seguimiento:</b> arriba, el resumen (entregados, abiertos, han tocado un enlace, seguimiento de hoy; tocando cada número ves esos clubs). En el lápiz de cada club, el correo paso a paso: cuándo le llegó, cuántas veces lo ha abierto y qué enlaces ha tocado. Si lo abre, al día siguiente sale en «Toca hoy» para llamarle (hasta que apuntes el contacto); si en 4 días no lo ha abierto, sale para mandarle un WhatsApp. A dirección le llega un aviso al móvil la primera vez que un club lo abre o toca un enlace.<br><br><b>WhatsApp:</b> el botón abre un mensaje con la propuesta (fisio de referencia y Mi equipo) y el enlace al ejemplo de cómo lo ve un entrenador.`},
  {ti:'Mi equipo: equipos y accesos de un club',body:`En <b>Captación › Clubs</b>, el icono de las personas de un club. En <b>Equipos</b> creas los equipos del club (Infantil B, Juvenil A…). Con <b>Dar acceso</b>: su nombre, su email o móvil y <b>qué equipos ve</b> (el entrenador del Infantil B, solo el Infantil B; si no marcas ninguno, todo el club, como un coordinador). Al crearlo te sale su clave y los botones para enviársela por WhatsApp o email, ya escrita.<br><br>El entrenador entra en la app de pacientes con su email y esa clave y solo ve «Mi equipo». Si alguien deja el club, abre su acceso y quita <b>Acceso activo</b>: deja de verlo al momento.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En Clubs, el icono de las personas de cada club.'}]}},
  {ti:'Negocios del barrio',body:`En <b>Captación › Negocios</b> están los negocios con los que colaboramos: cuándo toca visitarlos, si tienen flyers y cuántos pacientes nos han mandado.<br><br>Al ir, toca <b>Visitado</b>: se apunta la visita y cuándo volver.`}
  ],
  qs:[
- {q:'Te queda una hora libre y quieres llamar a los pacientes de Sara que están en «pendiente de continuar». ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','En la agenda','En el chat'],ok:0,fb:['¡Eso es!','Ahí están las citas, no las listas.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}},
+ {q:'Te queda una hora libre y quieres llamar a los pacientes de Ana que están en «pendiente de continuar». ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','En la agenda','En el chat'],ok:0,fb:['¡Eso es!','Ahí están las citas, no las listas.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}},
  {q:'Una persona que preguntó la semana pasada y no se citó, hoy viene a su primera sesión. ¿Qué haces en No citados?',opts:['Nada','La marco como «Se citó»','La borro'],ok:1,fb:['Seguiría saliendo como no citada.','¡Bien! Así se cuenta bien.','Mejor marcarla: así sabemos que funcionó.']},
  {q:'Vuelves de dejar flyers en la farmacia de al lado. ¿Qué haces?',opts:['Captación › Negocios › Visitado','Nada','Se lo digo a alguien'],ok:0,fb:['¡Eso es! Queda la visita y cuándo volver.','Así nadie sabe que fuiste.','Mejor apuntarlo en el panel.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Negocios está aquí.'}]}},
  {q:'Un jugador del club con «Mi equipo» empieza el tratamiento. ¿Qué ve su entrenador?',opts:['Su historia clínica entera','Nada hasta que el jugador lo acepte en su app; después, solo el parte del club','Todo lo que apuntamos en la ficha'],ok:1,fb:['No: la historia clínica no se comparte nunca.','¡Eso es! Y el jugador lo puede retirar cuando quiera.','No: solo el parte que escribís para el club.']},
@@ -16784,7 +16784,7 @@ function renderFormacion(wrap, ruta){
  {q:'Una fisio nueva no ve Captación. ¿Dónde se arregla?',opts:['Dirección › Accesos','Lo cambia ella','No se puede'],ok:0,fb:['¡Correcto!','Lo activa dirección.','Sí se puede.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="acc"] || .adm-tabs',txt:'Accesos.'}]}},
  {q:'Un fisio no sale en la ocupación del equipo. ¿Qué le falta?',opts:['Su horario en Dirección › Equipo','Hacer más sesiones','Nada'],ok:0,fb:['¡Eso es!','No.','Le falta el horario.']},
  {q:'Un fisio se va de la clínica. ¿Qué haces?',opts:['Le borro','Dar de baja: se guardan sus datos','Nada'],ok:1,fb:['Mejor no: se perdería su historial.','¡Correcto!','Seguiría saliendo en la agenda.']},
- {q:'Jonathan se coge del 22 al 26 de diciembre. ¿Dónde lo apuntas?',opts:['Vacaciones y horarios › Apuntar varios días','En la agenda, hora a hora','En el chat'],ok:0,fb:['¡Eso es! Y te avisa de las citas a mover.','Mucho más lento.','No.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="aus"] || .adm-tabs',txt:'Vacaciones y horarios.'}]}}
+ {q:'Marc se coge del 22 al 26 de diciembre. ¿Dónde lo apuntas?',opts:['Vacaciones y horarios › Apuntar varios días','En la agenda, hora a hora','En el chat'],ok:0,fb:['¡Eso es! Y te avisa de las citas a mover.','Mucho más lento.','No.'],ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="aus"] || .adm-tabs',txt:'Vacaciones y horarios.'}]}}
  ]},
 
  {t:'Dirección: listas y ajustes',sub:'Solo lo ve dirección',dir:1,
@@ -16811,7 +16811,7 @@ function renderFormacion(wrap, ruta){
  {ti:'El reparto',body:`Con el contrato puesto en Equipo: si es <b>autónomo</b>, lo que le toca con su % y lo que queda a la clínica; si es <b>nómina</b>, lo que cuesta y lo que deja.`}
  ],
  qs:[
- {q:'Quieres que Juan revise hoy sus pacientes sin reagendar. ¿Qué haces?',opts:['Rendimiento › Pacientes sin reagendar › Avisar en su fila','Escribirle uno a uno','Nada'],ok:0,fb:['¡Eso es! Le llega su lista con los pacientes enlazados.','Más lento: el botón lo hace por ti.','Se quedarían sin revisar.'],ver:{sec:'rend',pasos:[{el:'.rnr',txt:'Pacientes sin reagendar de cada fisio.'}]}},
+ {q:'Quieres que Pol revise hoy sus pacientes sin reagendar. ¿Qué haces?',opts:['Rendimiento › Pacientes sin reagendar › Avisar en su fila','Escribirle uno a uno','Nada'],ok:0,fb:['¡Eso es! Le llega su lista con los pacientes enlazados.','Más lento: el botón lo hace por ti.','Se quedarían sin revisar.'],ver:{sec:'rend',pasos:[{el:'.rnr',txt:'Pacientes sin reagendar de cada fisio.'}]}},
  {q:'Un autónomo pregunta por qué su parte sale con «≈». ¿Qué te falta?',opts:['Verificar sus sesiones en su Informe','Nada','Cambiarle el %'],ok:0,fb:['¡Eso es!','Faltan sesiones por verificar.','No.'],ver:{sec:'rend',pasos:[{el:'.rc-inf',txt:'Abre su informe.'}]}},
  {q:'Un fisio explica que el martes cubrió 2 horas a una compañera. ¿Qué haces?',opts:['Validar el día (y, si tiene banco, sumarlo)','Nada','Borrarlo'],ok:0,fb:['¡Correcto!','Seguiría por validar.','No.']},
  {q:'No te sale el reparto de un fisio. ¿Qué falta?',opts:['Su contrato en Dirección › Equipo','Que haga más sesiones','Nada'],ok:0,fb:['¡Correcto!','No.','Falta el contrato.']},
@@ -16829,13 +16829,13 @@ function renderFormacion(wrap, ruta){
  ],
  qs:[
  {q:'¿Dónde ves rápido si a un fisio se le quedaron citas sin marcar ayer?',opts:['En el Daily report','En Valoraciones','En el chat'],ok:0,fb:['¡Eso es! Y las marcas ahí mismo.','No.','No.'],ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Aquí.'}]}},
- {q:'Juan no envió ayer su check-list. ¿Qué haces?',opts:['Avisar a Juan desde el Daily report','Nada','Lo envío yo'],ok:0,fb:['¡Bien!','Mejor avisarle.','Lo tiene que revisar él.']},
+ {q:'Pol no envió ayer su check-list. ¿Qué haces?',opts:['Avisar a Pol desde el Daily report','Nada','Lo envío yo'],ok:0,fb:['¡Bien!','Mejor avisarle.','Lo tiene que revisar él.']},
  {q:'Quieres comparar cuántos pacientes nuevos hubo este trimestre y el anterior. ¿Dónde?',opts:['Estadísticas › Trimestre','En la agenda','En Rendimiento'],ok:0,fb:['¡Eso es!','No.','Rendimiento es por fisio y sesiones.']},
  {q:'Un paciente activo lleva 3 semanas sin cita. ¿Qué pasa?',opts:['Nada','Pasa solo a «pendiente de continuar»','Se le da de alta'],ok:1,fb:['Sí pasa algo.','¡Correcto!','No.']}
  ]},
  {t:'Dirección: Facturación',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Cómo está ordenada',body:`En <b>Facturación</b> (menú de tu perfil) arriba eliges la <b>actividad</b> (la clínica o CerraPoint) y uno de los 6 apartados: <b>Ventas</b>, <b>Gastos</b>, <b>Banco</b>, <b>Contactos</b>, <b>Impuestos</b> y <b>Ajustes</b>. Debajo, un desplegable con sus partes.<br><br>El <b>periodo</b> se elige con la pastilla de fechas (hoy, este mes, el trimestre, este año o entre dos fechas) y con las flechas vas al de antes o al de después. Vale para todo.`,ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'Los 6 apartados.'},{el:'.fx-top',txt:'Y aquí sus partes.'}]}},
+ {ti:'Cómo está ordenada',body:`En <b>Facturación</b> (menú de tu perfil) arriba eliges la <b>actividad</b> (la clínica o Actividad 2) y uno de los 6 apartados: <b>Ventas</b>, <b>Gastos</b>, <b>Banco</b>, <b>Contactos</b>, <b>Impuestos</b> y <b>Ajustes</b>. Debajo, un desplegable con sus partes.<br><br>El <b>periodo</b> se elige con la pastilla de fechas (hoy, este mes, el trimestre, este año o entre dos fechas) y con las flechas vas al de antes o al de después. Vale para todo.`,ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'Los 6 apartados.'},{el:'.fx-top',txt:'Y aquí sus partes.'}]}},
  {ti:'Ventas: facturas y tickets',body:`<b>Facturas</b> son las completas (con NIF y dirección) y <b>Tickets</b> las simplificadas; cada lista lleva también sus rectificativas.<br><br>Al tocar una ves sus líneas y tienes <b>Ver</b>, <b>Descargar</b>, <b>Enviar</b> (email con el PDF o WhatsApp con un enlace), <b>Rectificar</b> y <b>Duplicar</b>. Una factura hecha no se borra: si está mal, se rectifica.`,ver:{sec:'fx',pasos:[{el:'.fx-c',txt:'Toca una para ver sus botones.'}]}},
  {ti:'Cobrar lo pendiente',body:`En <b>Ventas › Por cobrar</b> está lo que nos deben y desde cuándo. <b>Recordar</b> manda el email o el WhatsApp, y puedes dejar puestos los recordatorios automáticos.<br><br>Las pendientes llevan un botón <b>Pagar con tarjeta</b>: cuando el cliente paga, la factura queda pagada sola y te llega un aviso. Administración también ve esta parte.`},
  {ti:'Gastos y banco',body:`En <b>Gastos</b> subes la foto o el PDF de la factura del proveedor y se rellena sola (revísala antes de guardar). Recepción también puede subirlos. Y si las reenviáis a la dirección de <b>Gastos por email</b> (Ajustes), aparecen en <b>Llegadas por email</b> ya leídas.<br><br>En <b>Banco</b> están los movimientos del BBVA (llegan solos desde Holded cada día o con <b>Traer de Holded</b>). Cada movimiento se une a su factura o a su gasto; lo que se repite, el panel lo recuerda.`},
@@ -17360,7 +17360,7 @@ const fxSel=(cls,opts,val,label)=>`<select class="fx-in fx-sel ${cls}" aria-labe
 async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='tickets';
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  let I;try{I=await fxInicio();}catch(e){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(e.message)}</div></div>`;return;}
- // Lo hecho en Holded (p. ej., las facturas de Vilfer) entra solo: como mucho una vez cada 10 min, sin esperar más de 8 s
+ // Lo hecho en Holded (p. ej., las facturas de Taller Norte) entra solo: como mucho una vez cada 10 min, sin esperar más de 8 s
  {let t0=0;try{t0=+sessionStorage.getItem('f365_holauto')||0;}catch(e){}if(Date.now()-t0>600000){try{sessionStorage.setItem('f365_holauto',Date.now());}catch(e){}await Promise.race([agPost('fac-holded-auto',{}).catch(()=>null),new Promise(ok=>setTimeout(ok,8000))]);}}
  const [desde,hasta]=fxPerIni();
  const r=await (await fetch(`/api/schedule?action=fac-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}${FX.serie?'&serie='+FX.serie:''}${FX.q?'&q='+encodeURIComponent(FX.q):''}&actividad=${FX.act}&clase=${clase}`)).json().catch(()=>({}));
@@ -17523,7 +17523,7 @@ async function fxAjustes(c,cambio){
  c.querySelector('.fx-logo input').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const k=Math.min(1,600/im.width,200/im.height),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);logoN=cv.toDataURL('image/png');quitarL=false;c.querySelector('.fx-lprev').innerHTML=`<img src="${logoN}" alt="">`;URL.revokeObjectURL(im.src);};im.src=URL.createObjectURL(f);};
  {const q=c.querySelector('.fx-lq');if(q)q.onclick=()=>{logoN=null;quitarL=true;c.querySelector('.fx-lprev').innerHTML='<em>Sin logo</em>';};}
  const guardaActs=async L=>{const r=await agPost('fac-config',{config:{actividades:L}}).catch(()=>({}));if(!r.ok){toast(r.error||'No se ha podido guardar',false);return false;}FX.ini=null;return true;};
- {const n=c.querySelector('.fx-nact');if(n)n.onclick=async()=>{const nom=String(await pideTexto('Nombre de la actividad (p. ej. CerraPoint)','')||'').trim();if(!nom)return;const id=nom.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g,'').slice(0,20);if(!id||ACTS.some(a=>a.id===id)){toast('Ya hay una actividad con ese nombre',false);return;}
+ {const n=c.querySelector('.fx-nact');if(n)n.onclick=async()=>{const nom=String(await pideTexto('Nombre de la actividad (p. ej. Actividad 2)','')||'').trim();if(!nom)return;const id=nom.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g,'').slice(0,20);if(!id||ACTS.some(a=>a.id===id)){toast('Ya hay una actividad con ese nombre',false);return;}
   if(await guardaActs([...ACTS,{id,nombre:nom,iva:{tipo:21}}])){FX.act=id;try{sessionStorage.setItem('f365_fx_act',id);}catch(e){}toast('Actividad creada con sus series',true);cambio&&cambio();}};}
  const add=c.querySelector('.fx-ivadd');if(add)add.querySelector('button').onclick=()=>{const v=add.querySelector('input').value.trim();if(!v)return;const L=c.querySelector('.fx-ivas'),d=ce('label','fx-ivf');d.innerHTML=`<span>${escH(v)}</span>${ivaSel(C.iva.def,v)}`;L.insertBefore(d,L.querySelector('.def'));add.querySelector('input').value='';};
  c.querySelector('.fx-guardar button').onclick=async e=>{const b=e.currentTarget;b.disabled=true;
@@ -17802,7 +17802,7 @@ async function fxBanco(c){const [desde,hasta]=fxPerIni();const est=FX.best||'pen
  let r=await agPost('fac-banco',{cuenta:FX.cta||'-',estado:'x'}).catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const C=r.cuentas,R=Object.fromEntries(r.resumen.map(x=>[x.cuenta,x]));FXG.ctas=C;
- if(!C.length){c.innerHTML=`<div class="card fxb-vacio"><h3 class="fx-h">Primero, vuestras cuentas</h3><p class="fx-p">Di qué cuentas del banco usáis (la de la empresa, la de Nora…). Luego subes el extracto de cada una (el Excel, CSV o Norma 43 que te da el banco) y aquí se cruza cada movimiento con sus facturas y gastos.</p><button type="button" class="fx-btn fxb-cc">Añadir cuentas</button></div>`;c.querySelector('.fxb-cc').onclick=()=>fxCuentas(()=>fxBanco(c));return;}
+ if(!C.length){c.innerHTML=`<div class="card fxb-vacio"><h3 class="fx-h">Primero, vuestras cuentas</h3><p class="fx-p">Di qué cuentas del banco usáis (la de la empresa, la tuya…). Luego subes el extracto de cada una (el Excel, CSV o Norma 43 que te da el banco) y aquí se cruza cada movimiento con sus facturas y gastos.</p><button type="button" class="fx-btn fxb-cc">Añadir cuentas</button></div>`;c.querySelector('.fxb-cc').onclick=()=>fxCuentas(()=>fxBanco(c));return;}
  if(!C.some(x=>x.id===FX.cta))FX.cta=C[0].id;
  r=await agPost('fac-banco',Object.assign({cuenta:FX.cta,estado:est==='todos'?'':est,desde,hasta},FX.bq?{q:FX.bq}:{})).catch(()=>({}));
  const L=r.movimientos||[],Rc=R[FX.cta]||{};
@@ -17863,7 +17863,7 @@ async function fxMov(id,listo){const r=await agPost('fac-banco-uno',{id}).catch(
  const nue=mm.querySelector('.fxb-nue');if(nue)nue.onclick=()=>{mm.remove();fxGasto(null,listo,{mov:id,fecha:M.fecha,cuenta:M.cuenta,total:-M.importe,plantilla:r.plantilla||null});};}
 function fxCuentas(listo){const C=(FXG.ctas||[]).map(x=>Object.assign({},x));const A=((FX.ini||{}).config||{}).actividades||[];
  const mm=hzModal(`<div class="hz-top"><div><small>Banco</small><b>Vuestras cuentas</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
-  <p class="fx-p">Un nombre que reconozcáis (p. ej. «SL», «Nora 1»). Los últimos dígitos del IBAN ayudan a no confundirlas al subir un extracto.</p><div class="fxb-cl"></div>
+  <p class="fx-p">Un nombre que reconozcáis (p. ej. «SL», «Laura 1»). Los últimos dígitos del IBAN ayudan a no confundirlas al subir un extracto.</p><div class="fxb-cl"></div>
   <button type="button" class="fx-btn sec fxb-add">＋ Otra cuenta</button><div class="hz-bts"><button type="button" class="hz-re fxb-can">Cancelar</button><button type="button" class="hz-ok">Guardar</button></div>`);
  mm.querySelector('.hz-card').classList.add('fx-mod');const box=mm.querySelector('.fxb-cl');
  const pinta=()=>{box.innerHTML=C.map((x,i)=>`<div class="fxb-cr" data-i="${i}"><input class="fx-in" data-f="nombre" placeholder="Nombre" value="${escH(x.nombre||'')}"><input class="fx-in" data-f="iban" placeholder="IBAN o últimos dígitos" value="${escH(x.iban||'')}">${A.length>1?`<select class="fx-in" data-f="actividad">${A.map(a=>`<option value="${a.id}"${(x.actividad||'principal')===a.id?' selected':''}>${escH(fxActNom(a))}</option>`).join('')}</select>`:''}<button type="button" class="fx-lx" aria-label="Quitar">✕</button></div>`).join('');
@@ -17963,9 +17963,9 @@ async function fxGestoria(c){const hoy=fxHoy();if(FX.gtodo==null)FX.gtodo=1;
   <div class="fxs-r fxs-t"><span>Se puede deducir</span><span></span><b>${fxEur(R.recibidas.deducible)}</b></div><div class="fxs-r"><span>No se deduce (más gasto)</span><span></span><b>${fxEur(R.recibidas.no_deducible)}</b></div>
   ${Rt.alquiler.irpf||Rt.profesionales.irpf?`<h3 class="fx-h" style="margin-top:14px">Retenciones</h3>${Rt.alquiler.irpf?`<div class="fxs-r"><span>Alquiler (115)</span><span>${fxEur(Rt.alquiler.base)}</span><b>${fxEur(Rt.alquiler.irpf)}</b></div>`:''}${Rt.profesionales.irpf?`<div class="fxs-r"><span>Profesionales (111)</span><span>${fxEur(Rt.profesionales.base)}</span><b>${fxEur(Rt.profesionales.irpf)}</b></div>`:''}`:''}</div></div>
   ${R.isp?`<div class="card fxs-c"><h3 class="fx-h">Proveedores de fuera de España</h3><p class="fx-p">Facturan sin IVA español: la empresa declara el 21 % como devengado y como soportado (inversión del sujeto pasivo)${r.iva.isp.ue.base?'. Los de la UE van también en el modelo 349':''}.</p>${r.iva.isp.ue.base?`<div class="fxs-r"><span>De la UE</span><span>${fxEur(r.iva.isp.ue.base)}</span><b>${fxEur(r.iva.isp.ue.cuota)}</b></div>`:''}${r.iva.isp.fuera.base?`<div class="fxs-r"><span>De fuera de la UE</span><span>${fxEur(r.iva.isp.fuera.base)}</span><b>${fxEur(r.iva.isp.fuera.cuota)}</b></div>`:''}</div>`:''}
-  <div class="card fxs-c"><h3 class="fx-h">Cómo se desgrava el IVA</h3><p class="fx-p">La fisioterapia está exenta, así que el IVA de sus gastos no se recupera; el de CerraPoint sí, y el de lo común solo en parte (prorrata). Pregúntale a la gestoría cuál os aplica.</p>
+  <div class="card fxs-c"><h3 class="fx-h">Cómo se desgrava el IVA</h3><p class="fx-p">La fisioterapia está exenta, así que el IVA de sus gastos no se recupera; el de Actividad 2 sí, y el de lo común solo en parte (prorrata). Pregúntale a la gestoría cuál os aplica.</p>
    <div class="fx-chips fxs-reg"><button type="button" data-m="sectores" class="${r.iva.regimen.modo==='sectores'?'on':''}">Sectores diferenciados</button><button type="button" data-m="general" class="${r.iva.regimen.modo==='general'?'on':''}">Prorrata general</button></div>
-   <div class="fxs-pct"><label class="fx-lab"><span>% de prorrata${r.iva.regimen.fijo?'':' (calculado con lo facturado este año)'}</span><input class="fx-in" inputmode="numeric" data-k="pct" placeholder="${r.iva.regimen.pctAuto}" value="${r.iva.regimen.fijo?r.iva.regimen.pct:''}"></label><p class="fx-p">${r.iva.regimen.modo==='general'?'Todo el IVA de los gastos se deduce a este %.':'Lo de CerraPoint, al 100 %; lo de la clínica, nada; lo común («De las dos»), a este %.'} Si la gestoría os da el % del año, ponlo; si no, se calcula solo (ahora ${r.iva.regimen.pctAuto} %).</p></div></div>
+   <div class="fxs-pct"><label class="fx-lab"><span>% de prorrata${r.iva.regimen.fijo?'':' (calculado con lo facturado este año)'}</span><input class="fx-in" inputmode="numeric" data-k="pct" placeholder="${r.iva.regimen.pctAuto}" value="${r.iva.regimen.fijo?r.iva.regimen.pct:''}"></label><p class="fx-p">${r.iva.regimen.modo==='general'?'Todo el IVA de los gastos se deduce a este %.':'Lo de Actividad 2, al 100 %; lo de la clínica, nada; lo común («De las dos»), a este %.'} Si la gestoría os da el % del año, ponlo; si no, se calcula solo (ahora ${r.iva.regimen.pctAuto} %).</p></div></div>
   <div class="card fxs-c"><h3 class="fx-h">Para mandar a la gestoría</h3><p class="fx-p">Al acabar el trimestre, les mandas estos tres archivos y tienen todo para hacer el IVA y las retenciones.</p>
   <div class="fxs-bts"><a class="fx-btn fxs-pdf" href="${pdfU}" target="_blank" rel="noopener">Resumen en PDF</a><button type="button" class="fx-btn sec fxs-xls">Excel con los libros</button><button type="button" class="fx-btn sec fxs-zip"${r.gastos.some(g=>g.archivo)?'':' disabled'}>Facturas de gastos (ZIP)</button></div>
   <div class="fxs-ges"><label class="fx-lab"><span>Email de la gestoría</span><input class="fx-in" type="email" inputmode="email" data-k="gemail" placeholder="gestoria@…" value="${escH((r.conf||{}).email||'')}"></label>
@@ -18021,8 +18021,8 @@ function fxHoldedCard(A){const w=ce('div','card fxs-c fxh');const hoy=fxHoy();
   const pinta=()=>{const G={};r.series.forEach(x=>{if(mapa[x.prefijo]==='_no')return;Object.entries(x.act||{principal:{n:x.n,t:x.total}}).forEach(([a,v])=>{const g=G[a]=G[a]||{n:0,t:0};g.n+=v.n;g.t+=v.t;});});
    res.innerHTML=`<div class="fxh-tab">${Object.entries(G).map(([a,g])=>`<div class="fxh-r"><span>Ventas de ${escH(nomA(a))}<small>${g.n.toLocaleString('es-ES')} tickets y facturas</small></span><b>${fxEur(g.t)}</b></div>`).join('')||'<div class="fxh-r"><span>No hay ventas en esas fechas</span></div>'}
     <label class="fxh-r fx-chk"><input type="checkbox" class="fxh-c"${FX.hC===false?'':' checked'}><span>Compras<small>${r.compras.nuevas.toLocaleString('es-ES')} · entran como gastos</small></span><b>${fxEur(r.compras.total)}</b></label></div>
-    <p class="fx-p fxh-ya">Con las compras vienen sus proveedores, y con las facturas de CerraPoint, sus clientes.${ya?` ${ya.toLocaleString('es-ES')} ventas ya estaban y no se repiten.`:''}</p>
-    ${r.series.length?`<details class="fxh-det"${FX.hDet?' open':''}><summary>Las series de Holded</summary><p class="fx-p fxh-ya">Cada venta va a su sitio una a una: las de Vilfer (las que llevan IVA) a CerraPoint y el resto a la clínica, aunque estén en la misma serie. Si una serie entera no es de la SL, pon «No traer».</p>${r.series.map(x=>`<div class="fxh-s"><span><b>${escH(nSer(x))}</b><small>${x.n.toLocaleString('es-ES')} · ${fxEur(x.total)}${x.act&&x.act.cerrapoint?` · ${x.act.cerrapoint.n} de CerraPoint`:''}</small><small>Ej.: ${escH(x.ejemplo)}</small></span>${fxSel('fxh-a',[['si','Traer'],['_no','No traer']],mapa[x.prefijo],'Traer').replace('class="fx-in fx-sel fxh-a"',`class="fx-in fx-sel fxh-a" data-p="${escH(x.prefijo)}"`)}</div>`).join('')}</details>`:''}
+    <p class="fx-p fxh-ya">Con las compras vienen sus proveedores, y con las facturas de Actividad 2, sus clientes.${ya?` ${ya.toLocaleString('es-ES')} ventas ya estaban y no se repiten.`:''}</p>
+    ${r.series.length?`<details class="fxh-det"${FX.hDet?' open':''}><summary>Las series de Holded</summary><p class="fx-p fxh-ya">Cada venta va a su sitio una a una: las de Taller Norte (las que llevan IVA) a Actividad 2 y el resto a la clínica, aunque estén en la misma serie. Si una serie entera no es de la SL, pon «No traer».</p>${r.series.map(x=>`<div class="fxh-s"><span><b>${escH(nSer(x))}</b><small>${x.n.toLocaleString('es-ES')} · ${fxEur(x.total)}${x.act&&x.act.cerrapoint?` · ${x.act.cerrapoint.n} de Actividad 2`:''}</small><small>Ej.: ${escH(x.ejemplo)}</small></span>${fxSel('fxh-a',[['si','Traer'],['_no','No traer']],mapa[x.prefijo],'Traer').replace('class="fx-in fx-sel fxh-a"',`class="fx-in fx-sel fxh-a" data-p="${escH(x.prefijo)}"`)}</div>`).join('')}</details>`:''}
     <div class="fxs-bts" style="margin-top:14px"><button type="button" class="fx-btn fxh-go">Traerlo</button></div>`;
    res.querySelectorAll('.fxh-a').forEach(sl=>sl.onchange=()=>{mapa[sl.dataset.p]=sl.value;FX.hDet=true;pinta();});
    const d=res.querySelector('.fxh-det');if(d)d.ontoggle=()=>{FX.hDet=d.open;};
