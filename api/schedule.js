@@ -8364,7 +8364,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       return res.status(400).json({ ok: false, error: 'Acción desconocida' });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
   }
-  if (action === 'fac-borrar-borrador') { // Ficha › Facturas: quitar un ticket que sigue en borrador en Holded (para volver a cobrarlo bien)
+  if (action === 'ficha-borrar-borrador') { // Ficha › Facturas: quitar un ticket que sigue en borrador en Holded (para volver a cobrarlo bien)
     const q = req.body || {};
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
