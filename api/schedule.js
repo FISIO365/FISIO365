@@ -117,6 +117,17 @@ async function ingresosHoldedDias(desde, hasta) {
     .forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return; dias[x.f] = Math.round(((dias[x.f] || 0) + x.v) * 100) / 100; }); } catch (e) {}
   _ingH = { t: Date.now(), k, v: dias }; return dias;
 }
+// Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
+// Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia). Se mira en la ficha y en la agenda.
+async function arreglaPack2311(filas) {
+  for (const r of filas || []) { const F = r.fields || {};
+    if (nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || !/^2026-11-23/.test(String(F['FECHA DE COBRO'] || F['FECHA'] || ''))) continue;
+    console.log('pack-otros-ver', r.id, JSON.stringify({ g: F['PACK GRUPO'], n1: F['Nº SESIONES 1'], p1: F['PRECIO 1'], t: F['TOTAL'] }));
+    const rr = x => Math.round(Number(x) * 100) / 100, hoy = rr(Number(F['Nº SESIONES 1'] || 1) * Number(F['PRECIO 1'] || 0)), n = 5, pu = rr(345 / n);
+    const up = await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: n, [FF.p1]: pu, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: rr(hoy - pu * n) } }) }).catch(e => ({ error: e.message }));
+    console.log('pack-otros-2311', r.id, up.error ? JSON.stringify(up.error) : 'arreglado', hoy);
+    if (!up.error) { r.fields = Object.assign({}, F, { 'CONCEPTO 1': 'Sesión de fisioterapia avanzada', 'Nº SESIONES 1': n, 'PRECIO 1': pu, 'CONCEPTO 2': 'Otros', 'Nº SESIONES 2': 1, 'PRECIO 2': rr(hoy - pu * n) }); try { global._sesPac = {}; } catch (e) {} } }
+}
 // Dinero que entra en la clínica (lo mismo que «Ingresos») repartido por el fisio que lo vende:
 // los packs, al fisio del primer día del pack; el resto, al fisio que sale en la factura («Fisioterapeuta: …»); si no sale, el de la cita del paciente ese día,
 // o si no la última antes (o la primera después). Lo que no se puede asignar va a «Sin asignar».
@@ -5882,6 +5893,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
                 rs.forEach(r => (r.fields['PacienteRec'] || []).forEach(id => { if (L[id]) L[id].citas.push({ id: r.id, k: String(r.fields.FECHA || '').slice(0, 10) + ' ' + hh(r.fields.HORA), e: String(nmA(r.fields.ESTADO)).trim().toUpperCase() }); }));
                 ps.forEach(p => { if (L[p.id]) L[p.id].desde = cuentaDesde(inicio, p.fields['CUENTA DESDE']); });
                 ps.forEach(p => { const n = Number(p.fields['SESIONES BONO PREVIO'] || 0), u = Math.min(n, Number(p.fields['BONO PREVIO YA USADAS'] || 0)); if (L[p.id] && n - u > 0) L[p.id].lotes.push({ f: '', n: n - u, tot: n, off: u, precio: 0, previo: true, vale: !!p.fields['BONO PREVIO VALE'], desde: String(p.fields['BONO PREVIO DESDE'] || '') }); });
+                await arreglaPack2311(fs);
                 fs.sort((a, b) => String(a.fields['FECHA DE COBRO'] || a.fields['FECHA'] || '').localeCompare(String(b.fields['FECHA DE COBRO'] || b.fields['FECHA'] || ''))).forEach(r => { const id = r.fields['PacienteId']; if (!L[id]) return;
                   const psF = r.fields['POR SESION'] && !r.fields['EN PACK'] ? fs.filter(x => x.id !== r.id && x.fields['PACK GRUPO'] === r.id).length : null;
                   sesDe(r.fields).forEach(x => L[id].lotes.push({ f: r.fields['FECHA DE COBRO'] || r.fields['FECHA'] || '', n: x.n, precio: x.precio, num: r.fields['Nº FACTURA'] || '', fid: r.id, psF })); });
@@ -8407,13 +8419,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       const filasP = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}')`)}`).catch(() => []);
       // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
       // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia).
-      filasP.filter(r => /2026-11-(10|23)/.test(String((r.fields || {})['FECHA DE COBRO'] || (r.fields || {})['FECHA'] || ''))).forEach(r => { const F = r.fields || {}; console.log('pack-otros-ver', r.id, JSON.stringify({ g: F['PACK GRUPO'], c1: F['CONCEPTO 1'], n1: F['Nº SESIONES 1'], p1: F['PRECIO 1'], c2: F['CONCEPTO 2'], t: F['TOTAL'], pt: F['PACK TOTAL'], f: F['FECHA DE COBRO'] || F['FECHA'], ep: F['EN PACK'] })); });
-      for (const r of filasP) { const F = r.fields || {};
-        if (F['PACK GRUPO'] !== r.id || nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || String(F['FECHA DE COBRO'] || F['FECHA'] || r.createdTime || '').slice(0, 10) !== '2026-11-23') continue;
-        const rr = x => Math.round(Number(x) * 100) / 100, hoy = rr(Number(F['Nº SESIONES 1'] || 1) * Number(F['PRECIO 1'] || 0)), n = 5, pu = rr(345 / n);
-        const up = await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: n, [FF.p1]: pu, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: rr(hoy - pu * n) } }) });
-        console.log('pack-otros-2311', r.id, up.error ? JSON.stringify(up.error) : 'arreglado', hoy);
-        if (!up.error && up.fields) { r.fields = Object.assign({}, F, { 'CONCEPTO 1': 'Sesión de fisioterapia avanzada', 'Nº SESIONES 1': n, 'PRECIO 1': pu, 'CONCEPTO 2': 'Otros', 'Nº SESIONES 2': 1, 'PRECIO 2': rr(hoy - pu * n) }); global._sesPac = {}; } }
+      await arreglaPack2311(filasP);
       const sesFila = F => [[F['CONCEPTO 1'], F['Nº SESIONES 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2']]].reduce((t2, [c, n]) => t2 + (/^Sesi/i.test(nmA(c) || '') ? Number(n) || 0 : 0), 0);
       const facPanel = {}, sueltos = [];
       filasP.forEach(r => { const F = r.fields, s0 = sesFila(F); if (!s0) return; const x = { id: r.id, ses: s0, total: Number(F['TOTAL'] || 0), num: F['Nº FACTURA'] || '', fecha: String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10), enPack: !!F['EN PACK'], grupo: F['PACK GRUPO'] || '', pend: nmA(F['MODO DE PAGO']) === PEND_PAGO };
