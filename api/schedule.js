@@ -8364,6 +8364,24 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       return res.status(400).json({ ok: false, error: 'Acción desconocida' });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
   }
+  if (action === 'fac-borrar-borrador') { // Ficha › Facturas: quitar un ticket que sigue en borrador en Holded (para volver a cobrarlo bien)
+    const q = req.body || {};
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const id = String(q.id || ''); if (!/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ ok: false, error: 'Ticket no válido' });
+    try {
+      const d = await holded('/sales-receipts/' + id).catch(() => null);
+      if (!d || !d.id) return res.status(200).json({ ok: false, error: 'No encuentro ese ticket en Holded' });
+      if (d.document_number) return res.status(200).json({ ok: false, error: 'Ese ticket ya tiene número (' + d.document_number + '): ya no es un borrador. Para corregirlo hay que hacer una rectificativa en Holded.' });
+      const r = await fetch(HOLDED_URL + '/sales-receipts/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json' } });
+      if (!r.ok && r.status !== 404) throw await holdedErr(r, '/sales-receipts/' + id);
+      // El cobro del panel que lo hizo (para que se pueda volver a cobrar)
+      const cob = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{HOLDED ID}='${id}'`)}&fields[]=${encodeURIComponent('HOLDED ID')}`).catch(() => []);
+      for (const c of cob) await at(`${FACTURAS_TABLE}/${c.id}`, { method: 'DELETE' }).catch(() => {});
+      try { _hdCache.delete(id); _hdBorrados.add(id); } catch (e) {}
+      return res.status(200).json({ ok: true, cobros: cob.length });
+    } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
+  }
   if (action === 'ficha-facturas' || action === 'facturar' || action === 'facturar-sesion-pack') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
