@@ -8390,6 +8390,17 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
   if (action === 'ficha-facturas' || action === 'facturar' || action === 'facturar-sesion-pack') {
     const q = req.method === 'POST' ? (req.body || {}) : req.query;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    // Arreglo de una vez: el 23/11 (21:24-21:45) el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
+    // Se deja como debía: las sesiones del pack a su precio y una línea «Otros» en negativo con lo ya pagado (el total no cambia).
+    await FACX.unaVez('pack-otros-2311', async () => { const r2 = x => Math.round(Number(x) * 100) / 100;
+      const L = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent("AND({PACK GRUPO}=RECORD_ID(),{CONCEPTO 1}='Otros',IS_AFTER(CREATED_TIME(),'2026-11-23T20:00:00.000Z'),IS_BEFORE(CREATED_TIME(),'2026-11-23T21:00:00.000Z'))")}&returnFieldsByFieldId=true`).catch(() => []);
+      for (const r of L) { const F = r.fields || {}, tot = Number(F[FF_PK.total] || 0), hoy = r2(Number(F[FF.n1] || 1) * Number(F[FF.p1] || 0));
+        if (Math.abs(tot - 345) > 0.01) continue; // solo el pack de 5 de fisioterapia avanzada (345 €) que se hizo así
+        const n = 5, pu = r2(tot / n);
+        await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: n, [FF.p1]: pu, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: r2(hoy - pu * n) } }) });
+        console.log('pack-otros-2311 arreglado', r.id); }
+      global._sesPac = {};
+    }).catch(e => console.log('pack-otros-2311', e.message));
     const pac = q.pacienteId || patientId;
     if (!/^rec[A-Za-z0-9]{14}$/.test(pac || '')) return res.status(400).json({ ok: false, error: 'Falta paciente' });
     if (action === 'ficha-facturas') {
