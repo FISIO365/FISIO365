@@ -8479,11 +8479,9 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
           absorber.push({ id: fid, total: Number(X['TOTAL'] || 0) }); }
         const yaAbs = r2(absorber.reduce((t2, x) => t2 + x.total, 0));
         if (antes < 0 || antes + yaAbs + imp > tot + 0.001) return res.status(200).json({ ok: false, error: `Lo pagado (${r2(antes + yaAbs + imp)} €) es más que el pack (${tot} €)` });
-        // Si paga el pack entero: sus sesiones a su precio. Si paga solo una parte (o ya pagó algo antes), una sola línea con lo que paga
-        // ahora (como el resto de pagos de un pack): antes salían las sesiones del pack entero y una línea en negativo.
+        // En el panel el cobro guarda las sesiones del pack (para contarlas); el ticket de Holded lleva una sola línea con lo que paga hoy
         const pu = r2(tot / n), resto = r2(imp - pu * n);
-        if (Math.abs(imp - tot) < 0.01) { lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto }); }
-        else lineas = [{ concepto: 'Otros', uds: 1, precio: imp }];
+        lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto });
         pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + yaAbs + imp), resto: r2(tot - antes - yaAbs - imp), absorber };
       }
     }
