@@ -8407,6 +8407,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       const filasP = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PacienteId}='${pac}')`)}`).catch(() => []);
       // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
       // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia).
+      filasP.filter(r => /2026-11-(10|23)/.test(String((r.fields || {})['FECHA DE COBRO'] || (r.fields || {})['FECHA'] || ''))).forEach(r => { const F = r.fields || {}; console.log('pack-otros-ver', r.id, JSON.stringify({ g: F['PACK GRUPO'], c1: F['CONCEPTO 1'], n1: F['Nº SESIONES 1'], p1: F['PRECIO 1'], c2: F['CONCEPTO 2'], t: F['TOTAL'], pt: F['PACK TOTAL'], f: F['FECHA DE COBRO'] || F['FECHA'], ep: F['EN PACK'] })); });
       for (const r of filasP) { const F = r.fields || {};
         if (F['PACK GRUPO'] !== r.id || nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || String(F['FECHA DE COBRO'] || F['FECHA'] || r.createdTime || '').slice(0, 10) !== '2026-11-23') continue;
         const rr = x => Math.round(Number(x) * 100) / 100, hoy = rr(Number(F['Nº SESIONES 1'] || 1) * Number(F['PRECIO 1'] || 0)), n = 5, pu = rr(345 / n);
