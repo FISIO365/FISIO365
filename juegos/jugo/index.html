@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>¿Cuánto jugo le falta a tu negocio? · Juego de Mandarina</title>
+<meta name="description" content="Juego de 6 preguntas rápidas: descubre cuánto jugo le falta a tu negocio y llévate tres consejos. Por Mandarina, Barcelona.">
+<link rel="canonical" href="https://holamandarina.com/juegos/jugo/">
+<meta property="og:title" content="¿Cuánto jugo le falta a tu negocio? · Juega"><meta property="og:image" content="https://holamandarina.com/og.png">
+<link rel="icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;color:#16120F;background:#F7F1E8;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.disp{font-family:Syne,sans-serif;font-weight:800;letter-spacing:-.04em;line-height:.95}
+.ser{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400}
+.or{color:#F26A1B}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;padding:18px 20px 22px}
+.scr{position:absolute;inset:0;padding:18px 20px 24px;display:none;flex-direction:column}
+.scr.on{display:flex;animation:in .35s cubic-bezier(.2,1.2,.4,1)}
+@keyframes in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+/* botón de juego */
+.gb{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;padding:0 22px;border:3px solid #16120F;border-radius:20px;background:#FFFDF8;font-weight:700;font-size:18px;box-shadow:0 6px 0 #16120F;transition:transform .08s,box-shadow .08s;text-align:left}
+.gb:active,.gb.press{transform:translateY(6px);box-shadow:0 0 0 #16120F}
+.gb.or{background:#F26A1B;color:#16120F}
+.gb.big{min-height:76px;font-size:22px;border-radius:24px;font-family:Syne,sans-serif;font-weight:800;letter-spacing:-.02em}
+.gb.ok{background:#B6E3A0}.gb.ko{background:#F7B7A8;animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-right:56px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:2.5px solid #16120F;border-radius:999px;padding:7px 14px;background:#FFFDF8;font-weight:700;font-size:15px}
+.chip b{font-family:Syne,sans-serif;font-size:18px}
+.lives{display:flex;gap:5px}
+.timer{height:16px;border:2.5px solid #16120F;border-radius:999px;background:#FFFDF8;overflow:hidden;margin-top:16px}
+.timer i{display:block;height:100%;width:100%;background:#F26A1B;transform-origin:left}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.dots span{width:28px;height:8px;border-radius:9px;border:2px solid #16120F;background:#FFFDF8}
+.dots span.d{background:#16120F}.dots span.c{background:#F26A1B}
+.float{position:absolute;font-family:Syne,sans-serif;font-weight:800;font-size:34px;color:#F26A1B;pointer-events:none;animation:up .9s ease-out forwards;-webkit-text-stroke:1.5px #16120F}
+@keyframes up{from{opacity:1;transform:translateY(0) scale(.8)}to{opacity:0;transform:translateY(-90px) scale(1.2)}}
+.combo{position:absolute;top:80px;right:20px;transform:rotate(0);background:#16120F;color:#F7F1E8;border-radius:999px;padding:6px 14px;font-weight:800;font-family:Syne,sans-serif;font-size:16px;opacity:0;transition:opacity .2s}
+.combo.on{opacity:1;animation:pulse .5s}
+@keyframes pulse{50%{transform:scale(1.15)}}
+.mand{display:block;margin:0 auto}
+.bob{animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.conf{position:fixed;width:10px;height:14px;top:-20px;z-index:20;animation:fall linear forwards;border:1.5px solid #16120F;border-radius:3px}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.badge{display:inline-flex;margin:0 auto;border:3px solid #16120F;border-radius:999px;background:#16120F;color:#F7F1E8;padding:8px 18px;font-family:Syne,sans-serif;font-weight:800;font-size:15px;letter-spacing:.08em}
+.tip{display:flex;gap:12px;align-items:flex-start;border:2.5px solid #16120F;border-radius:18px;background:#FFFDF8;padding:12px 14px;font-size:15px;line-height:1.4}
+.tip b.n{flex:none;width:28px;height:28px;border-radius:50%;background:#F26A1B;border:2px solid #16120F;display:flex;align-items:center;justify-content:center;font-family:Syne;font-size:14px}
+.blink{animation:bl 1.1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+.snd{position:absolute;right:20px;top:18px;z-index:5;width:44px;height:44px;border-radius:50%;border:2.5px solid #16120F;background:#FFFDF8;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- INICIO -->
+<section class="scr on" id="s-start">
+  <div class="hud"><span class="chip">🍊 <span>Mandarina</span></span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center">
+    <svg class="mand bob" width="150" height="165" viewBox="0 0 300 330" aria-hidden="true" style="overflow:visible"><g transform="rotate(-40 150 52)"><path d="M150 52 A58 58 0 0 1 244 52 A58 58 0 0 1 150 52 Z" fill="#FFFDF8" stroke="#16120F" stroke-width="9" stroke-linejoin="round"/><path d="M162 52 L232 52" stroke="#16120F" stroke-width="7" stroke-linecap="round"/></g><circle cx="150" cy="190" r="128" fill="#F26A1B" stroke="#16120F" stroke-width="9"/><circle cx="108" cy="178" r="11" fill="#16120F"/><circle cx="192" cy="178" r="11" fill="#16120F"/><path d="M118 226 Q150 254 182 226" fill="none" stroke="#16120F" stroke-width="9" stroke-linecap="round"/></svg>
+    <p class="disp" style="font-size:44px;margin-top:26px">¿Cuánto jugo<br>le falta a tu<br><span class="or">negocio?</span></p>
+    <p style="font-size:17px;margin-top:16px;line-height:1.45">6 preguntas · 8 segundos cada una<br>Cuanto más rápido, más puntos.</p>
+    <p class="chip" id="rec0" style="margin:18px auto 0;display:none">🏆 Tu récord: <b id="rec0v">0</b></p>
+  </div>
+  <button class="gb big or" id="go">¡JUGAR! ▶</button>
+  <p class="blink" style="text-align:center;font-size:13px;font-weight:700;letter-spacing:.14em;margin-top:14px">PULSA PARA EMPEZAR</p>
+</section>
+
+<!-- JUEGO -->
+<section class="scr" id="s-play">
+  <div class="hud">
+    <span class="chip">Pregunta <b id="qn">1</b>/6</span>
+    <span class="chip">⭐ <b id="pts">0</b></span>
+  </div>
+  <div class="timer"><i id="tb"></i></div>
+  <div class="dots" id="dots"></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <p class="disp" id="q" style="font-size:30px;line-height:1.08"></p>
+  </div>
+  <div id="ans" style="display:flex;flex-direction:column;gap:14px"></div>
+  <span class="combo" id="combo">x2 COMBO</span>
+</section>
+
+<!-- RESULTADO -->
+<section class="scr" id="s-end" style="overflow-y:auto">
+  <div class="hud"><span class="chip">⭐ <b id="fpts">0</b> puntos</span><span class="chip" id="newrec" style="display:none;background:#F26A1B">¡NUEVO RÉCORD!</span></div>
+  <div style="text-align:center;margin-top:20px">
+    <svg width="130" height="143" viewBox="0 0 300 330" aria-hidden="true" style="overflow:visible"><defs><clipPath id="cl"><circle cx="150" cy="190" r="124"/></clipPath></defs><g transform="rotate(-40 150 52)"><path d="M150 52 A58 58 0 0 1 244 52 A58 58 0 0 1 150 52 Z" fill="#FFFDF8" stroke="#16120F" stroke-width="9" stroke-linejoin="round"/></g><circle cx="150" cy="190" r="128" fill="#FFFDF8" stroke="#16120F" stroke-width="9"/><rect id="fill" clip-path="url(#cl)" x="0" y="318" width="300" height="260" fill="#F26A1B"/><circle cx="150" cy="190" r="128" fill="none" stroke="#16120F" stroke-width="9"/></svg>
+    <p style="font-family:Syne;font-weight:800;font-size:56px;margin-top:6px"><span id="pct">0</span>%</p>
+    <p style="font-size:14px;font-weight:700;letter-spacing:.12em;margin-top:2px">DE JUGO</p>
+    <p class="badge" id="lvl" style="margin-top:14px">NIVEL</p>
+    <p class="ser" id="lvlt" style="font-size:24px;margin-top:12px;line-height:1.2"></p>
+  </div>
+  <p style="font-weight:700;margin:22px 0 10px">Tres cosas que harían los que van por delante:</p>
+  <div id="tips" style="display:flex;flex-direction:column;gap:10px"></div>
+  <div style="display:flex;flex-direction:column;gap:14px;margin-top:22px">
+    <a class="gb or" id="wa" target="_blank" rel="noopener" style="text-decoration:none">Te ayudo a exprimirlo · Escríbeme</a>
+    <div style="display:flex;gap:12px"><button class="gb" id="again" style="flex:1">↻ Otra vez</button><button class="gb" id="share" style="flex:1">Retar a alguien</button></div>
+  </div>
+</section>
+
+<button class="snd" id="snd" aria-label="Sonido"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16120F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="sw" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg></button>
+</div>
+<script>
+var Q=[
+ ['Un cliente quiere reservar a las 23:00. ¿Puede?',[['Sí, online, en un minuto',3],['Me deja un WhatsApp y le contesto mañana',1],['Que llame mañana',0]]],
+ ['¿Qué pasa el día antes de una cita?',[['Le llega un recordatorio solo',3],['Le escribo yo, si me acuerdo',1],['Nada',0]]],
+ ['¿Cómo haces las facturas?',[['Salen solas al cobrar',3],['Con una plantilla, una a una',1],['A mano o con Excel',0]]],
+ ['Un cliente lleva 3 meses sin venir. ¿Te enteras?',[['Sí, el programa me avisa',3],['Si me acuerdo de su cara',1],['No',0]]],
+ ['Si te buscan en Google desde el móvil…',[['Encuentran mi web y reservan',3],['Ven una web antigua',1],['No salgo',0]]],
+ ['¿Cuánto tardas en saber cómo va el mes?',[['Lo veo en un vistazo',3],['Una tarde con papeles',1],['Ni idea',0]]]
+];
+var TIPS=[
+ 'Reservas online 24 horas: tus clientes reservan cuando les va bien, también a las 23:00.',
+ 'Recordatorios automáticos el día antes: menos citas olvidadas y menos sillas vacías.',
+ 'Facturas que se hacen solas al cobrar: te ahorras horas cada mes.',
+ 'Avisos de clientes que llevan tiempo sin venir, para escribirles a tiempo.',
+ 'Una web rápida y pensada para el móvil, que salga en Google y deje reservar.',
+ 'Un panel con tus números del mes en un vistazo, sin papeles.'
+];
+var $=function(q){return document.querySelector(q)},i=0,pts=0,score=0,combo=0,t0=0,raf=0,lock=false,picks=[],sound=true;
+try{sound=localStorage.getItem('mj_snd')!=='0'}catch(e){}
+var AC;function beep(f,d,tp,v){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type=tp||'square';o.frequency.value=f;g.gain.value=v||.06;o.connect(g);g.connect(AC.destination);var n=AC.currentTime;g.gain.setValueAtTime(v||.06,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.start(n);o.stop(n+d)}catch(e){}}
+function jingle(a){a.forEach(function(f,k){setTimeout(function(){beep(f,.14,'square',.05)},k*110)})}
+function snd(){$('#sw').style.display=sound?'':'none'}snd();
+$('#snd').onclick=function(){sound=!sound;try{localStorage.setItem('mj_snd',sound?'1':'0')}catch(e){};snd();beep(660,.08)};
+function rec(){try{return +localStorage.getItem('mj_rec')||0}catch(e){return 0}}
+if(rec()){$('#rec0').style.display='inline-flex';$('#rec0v').textContent=rec()}
+function show(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.id===id)})}
+function press(b){b.classList.add('press');setTimeout(function(){b.classList.remove('press')},120)}
+$('#go').onclick=function(){press(this);jingle([523,659,784,1047]);setTimeout(start,350)};
+function start(){i=0;pts=0;score=0;combo=0;picks=[];$('#pts').textContent=0;show('s-play');ask()}
+function dots(){$('#dots').innerHTML=Q.map(function(_,k){return '<span class="'+(k<i?(picks[k]===3?'c':'d'):'')+'"></span>'}).join('')}
+function ask(){lock=false;var q=Q[i];$('#qn').textContent=i+1;$('#q').textContent=q[0];dots();
+ var opts=q[1].slice().sort(function(){return Math.random()-.5});
+ $('#ans').innerHTML=opts.map(function(o){return '<button class="gb" data-v="'+o[1]+'">'+o[0]+'</button>'}).join('');
+ document.querySelectorAll('#ans .gb').forEach(function(b){b.onclick=function(){pick(b)}});
+ t0=performance.now();cancelAnimationFrame(raf);tick()}
+function tick(){var e=(performance.now()-t0)/8000;$('#tb').style.transform='scaleX('+Math.max(0,1-e)+')';$('#tb').style.background=e>.7?'#E0402B':'#F26A1B';
+ if(e>=1){if(!lock){lock=true;beep(160,.35,'sawtooth',.06);combo=0;$('#combo').classList.remove('on');picks[i]=0;next()}return}raf=requestAnimationFrame(tick)}
+function pick(b){if(lock)return;lock=true;cancelAnimationFrame(raf);press(b);var v=+b.dataset.v,e=(performance.now()-t0)/8000;picks[i]=v;score+=v;
+ if(v===3){combo++;var gain=Math.round((100+Math.max(0,1-e)*100)*(combo>1?2:1));pts+=gain;b.classList.add('ok');jingle(combo>1?[784,988,1319]:[659,880]);
+   pop('+'+gain,b);if(combo>1){$('#combo').textContent='x'+combo+' COMBO';$('#combo').classList.remove('on');void $('#combo').offsetWidth;$('#combo').classList.add('on')}}
+ else{combo=0;$('#combo').classList.remove('on');if(!v)b.classList.add('ko');if(v){pts+=40;pop('+40',b);beep(440,.12)}else{beep(180,.3,'sawtooth',.06)}}
+ $('#pts').textContent=pts;setTimeout(next,750)}
+function pop(t,b){var r=b.getBoundingClientRect(),a=$('#app').getBoundingClientRect(),s=document.createElement('span');s.className='float';s.textContent=t;s.style.left=(r.left-a.left+r.width-90)+'px';s.style.top=(r.top-a.top-10)+'px';$('#app').appendChild(s);setTimeout(function(){s.remove()},900)}
+function next(){i++;if(i<Q.length)ask();else end()}
+function end(){show('s-end');var pct=Math.round(score/18*100),r=rec(),nr=pts>r;$('#fpts').textContent=pts;$('#newrec').style.display=nr?'inline-flex':'none';if(nr){try{localStorage.setItem('mj_rec',pts)}catch(e){}}
+ var L=pct>=80?['NIVEL: EXPRIMIDO','Tu negocio va a tope. Ahora, a por el último gajo.']:pct>=45?['NIVEL: MEDIO JUGO','Vas bien, pero se te escapa zumo por el camino.']:['NIVEL: SIN EXPRIMIR','Aquí hay muchísimo jugo esperando. ¡Buena noticia!'];
+ $('#lvl').textContent=L[0];$('#lvlt').textContent=L[1];
+ var k=0,iv=setInterval(function(){k+=2;if(k>=pct){k=pct;clearInterval(iv)}$('#pct').textContent=k;$('#fill').setAttribute('y',318-256*k/100);if(k%6===0)beep(300+k*6,.04,'square',.03)},28);
+ var weak=picks.map(function(v,ix){return [v,ix]}).sort(function(a,b){return a[0]-b[0]}).slice(0,3);
+ $('#tips').innerHTML=weak.map(function(w,n){return '<div class="tip"><b class="n">'+(n+1)+'</b><span>'+TIPS[w[1]]+'</span></div>'}).join('');
+ $('#wa').href='https://wa.me/34675435187?text='+encodeURIComponent('Hola Nora, he jugado a «¿Cuánto jugo le falta a tu negocio?» y me ha salido un '+pct+' % ('+L[0].replace('NIVEL: ','')+'). ¿Me ayudas a exprimirlo?');
+ if(nr||pct>=45)setTimeout(confetti,500);setTimeout(function(){jingle(pct>=45?[523,659,784,1047,1319]:[392,330,262])},300)}
+$('#again').onclick=function(){press(this);jingle([523,659]);setTimeout(function(){show('s-start');if(rec()){$('#rec0').style.display='inline-flex';$('#rec0v').textContent=rec()}},200)};
+$('#share').onclick=function(){press(this);var t='He sacado '+$('#fpts').textContent+' puntos en «¿Cuánto jugo le falta a tu negocio?». ¿Me superas? https://holamandarina.com/juegos/jugo/';if(navigator.share){navigator.share({text:t}).catch(function(){})}else{window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}};
+function confetti(){var C=['#F26A1B','#FFFDF8','#16120F','#F2B705'];for(var k=0;k<60;k++){var c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=C[k%4];c.style.animationDuration=(1.6+Math.random()*1.6)+'s';c.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(c);setTimeout(function(x){return function(){x.remove()}}(c),3800)}}
+</script>
+</body>
+</html>
