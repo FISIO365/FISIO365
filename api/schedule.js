@@ -120,13 +120,13 @@ async function ingresosHoldedDias(desde, hasta) {
 // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
 // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia). Se mira en la ficha y en la agenda.
 async function arreglaPack2311(filas) {
-  for (const r of filas || []) { const F = r.fields || {};
-    if (nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || !/^2026-11-23/.test(String(F['FECHA DE COBRO'] || F['FECHA'] || ''))) continue;
-    console.log('pack-otros-ver', r.id, JSON.stringify({ g: F['PACK GRUPO'], n1: F['Nº SESIONES 1'], p1: F['PRECIO 1'], t: F['TOTAL'] }));
-    const rr = x => Math.round(Number(x) * 100) / 100, hoy = rr(Number(F['Nº SESIONES 1'] || 1) * Number(F['PRECIO 1'] || 0)), n = 5, pu = rr(345 / n);
-    const up = await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: n, [FF.p1]: pu, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: rr(hoy - pu * n) } }) }).catch(e => ({ error: e.message }));
-    console.log('pack-otros-2311', r.id, up.error ? JSON.stringify(up.error) : 'arreglado', hoy);
-    if (!up.error) { r.fields = Object.assign({}, F, { 'CONCEPTO 1': 'Sesión de fisioterapia avanzada', 'Nº SESIONES 1': n, 'PRECIO 1': pu, 'CONCEPTO 2': 'Otros', 'Nº SESIONES 2': 1, 'PRECIO 2': rr(hoy - pu * n) }); try { global._sesPac = {}; } catch (e) {} } }
+  // Ya arreglado el 23/11 (5 sesiones a 69 €), pero la línea en negativo quedó en -345 en vez de -75: se deja en -75 para que el cobro sume 270 €
+  const r = (filas || []).find(x => x.id === 'recpjbHjAANFEac4F'); if (!r || global._pk2311) return;
+  const x = await at(`${FACTURAS_TABLE}/${r.id}?returnFieldsByFieldId=true`).catch(() => ({})), F = x.fields || {};
+  if (x.error || Number(F[FF.p2]) === -75) { global._pk2311 = 1; return; }
+  const up = await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: 5, [FF.p1]: 69, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: -75 } }) }).catch(e => ({ error: e.message }));
+  console.log('pack-otros-2311b', up.error ? JSON.stringify(up.error) : 'ok', JSON.stringify(up.fields ? { t: up.fields['TOTAL'] || up.fields['fldTOTAL'] } : {}));
+  if (!up.error) { global._pk2311 = 1; try { global._sesPac = {}; } catch (e) {} r.fields = Object.assign({}, r.fields, { 'PRECIO 2': -75, 'TOTAL': 270 }); }
 }
 // Dinero que entra en la clínica (lo mismo que «Ingresos») repartido por el fisio que lo vende:
 // los packs, al fisio del primer día del pack; el resto, al fisio que sale en la factura («Fisioterapeuta: …»); si no sale, el de la cita del paciente ese día,
