@@ -1,5 +1,5 @@
 // api/reservar.js — El paciente reserva una cita desde la app
-// Los huecos libres son las citas de Airtable con ESTADO «CITA LIBRE» (los «LIBRE - SIN BOMBA» no salen en la app).
+// Los huecos libres son las citas de Airtable con ESTADO «CITA LIBRE» o «LIBRE - SIN BOMBA» (estos salen marcados «sin bomba»).
 // Reservar = esa misma fila pasa a «PENDIENTE » y se enlaza con el paciente (llega directa a la agenda de Airtable).
 export const config = { runtime: 'edge' };
 
@@ -7,7 +7,7 @@ const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const { BASE_ID } = require('./_base');
 const CITAS = 'tblTPlcuiSjQngkaD';
 const PACIENTES = 'tbldBVgClS4HY2mOJ';
-const LIBRES = ['CITA LIBRE']; // «LIBRE - SIN BOMBA» no se ofrece en la app (solo la da la clínica)
+const LIBRES = ['CITA LIBRE', 'LIBRE - SIN BOMBA']; // los «sin bomba» también se ofrecen, marcados
 const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
 const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
@@ -66,7 +66,7 @@ export default async function handler(req) {
         recs = recs.concat(d.records || []); off = d.offset || '';
       } while (off && recs.length < 1500);
       const huecos = recs.filter(r => reservable(r.fields)).map(r => ({
-        id: r.id, fecha: fechaISO(r.fields['FECHA']), hora: String(r.fields['HORA']).slice(0, 5), fisio: fisioDe(r.fields['PREF.'])
+        id: r.id, fecha: fechaISO(r.fields['FECHA']), hora: String(r.fields['HORA']).slice(0, 5), fisio: fisioDe(r.fields['PREF.']), sb: String(r.fields['ESTADO'] || '').trim() === 'LIBRE - SIN BOMBA'
       })).sort((a, b) => (a.fecha + a.hora + a.fisio).localeCompare(b.fecha + b.hora + b.fisio));
       return json({ ok: true, huecos });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
@@ -95,10 +95,13 @@ export default async function handler(req) {
         const yd = await yr.json(); const ya = (yd.records || []).find(r => r.id !== huecoId && /PENDIENTE|DUDOSA|REALIZADA/i.test(String(r.fields['ESTADO'] || '')));
         if (ya) return json({ ok: false, mismoDia: true, error: `Ya tienes una cita ese día a las ${String(ya.fields['HORA'] || '').slice(0, 5)}. Si necesitas otra, escríbenos por el chat.` }, 409); }
 
+      // Hueco sin bomba: la cita lleva «NO BOMBA» para que no cuente en la máquina (que ya está llena a esa hora)
+      let noBomba = '';
+      if (String(h.fields['ESTADO'] || '').trim() === 'LIBRE - SIN BOMBA') try { const t = await (await fetch(`https://api.airtable.com/v0/${BASE_ID}/tbltoikmBZwHYQcpD?filterByFormula=${encodeURIComponent("{Name}='NO BOMBA'")}&pageSize=1&fields[]=Name`, { headers: AT })).json(); noBomba = ((t.records || [])[0] || {}).id || ''; } catch (e) {}
       // Reservar: pasa a PENDIENTE y se enlaza al paciente
       const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${CITAS}/${huecoId}`, {
         method: 'PATCH', headers: AT,
-        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId], 'RESERVA': 'RESERVADA POR LA APP', 'RESERVADA EL': new Date().toISOString(), 'TIPO DE CITA': [...new Set([...(Array.isArray(h.fields['TIPO DE CITA']) ? h.fields['TIPO DE CITA'] : []), TIPO_APP])] } })
+        body: JSON.stringify({ fields: { 'ESTADO': 'PENDIENTE ', 'RELACIÓN - CITA': [patientId], 'RESERVA': 'RESERVADA POR LA APP', 'RESERVADA EL': new Date().toISOString(), 'TIPO DE CITA': [...new Set([...(Array.isArray(h.fields['TIPO DE CITA']) ? h.fields['TIPO DE CITA'] : []), TIPO_APP, ...(noBomba ? [noBomba] : [])])] } })
       });
       const u = await ur.json();
       if (!ur.ok) return json({ ok: false, error: u.error?.message || 'No se ha podido reservar' }, 500);

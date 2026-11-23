@@ -27,6 +27,8 @@
 "vie": ["dv", "Fri"],
 "sáb": ["ds", "Sat"],
 "dom": ["dg", "Sun"],
+"sin bomba": ["sense bomba", "no magnetic pump"],
+"Esta hora es sin bomba diamagnética.": ["Aquesta hora és sense bomba diamagnètica.", "This slot is without the diamagnetic pump."],
 "Ya tienes otra cita": [
 "Ja tens una altra cita",
 "You already have another appointment"
