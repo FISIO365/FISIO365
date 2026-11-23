@@ -16,7 +16,10 @@ var SES=['Fisioterapia convencional','Fisioterapia avanzada','Suelo pélvico','R
 var HORAS=['09:00','10:00','11:00','12:00','13:00','16:00','17:00','18:00','19:00'];
 function dia(f){var seed=0;for(var i=0;i<f.length;i++)seed=(seed*31+f.charCodeAt(i))%100000;var r=R(seed),c=[],k=0,pas=f<hoy(0);
  FIS.forEach(function(fi){HORAS.forEach(function(h){k++;if(r()<0.18){c.push({id:'c'+f+k,fecha:f,hora:h,estado:'CITA LIBRE',fisio:fi,pacienteId:'',paciente:'',tipos:[],sesion:'',notas:''});return}
-  var p=PAC[Math.floor(r()*PAC.length)];c.push({id:'c'+f+k,fecha:f,hora:h,estado:pas?'REALIZADA':'PENDIENTE',fisio:fi,pacienteId:p.id,paciente:p.nombre,tipos:[],sesion:SES[Math.floor(r()*4)],notas:'',confirmada:r()<.65,app:r()<.2,web:r()<.1})})});return c}
+  var p=PAC[Math.floor(r()*PAC.length)];c.push({id:'c'+f+k,fecha:f,hora:h,estado:pas?'REALIZADA':'PENDIENTE',fisio:fi,pacienteId:p.id,paciente:p.nombre,tipos:[],sesion:SES[Math.floor(r()*4)],notas:'',confirmada:r()<.65,app:r()<.2,web:r()<.1})})});
+ var RS=[];try{RS=JSON.parse(localStorage.getItem('mand_demo_res')||'[]')}catch(e){}var LU=PAC.filter(function(p){return /^Lucía Martín/.test(p.nombre)})[0]||PAC[0];
+ RS.forEach(function(x){if(x.fecha!==f)return;var j=-1;c.forEach(function(q,i){if(q.fisio===x.fisio&&q.hora===x.hora)j=i});var n={id:'cres'+f+x.hora,fecha:f,hora:x.hora,estado:'PENDIENTE',fisio:x.fisio,pacienteId:LU.id,paciente:LU.nombre,tipos:[],sesion:'Convencional',notas:'Reservada desde la app',confirmada:false,app:true,web:false};if(j>=0)c[j]=n;else c.push(n)});
+ return c}
 function ficha(id){var i=PAC.findIndex(function(p){return p.id===id});if(i<0)i=0;var p=PAC[i],r=R(i+3),cit=[];
  for(var d=-49;d<=14;d+=7){var f=hoy(d+(i%5));cit.push({id:'cf'+i+d,fecha:f,hora:HORAS[i%9],estado:f<hoy(0)?'REALIZADA':'PENDIENTE',fisio:FIS[i%4],nota:''})}
  cit.reverse();
@@ -121,3 +124,9 @@ window.fetch=function(u,o){var url=String(u&&u.url||u);if(url.indexOf('/api/')<0
  return new Promise(function(res){setTimeout(function(){res(d===null?new Response('',{status:404}):new Response(JSON.stringify(d),{status:200,headers:{'Content-Type':'application/json'}}))},120)})};
 var __tap=0;addEventListener('pointerdown',function(){__tap=Date.now()},true);window.__demoAviso=function(){if(Date.now()-__tap>1500)return;var t=document.getElementById('demoToast');if(!t){t=document.createElement('div');t.id='demoToast';t.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99999;background:#16120F;color:#fff;font:600 14px/1.3 Poppins,system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:opacity .3s';document.body.appendChild(t)}t.textContent='Es una demo: no se guarda nada';t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(function(){t.style.opacity=0},2200)};
 })();
+
+/* Demo conectada: si se reserva una cita en la app (otra pestaña o iframe del mismo sitio), el panel se refresca y la cita aparece en la agenda */
+addEventListener('storage',function(e){if(e.key!=='mand_demo_res')return;try{Object.keys(localStorage).filter(function(k){return k.indexOf('f365_apiL_')===0}).forEach(function(k){localStorage.removeItem(k)});Object.keys(sessionStorage).forEach(function(k){sessionStorage.removeItem(k)})}catch(_){}
+ var RS=[];try{RS=JSON.parse(e.newValue||'[]')}catch(_){}var x=RS[RS.length-1];try{if(x)sessionStorage.setItem('mand_ir',x.fecha)}catch(_){}location.reload()});
+addEventListener('load',function(){var f='';try{f=sessionStorage.getItem('mand_ir')||'';sessionStorage.removeItem('mand_ir')}catch(_){}if(!f)return;
+ setTimeout(function(){try{AG.fecha=f;AG.vista='dia';showSection('agenda');setTimeout(function(){var c=[].slice.call(document.querySelectorAll('.ag-c')).filter(function(x){return /Lucía Martín/.test(x.textContent)&&/App/.test(x.textContent)})[0];if(c){c.scrollIntoView({block:'center'});c.style.outline='3px solid #E8742F';c.style.outlineOffset='2px'}try{toast('Nueva cita reservada desde la app',true)}catch(_){}},700)}catch(_){}},800)});
