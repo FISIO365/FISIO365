@@ -41,7 +41,7 @@ section.ink .pill{background:transparent;border-color:#F7F1E8;color:#F7F1E8}sect
 .big{font-family:Syne,system-ui,sans-serif;font-size:clamp(40px,4vw,56px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:24px}.big small{font-family:'DM Sans';font-size:16px;font-weight:600;letter-spacing:0}
 .mo{display:inline-flex;margin-top:12px;border-radius:999px;background:#F26A1B;border:1.5px solid #16120F;padding:6px 14px;font-weight:700;font-size:15px}
 .card.feat{background:#F26A1B}.card.feat .mo{background:#FFFDF8}
-.tag{position:absolute;top:-15px;right:24px;background:#16120F;color:#F7F1E8;border-radius:999px;padding:5px 14px;font-size:13px;font-weight:700}
+.tag{position:absolute;top:-15px;right:24px;background:#FFFDF8;color:#16120F;border:1.5px solid #16120F;border-radius:999px;padding:5px 14px;font-size:13px;font-weight:700}
 ul.tick{list-style:none;padding:0;margin:18px 0 0}ul.tick li{padding:7px 0 7px 32px;position:relative;font-size:17px}
 ul.tick li:before{content:'';position:absolute;left:0;top:11px;width:17px;height:17px;border-radius:50%;background:#F26A1B;border:1.5px solid #16120F}
 section.ink ul.tick li:before{border-color:#F7F1E8}
@@ -103,7 +103,7 @@ footer .igl{display:inline-flex;width:46px;height:46px;border-radius:50%;border:
 .wtabs button b{font-size:18px}.wtabs button small{display:block;font-size:14px;opacity:.7;margin-top:2px}
 .wtabs button i{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid #16120F;display:flex;align-items:center;justify-content:center;font-style:normal;transition:background .2s}
 .wtabs button.on{background:#fff;transform:translate(-3px,-3px);box-shadow:5px 5px 0 #16120F}.wtabs button.on i{background:#F26A1B}
-.sphone{width:min(340px,88%);margin:0 auto}.sphone .scr{height:min(640px,140vw)}
+.sphone{width:clamp(320px,29vw,400px);max-width:88vw;margin:0 auto}.sphone .scr{height:auto;aspect-ratio:390/790}
 .hint{display:flex;justify-content:center;margin:28px auto 0}
 .hint span{display:inline-flex;align-items:center;gap:10px;border:1.5px solid #16120F;border-radius:999px;padding:10px 20px;background:#FFFDF8;font-weight:600;font-size:15px}.hint span i{width:9px;height:9px;border-radius:50%;background:#F26A1B;animation:pl 1.6s ease-in-out infinite}@keyframes pl{50%{opacity:.25}}
 @media(max-width:860px){.duo{margin:12px 0 0;max-width:none}.webdemo{grid-template-columns:1fr}.wtabs{display:grid;grid-template-columns:1fr 1fr;max-width:none;gap:10px}.wtabs button{justify-content:center;text-align:center}.wtabs button{flex:none;border-radius:999px;padding:11px 18px}.wtabs button small,.wtabs button i{display:none}.wtabs button b{font-size:15px;white-space:nowrap}.wtabs button.on{transform:none;box-shadow:none;background:#F26A1B}.webdemo{gap:32px}}
