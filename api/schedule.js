@@ -8408,7 +8408,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
       // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia).
       for (const r of filasP) { const F = r.fields || {};
-        if (F['PACK GRUPO'] !== r.id || nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || String(r.createdTime || '').slice(0, 10) !== '2026-11-23') continue;
+        if (F['PACK GRUPO'] !== r.id || nmA(F['CONCEPTO 1']) !== 'Otros' || Math.abs(Number(F['PACK TOTAL'] || 0) - 345) > 0.01 || String(F['FECHA DE COBRO'] || F['FECHA'] || r.createdTime || '').slice(0, 10) !== '2026-11-23') continue;
         const rr = x => Math.round(Number(x) * 100) / 100, hoy = rr(Number(F['Nº SESIONES 1'] || 1) * Number(F['PRECIO 1'] || 0)), n = 5, pu = rr(345 / n);
         const up = await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ typecast: true, fields: { [FF.c1]: 'Sesión de fisioterapia avanzada', [FF.n1]: n, [FF.p1]: pu, [FF.c2]: 'Otros', [FF.n2]: 1, [FF.p2]: rr(hoy - pu * n) } }) });
         console.log('pack-otros-2311', r.id, up.error ? JSON.stringify(up.error) : 'arreglado', hoy);
