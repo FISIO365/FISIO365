@@ -1208,5 +1208,5 @@ const app = createApp({
 app.config.compilerOptions.whitespace = 'preserve';
 app.mount('#app');
 </script>
-</body>
+<script>(function(){function c(){document.querySelectorAll('details.mmenu[open]').forEach(function(d){d.removeAttribute('open')})}document.addEventListener('click',function(e){var d=e.target.closest&&e.target.closest('details.mmenu');if(!d){c();return}if(e.target.closest('a'))setTimeout(c,0)},true);var y=0;addEventListener('scroll',function(){if(!document.querySelector('details.mmenu[open]')){y=scrollY;return}if(Math.abs(scrollY-y)>60)c()},{passive:true});document.addEventListener('keydown',function(e){if(e.key==='Escape')c()})})();</script></body>
 </html>
