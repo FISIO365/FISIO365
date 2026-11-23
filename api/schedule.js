@@ -8377,7 +8377,12 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
       if (!r.ok && r.status !== 404) throw await holdedErr(r, '/sales-receipts/' + id);
       // El cobro del panel que lo hizo (para que se pueda volver a cobrar)
       const cob = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{HOLDED ID}='${id}'`)}&fields[]=${encodeURIComponent('HOLDED ID')}`).catch(() => []);
-      for (const c of cob) await at(`${FACTURAS_TABLE}/${c.id}`, { method: 'DELETE' }).catch(() => {});
+      for (const c of cob) {
+        // Si era el primer pago de un pack, los cobros que se unieron a él (sesiones sueltas, otros pagos) vuelven a estar sueltos
+        const unidos = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`{PACK GRUPO}='${c.id}'`)}&fields[]=${encodeURIComponent('PACK GRUPO')}`).catch(() => []);
+        for (const u of unidos) if (u.id !== c.id) await at(`${FACTURAS_TABLE}/${u.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'PACK GRUPO': '', 'EN PACK': false } }) }).catch(() => {});
+        await at(`${FACTURAS_TABLE}/${c.id}`, { method: 'DELETE' }).catch(() => {});
+      }
       try { _hdCache.delete(id); _hdBorrados.add(id); } catch (e) {}
       return res.status(200).json({ ok: true, cobros: cob.length });
     } catch (e) { return res.status(200).json({ ok: false, error: e.message }); }
@@ -8474,8 +8479,11 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
           absorber.push({ id: fid, total: Number(X['TOTAL'] || 0) }); }
         const yaAbs = r2(absorber.reduce((t2, x) => t2 + x.total, 0));
         if (antes < 0 || antes + yaAbs + imp > tot + 0.001) return res.status(200).json({ ok: false, error: `Lo pagado (${r2(antes + yaAbs + imp)} €) es más que el pack (${tot} €)` });
+        // Si paga el pack entero: sus sesiones a su precio. Si paga solo una parte (o ya pagó algo antes), una sola línea con lo que paga
+        // ahora (como el resto de pagos de un pack): antes salían las sesiones del pack entero y una línea en negativo.
         const pu = r2(tot / n), resto = r2(imp - pu * n);
-        lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto });
+        if (Math.abs(imp - tot) < 0.01) { lineas = [{ concepto: con, uds: n, precio: pu }]; if (Math.abs(resto) >= 0.01) lineas.push({ concepto: 'Otros', uds: 1, precio: resto }); }
+        else lineas = [{ concepto: 'Otros', uds: 1, precio: imp }];
         pk = { grupo: '', total: tot, antes, concepto: con, sesiones: n, pagado: r2(antes + yaAbs + imp), resto: r2(tot - antes - yaAbs - imp), absorber };
       }
     }
