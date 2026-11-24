@@ -7237,7 +7237,7 @@ async function valSorteo(wrap,dir){const card=ce('div','card val-so');wrap.appen
   card.querySelectorAll('.so-av').forEach(b=>b.onclick=()=>{const g=G[b.dataset.t],tl=segTel(g.tel||'');if(tl.length<9){toast('No tiene teléfono en su ficha',false);return;}abrirWA(tl,msg(b.dataset.t,g));});
   card.querySelectorAll('.so-go,.so-q').forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==='azar')sortear(b);else elegir();})
   card.querySelectorAll('.so-del').forEach(b=>b.onclick=async()=>{const g=G[b.dataset.t];if(!await pregunta(`¿Quitar a ${fn(g.nombre)} como ganador? Si ya le habéis mandado el enlace, dejará de funcionar.`,{si:'Quitar',peligro:1}))return;b.disabled=true;try{await op({op:'quitar',tipo:b.dataset.t});toast('Ganador quitado',true);}catch(e){b.disabled=false;toast(e.message,false);}});};
- const op=async o=>{const r=await agPost('seg-agenda-sorteo',Object.assign({mes,quien},o));if(!r.ok)throw new Error(r.error||'No se ha podido guardar');D=r;pinta();};
+ const op=async o=>{const r=await agPost('seg-agenda-sorteo',Object.assign({mes,quien},o));if(!r.ok)throw new Error(r.error||'No se ha podido guardar');D=r;pinta();resMetaCarga(true);ST.res=null;};
  // Gran momento: pantalla con la ruleta de nombres (al azar) o las estrellas (la más original), confeti y el ganador
  const show=(t,L)=>{const g=(D.ganadores||{})[t];if(!g)return;const ov=ce('div','sor-ov'),nm=fn(g.nombre),mt=MES[+mes.slice(5)-1];
   ov.innerHTML=`<div class="sor-c"><small>${t==='azar'?'SORTEO DE '+mt.toUpperCase():'LA RESEÑA DE '+mt.toUpperCase()}</small><p>${t==='azar'?`Entre ${L.length} ${L.length===1?'persona':'personas'} con la reseña comprobada…`:'La reseña que más os ha gustado es la de…'}</p>
@@ -18454,7 +18454,7 @@ function diaBadge(){const n=(window._planN||0)+(window._tarN||0);const b=$('sb-d
  document.querySelectorAll('.dia-tabs i[data-n]').forEach(e=>{const v=e.dataset.n==='plan'?(window._planN||0):(window._tarN||0);e.textContent=v||'';e.style.display=v?'':'none';});}
 // ── Meta de reseñas del mes: barra en Mi día (todo el equipo). Al tocarla: el embudo de las primeras visitas y cada fisio ──
 let RES_META=null,RES_META_T=0;
-async function resMetaCarga(f){if(!f&&RES_META&&Date.now()-RES_META_T<5*60e3)return RES_META;try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas-meta&pwd=${encodeURIComponent(apiPwd)}`)).json();if(r.ok){RES_META=r;RES_META_T=Date.now();}}catch(e){}return RES_META;}
+async function resMetaCarga(f){if(!f&&RES_META&&Date.now()-RES_META_T<5*60e3)return RES_META;try{const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas-meta&pwd=${encodeURIComponent(apiPwd)}${f?'&fresco=1':''}`)).json();if(r.ok){RES_META=r;RES_META_T=Date.now();if(f&&window.__resPinta)window.__resPinta(r);}}catch(e){}return RES_META;}
 const RES_MESN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 // Icono flotante de reseñas (en todo el panel): estrella con el anillo de progreso y «7/10». Al tocarlo, el detalle
 function resFlot(){if(document.getElementById('resFlot')||!fisioActual)return;const b=ce('button','resf');b.id='resFlot';b.type='button';b.setAttribute('aria-label','Reseñas del mes');b.hidden=true;document.body.appendChild(b);

@@ -6218,7 +6218,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         if (action === 'seg-agenda-resenas-meta') { // Barra de reseñas del mes (todo el equipo): meta, reseñas comprobadas, por fisio y el embudo de primeras visitas
           const mes = hoyF.slice(0, 7);
           if (q.meta != null) { const n = Math.round(Number(q.meta)); if (!(n >= 1 && n <= 500)) return res.status(400).json({ ok: false, error: 'Pon un número' }); await guardarAjuste('meta-resenas', n, String(q.quien || '').slice(0, 40)); global._resMeta = null; }
-          if (global._resMeta && global._resMeta.mes === mes && Date.now() - global._resMeta.t < 10 * 60e3) return res.status(200).json({ ok: true, ...global._resMeta.v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
+          if (!q.fresco && global._resMeta && global._resMeta.mes === mes && Date.now() - global._resMeta.t < 2 * 60e3) return res.status(200).json({ ok: true, ...global._resMeta.v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
           const enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`, k = f => String((f && f.name) || f || '').trim().split(' ')[0].toLowerCase();
           const [env, resp] = await Promise.all([
             todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA ENVIADA},${enMes('ENCUESTA ENVIADA')})`)}&fields[]=${encodeURIComponent('PREF.')}`).catch(() => []),
