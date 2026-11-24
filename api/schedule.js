@@ -5761,6 +5761,23 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         return res.status(400).json({ ok: false });
       }
       // ── AGENDA: citas de un día, dar/mover/cancelar citas (tabla CITAS: cada fila es una hora de un fisio) ──
+      if (action === 'seg-protocolos') { // Protocolos de ejercicios: programas base que se cargan en la ficha y se adaptan a cada paciente
+        let L = (await ajuste('protocolos-ej', [])) || []; if (!Array.isArray(L)) L = [];
+        if (req.method === 'POST') {
+          const quien = String(q.quien || '').trim().slice(0, 40);
+          if (q.op === 'guardar') {
+            const nombre = String(q.nombre || '').trim().slice(0, 80), ejs = Array.isArray(q.ejercicios) ? q.ejercicios.slice(0, 60) : [];
+            if (!nombre || !ejs.length) return res.status(400).json({ ok: false, error: 'Falta el nombre o los ejercicios' });
+            if (JSON.stringify(ejs).length > 60000) return res.status(400).json({ ok: false, error: 'El protocolo es demasiado grande' });
+            const i = L.findIndex(x => x.nombre.toLowerCase() === nombre.toLowerCase()), x = { id: i >= 0 ? L[i].id : 'p' + Date.now().toString(36), nombre, zona: String(q.zona || '').slice(0, 40), ejercicios: ejs, por: quien, fecha: hoyF };
+            if (i >= 0) L[i] = x; else L.push(x);
+          } else if (q.op === 'borrar') L = L.filter(x => x.id !== q.id);
+          else return res.status(400).json({ ok: false });
+          L.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+          await guardarAjuste('protocolos-ej', L, quien);
+        }
+        return res.status(200).json({ ok: true, protocolos: L });
+      }
       if (action.startsWith('seg-agenda')) {
         const TIP = 'tbltoikmBZwHYQcpD', nmA = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v.name || '') : (v || '');
         const okF = f => /^\d{4}-\d{2}-\d{2}$/.test(f || ''), okH = h => /^\d{1,2}:\d{2}$/.test(h || ''), okId = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
