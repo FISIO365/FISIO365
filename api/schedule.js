@@ -8307,8 +8307,10 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, factura: Object.assign(F, { k: FACX.firma(F.id), rects: (F.rects || []).map(x => Object.assign(x, { k: FACX.firma(x.id) })) }) }); }
       if (action === 'fac-cobro-pago') { // cobro del panel que se dejó pendiente (ticket de Holded): se marca pagado aquí y en su copia
         if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.cobro || '')) return res.status(400).json({ ok: false });
-        const modo = ['Tarjeta', 'Efectivo', 'Bizum', 'Transferencia', 'Stripe'].includes(q.modo) ? q.modo : 'Tarjeta';
-        const u = await at(`${FACTURAS_TABLE}/${q.cobro}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'fldafSkOOldJ8gH70': modo }, typecast: true }) });
+        // Pagado en varias formas: [{m, v}] → «Varias» con su desglose
+        const DS = Array.isArray(q.desglose) ? q.desglose.map(x => ({ m: String(x.m || '').trim().slice(0, 30), v: Math.round(Number(String(x.v || '').replace(',', '.')) * 100) / 100 })).filter(x => x.m && x.v > 0) : [];
+        const modo = DS.length > 1 ? 'Varias' : ['Tarjeta', 'Efectivo', 'Bizum', 'Transferencia', 'Stripe'].includes(q.modo) ? q.modo : 'Tarjeta';
+        const u = await at(`${FACTURAS_TABLE}/${q.cobro}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'fldafSkOOldJ8gH70': modo, ...(DS.length > 1 ? { 'PAGO DESGLOSE': DS.map(x => `${x.m}: ${x.v}`).join(' · ') } : {}) }, typecast: true }) });
         if (!u || u.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
         try { const D = await FACX.db(); const r = await D.query(`select id from fac_facturas where cobro=$1 and tipo<>'rectificativa'`, [q.cobro]); for (const x of r.rows) await FACX.pago(x.id, 'pagada', modo); } catch (e) {}
         return res.status(200).json({ ok: true }); }
