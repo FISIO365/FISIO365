@@ -5777,6 +5777,28 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         return res.status(400).json({ ok: false });
       }
       // ── AGENDA: citas de un día, dar/mover/cancelar citas (tabla CITAS: cada fila es una hora de un fisio) ──
+      if (action === 'seg-lesiones') { // Etiquetas de lesión de los pacientes (postparto, IUE, hombro…): una lista corta que solo cambia dirección, y qué etiquetas tiene cada paciente
+        const DEF = ['Embarazo', 'Postparto', 'Diástasis', 'IUE', 'Suelo pélvico', 'Cervical', 'Lumbar', 'Hombro', 'Codo', 'Muñeca / mano', 'Cadera', 'Rodilla', 'Tobillo / pie', 'ATM'].map((t, i) => ({ id: 'l' + i, t }));
+        let cat = (await ajuste('lesiones-cat', null)) || DEF; if (!Array.isArray(cat)) cat = DEF;
+        let pac = (await ajuste('lesiones-pac', {})) || {};
+        if (req.method === 'POST') {
+          const quien = String(q.quien || '').trim().slice(0, 40), okP = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
+          if (q.op === 'pac' && okP(q.pacienteId)) {
+            const ids = (Array.isArray(q.ids) ? q.ids : []).filter(id => cat.some(x => x.id === id)).slice(0, 8);
+            pac = (await ajuste('lesiones-pac', {})) || {}; if (ids.length) pac[q.pacienteId] = ids; else delete pac[q.pacienteId];
+            await guardarAjuste('lesiones-pac', pac, quien);
+          } else if (q.op === 'cat' && Array.isArray(q.tags)) {
+            const vistos = new Set(), L = [];
+            q.tags.slice(0, 25).forEach(x => { const t = String((x && x.t) || '').trim().replace(/\s+/g, ' ').slice(0, 30), k = t.toLowerCase(); if (!t || vistos.has(k)) return; vistos.add(k); L.push({ id: x.id && /^l[a-z0-9]{1,12}$/.test(x.id) ? x.id : 'l' + Date.now().toString(36) + L.length, t }); });
+            cat = L; await guardarAjuste('lesiones-cat', cat, quien);
+            // Las etiquetas borradas se quitan de los pacientes
+            const ok = new Set(cat.map(x => x.id)); let cambio = false;
+            Object.keys(pac).forEach(id => { const v = pac[id].filter(x => ok.has(x)); if (v.length !== pac[id].length) { cambio = true; if (v.length) pac[id] = v; else delete pac[id]; } });
+            if (cambio) await guardarAjuste('lesiones-pac', pac, quien);
+          } else return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+        }
+        return res.status(200).json({ ok: true, cat, pac });
+      }
       if (action === 'seg-protocolos') { // Protocolos de ejercicios: programas base que se cargan en la ficha y se adaptan a cada paciente
         let L = (await ajuste('protocolos-ej', [])) || []; if (!Array.isArray(L)) L = [];
         if (req.method === 'POST') {
