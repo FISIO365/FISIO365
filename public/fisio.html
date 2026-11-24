@@ -2271,6 +2271,7 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
 .cm-ic{width:34px;height:34px;border-radius:10px;background:#f7f3ef;display:flex;align-items:center;justify-content:center;flex:none}.com-modo.on .cm-ic{background:#fbe3d7}.cm-ic svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cm-tx b{display:block;font-size:14.5px;color:#1a1a1a}.com-modo.on .cm-tx b{color:#c2552e}.cm-tx small{display:block;font-size:12px;color:#7d6a60;line-height:1.4;margin-top:2px}
 .s-req{margin-top:14px}
+.adj-h{display:block;font-size:11.5px;color:#a3968b;margin-top:4px}@media(hover:none){.adj-h{display:none}}
 .adj-w{margin-top:10px}.adj-b{display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:13.5px;font-weight:600;color:#6b5f57;background:#fff;border:1.5px dashed #d9cfc6;border-radius:99px;padding:8px 14px;cursor:pointer}.adj-b svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .adj-ls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.adj-ls:empty{display:none}.adj-it{position:relative;display:inline-flex;align-items:center;gap:8px;max-width:100%;background:#f7f3ef;border-radius:12px;padding:7px 30px 7px 8px;font-size:12.5px}
 .adj-it i,.adj-doc i{font-style:normal;flex:none;width:34px;height:40px;border-radius:8px;background:#c2552e;color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}.adj-it b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
@@ -8454,23 +8455,31 @@ function renderSug(wrap){
 }
 
 // ── Adjuntos (fotos y archivos) para Comunicaciones y Sugerencias ──
+// Pegar fotos (Ctrl+V / Cmd+V): se adjuntan al selector del mismo formulario (el más cercano al cuadro donde escribes; si no, el único visible)
+document.addEventListener('paste',e=>{const fs=[...((e.clipboardData||{}).items||[])].filter(x=>x.kind==='file'&&/^image\//.test(x.type)).map(x=>x.getAsFile()).filter(Boolean);if(!fs.length)return;
+ const vis=[...document.querySelectorAll('.adj-w')].filter(x=>x.__adjAnade&&x.offsetParent);if(!vis.length)return;
+ let dst=null,n=document.activeElement;while(n&&n!==document.body&&!dst){dst=[...vis].find(x=>n.contains(x));n=n.parentElement;}
+ if(!dst){if(vis.length!==1)return;dst=vis[0];}
+ e.preventDefault();dst.__adjAnade(fs.map((f,i)=>new File([f],'foto-'+Date.now()+(i?'-'+i:'')+'.'+((f.type.split('/')[1]||'png').replace('jpeg','jpg')),{type:f.type})));toast(fs.length>1?'Fotos pegadas':'Foto pegada',true);});
 // adjSelector(): botón «Adjuntar» + lista; .lista() devuelve [{nombre,tipo,file(base64)}]. Las fotos se reducen (1600 px, JPEG)
 function adjSelector(){
  const el=ce('div','adj-w'),L=[];
- el.innerHTML=`<button type="button" class="adj-b"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></svg>Adjuntar fotos o archivos</button><input type="file" multiple accept="image/*,.heic,.heif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" hidden><div class="adj-ls"></div>`;
+ el.innerHTML=`<button type="button" class="adj-b"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></svg>Adjuntar fotos o archivos</button><span class="adj-h">o pega una captura con Ctrl+V</span><input type="file" multiple accept="image/*,.heic,.heif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" hidden><div class="adj-ls"></div>`;
  const fi=el.querySelector('input'),ls=el.querySelector('.adj-ls');
  const pinta=()=>{ls.innerHTML=L.map((a,i)=>a.img?`<span class="adj-it img"><img src="${a.prev}" alt=""><button type="button" data-i="${i}" aria-label="Quitar">✕</button></span>`:`<span class="adj-it"><i>${escH((a.nombre.split('.').pop()||'').toUpperCase().slice(0,4))}</i><b>${escH(a.nombre)}</b><button type="button" data-i="${i}" aria-label="Quitar">✕</button></span>`).join('');
   ls.querySelectorAll('button').forEach(b=>b.onclick=()=>{L.splice(+b.dataset.i,1);pinta();});
   el.querySelector('.adj-b').lastChild.textContent=L.length?'Adjuntar más':'Adjuntar fotos o archivos';};
  const b64=blob=>new Promise((ok,ko)=>{const fr=new FileReader();fr.onerror=ko;fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(blob);});
  el.querySelector('.adj-b').onclick=()=>fi.click();
- fi.onchange=async()=>{const fs=[...(fi.files||[])];fi.value='';
+ const anade=async fs=>{
   for(const f of fs){if(L.length>=6){toast('Como mucho 6 archivos',false);break;}
    const esImg=/^image\//.test(f.type)||/\.(heic|heif)$/i.test(f.name);let blob=f,tipo=f.type||'application/octet-stream',nombre=f.name;
    if(esImg&&f.type!=='image/gif'){try{const bmp=await createImageBitmap(f);const k=Math.min(1,1600/Math.max(bmp.width,bmp.height));const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.82));if(bl){blob=bl;tipo='image/jpeg';nombre=nombre.replace(/\.\w+$/,'')+'.jpg';}}catch(e){}}
    if(blob.size>4*1048576){toast(`«${f.name}» pesa más de 4 MB`,false);continue;}
    try{L.push({nombre,tipo,file:await b64(blob),img:esImg,prev:esImg?URL.createObjectURL(blob):''});}catch(e){toast('No se ha podido leer '+f.name,false);}}
   pinta();};
+ fi.onchange=()=>{const fs=[...(fi.files||[])];fi.value='';anade(fs);};
+ el.__adjAnade=anade;
  return{el,lista:()=>L.map(({nombre,tipo,file})=>({nombre,tipo,file})),vaciar:()=>{L.length=0;pinta();}};
 }
 // Sube los adjuntos uno a uno al registro ya creado. Devuelve cuántos han fallado
@@ -14234,6 +14243,7 @@ const NOVEDADES=[
  {f:'2026-11-20',t:'Mi día › Pendientes: la tarjeta «Lo que te queda» tiene nuevo diseño. Arriba puedes filtrar por tipo (sin próxima cita, ejercicios, app…) y cada bloque lleva su icono y qué hacer.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes › Tareas: todo lo que te queda de tus pacientes está en una sola tarjeta, ordenado por tipo: llamadas, sin próxima cita (con Alta, Seguimiento, App y Explicar), historias, ejercicios, app (con Enviar app), consentimientos, cobros y citas sin marcar.'},
  {f:'2026-11-20',aviso:1,ver:{sec:'tar'},t:'Mi día › Pendientes › Tareas: arriba, «Lo que quedó sin hacer» de tus check-lists del último mes, por tipo (historias, ejercicios, app, consentimientos, cobros, citas sin marcar). Toca el paciente para arreglarlo en su ficha, o «Resolver» si no hace falta y dinos por qué.'},
+ {f:'2026-11-24',t:'Chat, Comunicaciones y Sugerencias: ya puedes pegar una captura con Ctrl+V (Cmd+V en Mac) y se adjunta sola, sin guardarla antes.'},
  {f:'2026-11-24',t:'Captación › Negocios: buscador por nombre y filtros por estado (sin visitar, toca volver, visitados) y por tipo de negocio.',ver:{sec:'cap',pasos:[{el:'.cap-fl',txt:'Busca o filtra los negocios.'}]}},
  {f:'2026-11-23',adm:1,t:'Ficha › Facturas: los tickets que siguen en borrador tienen botón «Rectificar». Se borra el borrador (de Holded y del panel) y lo vuelves a cobrar bien.',ver:{sec:'pacientes'}},
  {f:'2026-11-23',t:'Talleres y cursos: nueva casilla «Completo (sold out)» al editar un taller. En la app sale como agotado y ya no se puede reservar.'},

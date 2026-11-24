@@ -187,8 +187,7 @@
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(min-width: 800px)').matches) { e.preventDefault(); $('form').requestSubmit(); } });
     $('.fc-adj').onclick = () => inp.click();
     prev.querySelector('button').onclick = () => { adjunto = null; prev.classList.remove('on'); puedeEnviar(); };
-    inp.onchange = async () => {
-      const f = inp.files[0]; inp.value = ''; if (!f) return;
+    const usaArchivo = async (f) => {
       preparando = true; puedeEnviar();
       try {
         adjunto = await prepararArchivo(f);
@@ -199,6 +198,9 @@
       } catch (e) { alert(e.message); }
       preparando = false; puedeEnviar();
     };
+    inp.onchange = () => { const f = inp.files[0]; inp.value = ''; if (f) usaArchivo(f); };
+    // Pegar una foto (Ctrl+V / Cmd+V) en el cuadro de texto la adjunta
+    ta.addEventListener('paste', (e) => { const it = [...((e.clipboardData || {}).items || [])].find(x => x.kind === 'file' && /^image\//.test(x.type)); if (!it) return; const f = it.getAsFile(); if (!f) return; e.preventDefault(); usaArchivo(new File([f], 'foto-' + Date.now() + '.' + ((f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')), { type: f.type })); });
     $('form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const texto = ta.value.trim();
