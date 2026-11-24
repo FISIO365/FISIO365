@@ -6182,6 +6182,26 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           const pg = Math.round(Number(String(q.pago || '').replace(',', '.')) * 100) / 100;
           return res.status(200).json({ ok: true, url: huecosEnlace(q.desde, q.hasta, f, pg >= 1 && pg <= 2000 ? pg : 0) });
         }
+        if (action === 'seg-agenda-resenas-meta') { // Barra de reseñas del mes (todo el equipo): meta, reseñas comprobadas, por fisio y el embudo de primeras visitas
+          const mes = hoyF.slice(0, 7);
+          if (q.meta != null) { const n = Math.round(Number(q.meta)); if (!(n >= 1 && n <= 500)) return res.status(400).json({ ok: false, error: 'Pon un número' }); await guardarAjuste('meta-resenas', n, String(q.quien || '').slice(0, 40)); global._resMeta = null; }
+          if (global._resMeta && global._resMeta.mes === mes && Date.now() - global._resMeta.t < 10 * 60e3) return res.status(200).json({ ok: true, ...global._resMeta.v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
+          const enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`, k = f => String((f && f.name) || f || '').trim().split(' ')[0].toLowerCase();
+          const [env, resp] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA ENVIADA},${enMes('ENCUESTA ENVIADA')})`)}&fields[]=${encodeURIComponent('PREF.')}`).catch(() => []),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},${enMes('ENCUESTA RESPONDIDA')})`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`).catch(() => [])]);
+          const ver = (await ajuste('resenas-ok-' + mes, {})) || {}, ok = Object.keys(ver).filter(id => ver[id] && ver[id].ok && /^rec[A-Za-z0-9]{14}$/.test(id));
+          // A qué fisio cuenta cada reseña: el elegido a mano o el de su última sesión
+          const ult = {}; for (let i = 0; i < ok.length; i += 40) { const l = ok.slice(i, i + 40);
+            (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${l.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []))
+              .forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (l.includes(id) && (!ult[id] || f > ult[id].f)) ult[id] = { f, k: k(c.fields['PREF.']) }; }); }); }
+          const porFisio = {}; ok.forEach(id => { const fz = String((ver[id] && ver[id].fisio) || '').trim().split(' ')[0].toLowerCase(), f = fz || (ult[id] || {}).k || ''; if (f) porFisio[f] = (porFisio[f] || 0) + 1; });
+          const pf = {}; const suma = (f, c) => { const x = k(f); if (!x) return; pf[x] = pf[x] || { env: 0, resp: 0, google: 0 }; pf[x][c]++; };
+          env.forEach(r => suma(r.fields['PREF.'], 'env')); resp.forEach(r => { suma(r.fields['PREF.'], 'resp'); if (r.fields['ENCUESTA IR A RESEÑA']) suma(r.fields['PREF.'], 'google'); });
+          const v = { mes, resenas: ok.length, porFisio, primeras: { enviadas: env.length, respondidas: resp.length, google: resp.filter(r => r.fields['ENCUESTA IR A RESEÑA']).length, porFisio: pf } };
+          global._resMeta = { mes, t: Date.now(), v };
+          return res.status(200).json({ ok: true, ...v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
+        }
         if (action === 'seg-agenda-val-fisios') { // Valoraciones por fisio de un mes (solo dirección lo ve en el panel)
           const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`;
           const nmV = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), k = f => String(nmV(f) || '').trim().split(' ')[0].toLowerCase();
