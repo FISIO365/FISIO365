@@ -5785,7 +5785,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             const nombre = String(q.nombre || '').trim().slice(0, 80), ejs = Array.isArray(q.ejercicios) ? q.ejercicios.slice(0, 60) : [];
             if (!nombre || !ejs.length) return res.status(400).json({ ok: false, error: 'Falta el nombre o los ejercicios' });
             if (JSON.stringify(ejs).length > 60000) return res.status(400).json({ ok: false, error: 'El protocolo es demasiado grande' });
-            const i = L.findIndex(x => x.nombre.toLowerCase() === nombre.toLowerCase()), x = { id: i >= 0 ? L[i].id : 'p' + Date.now().toString(36), nombre, zona: String(q.zona || '').slice(0, 40), ejercicios: ejs, por: quien, fecha: hoyF };
+            const i = q.id ? L.findIndex(x => x.id === q.id) : L.findIndex(x => x.nombre.toLowerCase() === nombre.toLowerCase()), x = { id: i >= 0 ? L[i].id : 'p' + Date.now().toString(36), nombre, zona: String(q.zona || '').slice(0, 40), ejercicios: ejs, por: quien, fecha: hoyF };
             if (i >= 0) L[i] = x; else L.push(x);
           } else if (q.op === 'borrar') L = L.filter(x => x.id !== q.id);
           else return res.status(400).json({ ok: false });
