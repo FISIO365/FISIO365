@@ -1561,6 +1561,7 @@ button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;
 .les{display:inline-flex;align-items:center;font-family:var(--font);font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:#fff;color:#c2552e;border:1.5px solid #f0cdbd;white-space:nowrap}.les.les-add{color:#9a8d84;border-style:dashed;border-color:#ddd2c8}.fp-lesb{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;background:none;border:0;padding:0;cursor:pointer;font:inherit}.ag-les{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 10px}
 .les-g{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 14px}.les-g button{font-family:var(--font);font-size:13px;font-weight:500;padding:7px 13px;border-radius:99px;border:1.5px solid #e6ddd3;background:#fff;color:#5f554e;cursor:pointer}.les-g button.on{border-color:#c2552e;background:#fbeee7;color:#c2552e;font-weight:600}.les-ed{background:none;border:0;color:#c2552e;font:600 12.5px var(--font);cursor:pointer;padding:0;margin:0 0 12px}
 .les-r{display:flex;gap:6px;margin-bottom:6px}.les-r input{flex:1;font:14px var(--font);padding:8px 11px;border:1.5px solid #e6ddd3;border-radius:10px}.les-r button{width:36px;border:1.5px solid #e6ddd3;background:#fff;border-radius:10px;color:#9a8d84;cursor:pointer}.les-mas{background:none;border:1.5px dashed #ddd2c8;border-radius:10px;width:100%;padding:8px;font:500 13px var(--font);color:#7d6a60;cursor:pointer;margin:2px 0 12px}
+.clv{display:flex;justify-content:center;padding:48px 16px}.clv-c{background:#fff;border:1px solid #ede5dd;border-radius:20px;padding:30px 26px;width:100%;max-width:360px;text-align:center;display:flex;flex-direction:column;align-items:center}.clv-i{width:54px;height:54px;border-radius:50%;background:#fbeee7;display:flex;align-items:center;justify-content:center;margin-bottom:12px}.clv-i svg{width:26px;height:26px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.clv-c>b{font-size:17px}.clv-p{font-size:13px;color:#8a7d74;margin:6px 0 16px;line-height:1.5}.clv-in{width:100%;box-sizing:border-box;font:15px var(--font);padding:11px 14px;border:1.5px solid #e6ddd3;border-radius:12px;margin-bottom:8px;text-align:center;outline:none}.clv-in:focus{border-color:#c2552e}.clv-e{color:#b42318;font-size:12.5px;margin:2px 0 8px}.clv-b{width:100%;font:600 14.5px var(--font);padding:12px;border:0;border-radius:12px;background:#c2552e;color:#fff;cursor:pointer;margin-top:4px}.clv-b:disabled{opacity:.6}.clv-l{background:none;border:0;color:#c2552e;font:600 12.5px var(--font);cursor:pointer;margin-top:12px}
 .st-tb{display:flex;flex-direction:column}.st-tr{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr;gap:6px;font-size:13px;padding:6px 0;border-top:1px solid #efe8e1}.st-tr span:not(:first-child){text-align:right}.st-th{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a8d84;border-top:none}.st-tt{font-weight:700}
 .st-p{font-size:13px;margin:8px 0 0;line-height:1.5}
 .st-dias{display:flex;align-items:flex-end;gap:8px;height:130px}.st-dias div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}.st-dias i{display:block;width:100%;max-width:34px;background:#c2552e;border-radius:6px 6px 3px 3px;min-height:2px}.st-dias b{font-size:12.5px}.st-dias small{font-size:11px;color:#9a8d84}
@@ -2846,6 +2847,7 @@ function showSection(sec){try{resFlot();if(apiPwd)lesCarga();}catch(e){}
  const wrap=$('mainWrap');
  wrap.innerHTML='';wrap.dataset.sec=sec;
  try{cursoAviso(sec);}catch(e){}
+ if(CLAVE_SECS.includes(sec)&&!claveAbierta()){renderClave(wrap,sec);return;}
  if(sec==='prog') renderProg(wrap);
  else if(sec==='anam'){
  // Si hay anamnesis en curso, retomar directamente en lugar de mostrar el hub
@@ -2874,6 +2876,35 @@ function showSection(sec){try{resFlot();if(apiPwd)lesCarga();}catch(e){}
  else if(sec==='mis') renderRendimiento(wrap,true);
 }
 
+
+// ── Clave para entrar en Panel de control, Estadísticas, Facturación y Rendimiento ──
+// Se pide una vez y queda abierto 1 hora en esta pestaña (o hasta tocar «Bloquear»).
+const CLAVE_SECS=['ctrl','stats','fx','rend'];
+const claveAbierta=()=>{try{return Date.now()-Number(sessionStorage.getItem('f365_clave')||0)<60*60e3;}catch(e){return false;}};
+function claveBloquear(){try{sessionStorage.removeItem('f365_clave');}catch(e){}const s=(()=>{try{return sessionStorage.getItem('f365_panel_sec');}catch(e){return '';}})();if(CLAVE_SECS.includes(s))showSection(s);}
+async function renderClave(wrap,sec,modo){
+ const tit={ctrl:'Panel de control',stats:'Estadísticas',fx:'Facturación',rend:'Rendimiento'}[sec]||'Esta pantalla';
+ wrap.innerHTML=`<div class="clv"><div class="clv-c"><div class="clv-i"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/><circle cx="12" cy="15.5" r="1.2"/></svg></div><b>${escH(tit)}</b><p class="clv-p">Cargando…</p></div></div>`;
+ let puesta=true;try{const r=await (await fetch(`/api/schedule?action=seg-clave-zonas&pwd=${encodeURIComponent(apiPwd)}`)).json();puesta=!!r.puesta;}catch(e){}
+ if(!wrap.isConnected||wrap.dataset.sec!==sec)return;
+ const c=wrap.querySelector('.clv-c'),dir=esDireccion();
+ const cambiar=modo==='cambiar'||(!puesta&&dir);
+ if(!puesta&&!dir){c.querySelector('.clv-p').textContent='Esta pantalla pide una clave, pero dirección todavía no la ha puesto.';return;}
+ c.querySelector('.clv-p').outerHTML=cambiar
+  ?`<p class="clv-p">${puesta?'Cambia la clave para entrar en Panel de control, Estadísticas, Facturación y Rendimiento.':'Pon la clave para entrar en Panel de control, Estadísticas, Facturación y Rendimiento. Se la pedirá a todo el que entre.'}</p>${puesta?'<input type="password" class="clv-in clv-ac" placeholder="Clave actual" autocomplete="current-password">':''}<input type="password" class="clv-in clv-n1" placeholder="Clave nueva (mín. 4)" autocomplete="new-password"><input type="password" class="clv-in clv-n2" placeholder="Repite la clave nueva" autocomplete="new-password"><p class="clv-e" hidden></p><button type="button" class="clv-b">Guardar clave</button>${puesta?'<button type="button" class="clv-l clv-vo">Volver</button>':''}`
+  :`<p class="clv-p">Esta pantalla pide clave para entrar.</p><input type="password" class="clv-in clv-k" placeholder="Clave" autocomplete="current-password"><p class="clv-e" hidden></p><button type="button" class="clv-b">Entrar</button>${dir?'<button type="button" class="clv-l clv-ca">Cambiar la clave</button>':''}`;
+ const err=t=>{const e=c.querySelector('.clv-e');e.textContent=t;e.hidden=!t;};
+ const b=c.querySelector('.clv-b'),abre=()=>{try{sessionStorage.setItem('f365_clave',String(Date.now()));}catch(e){}showSection(sec);};
+ const post=o=>agPost('seg-clave-zonas',Object.assign({quien:String((fisioActual&&fisioActual.nombre)||'')},o));
+ if(cambiar){b.onclick=async()=>{const n1=c.querySelector('.clv-n1').value.trim(),n2=c.querySelector('.clv-n2').value.trim(),ac=c.querySelector('.clv-ac');
+   if(n1.length<4)return err('La clave tiene que tener al menos 4 caracteres');if(n1!==n2)return err('Las dos claves nuevas no coinciden');
+   b.disabled=true;b.textContent='Guardando…';try{const r=await post({op:'poner',nueva:n1,actual:ac?ac.value:''});if(!r.ok)throw new Error(r.error||'No se ha podido guardar');toast('Clave guardada',true);abre();}catch(e){b.disabled=false;b.textContent='Guardar clave';err(e.message);}};
+  {const v=c.querySelector('.clv-vo');if(v)v.onclick=()=>renderClave(wrap,sec);}}
+ else{const k=c.querySelector('.clv-k');const ir=async()=>{if(!k.value.trim())return err('Escribe la clave');b.disabled=true;b.textContent='Comprobando…';
+   try{const r=await post({op:'probar',clave:k.value});if(!r.ok)throw new Error(r.error||'No se ha podido comprobar');if(r.valida){abre();return;}err('Clave incorrecta');k.value='';k.focus();}catch(e){err(e.message);}b.disabled=false;b.textContent='Entrar';};
+  b.onclick=ir;k.onkeydown=e=>{if(e.key==='Enter')ir();};setTimeout(()=>k.focus(),50);
+  {const ca=c.querySelector('.clv-ca');if(ca)ca.onclick=()=>renderClave(wrap,sec,'cambiar');}}
+}
 
 // ── Avisos del panel (mensajes de pacientes) ──────────────────
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
@@ -14366,6 +14397,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-24',adm:1,aviso:1,t:'Panel de control, Estadísticas, Facturación y Rendimiento ahora piden clave para entrar (queda abierto 1 hora). Dirección la pone la primera vez y la puede cambiar desde esa misma pantalla.'},
 {f:'2026-11-24',aviso:1,ver:{sec:'pac',pasos:[{el:'#pacLes',txt:'Aquí ves a los pacientes por lesión.'}]},t:'Etiquetas de lesión: en la ficha del paciente, debajo del nombre, toca «+ Lesión» y marca postparto, IUE, hombro, rodilla… Salen al abrir su cita en la agenda y en Pacientes › Por lesión. La lista la lleva dirección.'},
 {f:'2026-11-24',dir:1,ver:{sec:'stats',pasos:[{el:'.st-res',txt:'Reseñas y primeras visitas, mes a mes.'}]},t:'Estadísticas: nueva tarjeta «Reseñas y primeras visitas» con los últimos meses: reseñas comprobadas frente al objetivo, y encuestas enviadas, respondidas y que fueron a Google. También por fisio.'},
  {f:'2026-11-20',t:'Ficha del paciente: si tiene una factura pendiente de pago, sale arriba (como los packs a medias) y al tocarla te lleva a Facturas para cobrarla.',ver:{sec:'pac'}},
@@ -16960,6 +16992,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Dirección: listas y ajustes',sub:'Solo lo ve dirección',dir:1,
  cards:[
+ {ti:'Pantallas con clave',body:`<b>Panel de control</b>, <b>Estadísticas</b>, <b>Facturación</b> y <b>Rendimiento</b> piden una clave para entrar. Se pide una vez y queda abierto 1 hora en esa pestaña.<br><br>La pone dirección la primera vez que entra; para cambiarla, en la pantalla de la clave, <b>Cambiar la clave</b>.`},
  {ti:'Cambiar el check-list',body:`En <b>Dirección › Check-list</b> editas los puntos del check-list del equipo (con sub-puntos), los ordenas o los ocultas.<br><br>¿Te has liado? <b>Volver a la original</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="chk"] || .adm-tabs',txt:'Check-list.'}]}},
  {ti:'Cambia un precio o un concepto',body:`En <b>Listas</b>: los <b>conceptos y precios</b> al cobrar, formas de pago, estados del paciente, tipos de cita y de sesión, motivos de no citarse, tipos de negocio y zonas de ejercicios.<br><br>Puedes renombrar, juntar o borrar.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="listas"] || .adm-tabs',txt:'Listas.'}]}},
  {ti:'Lo de la clínica y los pacientes',body:`En <b>Ajustes</b>: datos de la clínica (logo, color, reseñas, IBAN), tarjeta regalo, facturación, opciones (bomba), <b>política de cancelación</b>, la <b>app del paciente</b> (servicios, packs, promociones), <b>textos legales</b> y <b>mensajes a pacientes</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="ajustes"] || .adm-tabs',txt:'Ajustes.'}]}},

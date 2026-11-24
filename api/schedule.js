@@ -5777,6 +5777,28 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         return res.status(400).json({ ok: false });
       }
       // ── AGENDA: citas de un día, dar/mover/cancelar citas (tabla CITAS: cada fila es una hora de un fisio) ──
+      if (action === 'seg-clave-zonas') { // Clave extra para entrar en Panel de control, Estadísticas, Facturación y Rendimiento (solo se guarda la huella, nunca la clave)
+        const h = c => require('crypto').createHmac('sha256', String(process.env.AIRTABLE_TOKEN || 'fisio365')).update('zonas:' + String(c || '').trim()).digest('hex');
+        const g = (await ajuste('clave-zonas', null)) || null;
+        if (req.method === 'POST') {
+          global._claveFallos = global._claveFallos || { n: 0, t: 0 };
+          if (global._claveFallos.n >= 8 && Date.now() - global._claveFallos.t < 5 * 60e3) return res.status(429).json({ ok: false, error: 'Demasiados intentos. Espera 5 minutos.' });
+          if (q.op === 'probar') {
+            const ok = !!(g && g.h && q.clave && h(q.clave) === g.h);
+            if (!ok) global._claveFallos = { n: global._claveFallos.n + 1, t: Date.now() }; else global._claveFallos = { n: 0, t: 0 };
+            return res.status(200).json({ ok: true, valida: ok, puesta: !!(g && g.h) });
+          }
+          if (q.op === 'poner') {
+            const nueva = String(q.nueva || '').trim();
+            if (nueva.length < 4 || nueva.length > 40) return res.status(400).json({ ok: false, error: 'La clave tiene que tener al menos 4 caracteres' });
+            if (g && g.h && h(q.actual) !== g.h) { global._claveFallos = { n: global._claveFallos.n + 1, t: Date.now() }; return res.status(200).json({ ok: false, error: 'La clave actual no es correcta' }); }
+            await guardarAjuste('clave-zonas', { h: h(nueva), f: new Date().toISOString() }, String(q.quien || '').slice(0, 40));
+            return res.status(200).json({ ok: true, valida: true, puesta: true });
+          }
+          return res.status(400).json({ ok: false, error: 'Datos no válidos' });
+        }
+        return res.status(200).json({ ok: true, puesta: !!(g && g.h) });
+      }
       if (action === 'seg-lesiones') { // Etiquetas de lesión de los pacientes (postparto, IUE, hombro…): una lista corta que solo cambia dirección, y qué etiquetas tiene cada paciente
         const DEF = ['Embarazo', 'Postparto', 'Diástasis', 'IUE', 'Suelo pélvico', 'Cervical', 'Lumbar', 'Hombro', 'Codo', 'Muñeca / mano', 'Cadera', 'Rodilla', 'Tobillo / pie', 'ATM'].map((t, i) => ({ id: 'l' + i, t }));
         let cat = (await ajuste('lesiones-cat', null)) || DEF; if (!Array.isArray(cat)) cat = DEF;
