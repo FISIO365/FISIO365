@@ -1557,6 +1557,7 @@ button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;
 .st-box{background:#fbf8f5;border-radius:16px;padding:12px 14px;margin-bottom:10px;min-width:0}.st-bt{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}.st-bt b{font-size:14px}.st-bt small{font-size:12px;color:#7d6a60}
 .st-ch{overflow-x:auto}.st-ch svg{display:block}.st-bar{cursor:pointer}.st-bar rect{fill:#e9cdbd}.st-bar.on rect{fill:#c2552e}.st-bar text{font-size:10.5px;fill:#5f554e;font-family:var(--font);font-weight:600}.st-bar .st-x{font-weight:500;fill:#9a8d84}
 .st-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:10px}.st-2 .st-box{margin-bottom:0}
+.st-rsg{position:relative}.st-rsm{position:absolute;left:0;right:0;border-top:1.5px dashed #c2552e;opacity:.55;pointer-events:none;z-index:1}.st-rsm span{position:absolute;right:0;top:-17px;font-size:10px;font-weight:600;color:#c2552e;background:#fff;padding:0 4px;border-radius:4px}.st-ic.ok i{background:#5f9a6e}.st-rsT .st-tr{grid-template-columns:1.1fr .9fr 1.2fr 1.2fr .8fr}.st-rsT small{font-size:10.5px;color:#9a8d84}
 .st-tb{display:flex;flex-direction:column}.st-tr{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr;gap:6px;font-size:13px;padding:6px 0;border-top:1px solid #efe8e1}.st-tr span:not(:first-child){text-align:right}.st-th{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a8d84;border-top:none}.st-tt{font-weight:700}
 .st-p{font-size:13px;margin:8px 0 0;line-height:1.5}
 .st-dias{display:flex;align-items:flex-end;gap:8px;height:130px}.st-dias div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}.st-dias i{display:block;width:100%;max-width:34px;background:#c2552e;border-radius:6px 6px 3px 3px;min-height:2px}.st-dias b{font-size:12.5px}.st-dias small{font-size:11px;color:#9a8d84}
@@ -9667,6 +9668,7 @@ function renderStats(wrap){
    ${(()=>{const R=stRanking(L,S);return R.length?`<div class="st-box"><div class="st-bt"><b>Ranking de fisios</b><span class="st-rt"><button type="button" class="${ST.rk!=='per'?'on':''}" data-rk="sem">${ST.vista==='sem'?'Semana':(ST_VIS.find(v=>v[0]===ST.vista)||[])[1]}</button><button type="button" class="${ST.rk==='per'?'on':''}" data-rk="per">Periodo</button></span></div>
     <div class="st-tb st-rk"><div class="st-tr st-th"><span>Fisio</span><span>Ocupación</span><span>Sesiones</span><span>Conversión</span></div>${R.map((r,i)=>`<div class="st-tr"><span><i class="st-pos p${i+1}">${i+1}</i>${escH(r.nombre)}</span><span><b>${r.ocup==null?'—':r.ocup+'%'}</b><small>${r.cap?` ${r.oc}/${r.cap} h`:''}</small>${r.extra?`<small class="st-ext">+${r.extra} h extra</small>`:''}<em class="st-barra"><i style="width:${Math.min(r.ocup||0,100)}%"></i></em></span><span>${r.ses}</span><span>${r.conv==null?'—':r.conv+'%'}<small>${r.vin?` (${r.rep}/${r.vin})`:''}</small></span></div>`).join('')}</div>
     <p class="st-p fp-mu">Ordenado por ocupación: sesiones hechas entre las horas de su horario de los días en que hizo alguna sesión. Sesiones = citas hechas. Conversión = de sus primeras visitas, cuántas volvieron.</p></div>`:'';})()}
+   <div class="st-box st-res"><div class="st-bt"><b>Reseñas y primeras visitas</b><small>mes a mes</small></div><div class="st-rsc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-it"><div class="st-bt"><b>Ingresos desde el principio</b><span class="st-rt"><button type="button" data-v="mes" class="on">Por mes</button><button type="button" data-v="ano">Por año</button></span></div><div class="st-itc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-gv"><div class="st-bt"><b>Ingresos y gastos</b><span class="st-gl"><i class="in"></i>Ingresos<i class="ga"></i>Gastos</span></div><div class="st-gvc"><p class="st-p fp-mu">Cargando…</p></div></div>
    <div class="st-box st-con"><div class="st-bt"><b>¿Cómo nos han conocido?</b><small>Primeras visitas del periodo</small></div><div class="st-cq"><p class="st-p fp-mu">Cargando…</p></div></div>
@@ -9684,9 +9686,24 @@ function renderStats(wrap){
   g.querySelectorAll('.st-trb').forEach(b=>b.onclick=()=>{const pl=g.querySelector(`.st-pl[data-f="${CSS.escape(b.dataset.f)}"]`);pl.hidden=!pl.hidden;b.classList.toggle('on',!pl.hidden);});
   g.querySelectorAll('.st-pi').forEach(x=>x.onclick=()=>abrirFichaPaciente(x.dataset.id,x.querySelector('b').textContent));
   if(agr){const mb=g.querySelector('.st-man');if(mb)mb.remove();}
+  pintaResenasSt(g.querySelector('.st-res'));
   if(ST.fis){g.querySelectorAll('.st-it,.st-gv,.st-con,.st-man,.st-tkb').forEach(x=>x.remove());const rk=g.querySelector('.st-rk');if(rk)rk.closest('.st-box').remove();return;}
   pintaConocido(g.querySelector('.st-cq'),L[0].semana);
   pintaIngTodo(g.querySelector('.st-it'));pintaGastos(g.querySelector('.st-gv'));
+ }
+
+ // Reseñas comprobadas («La puso» en Valoraciones › Reseñas del mes) y embudo de primeras visitas, últimos 12 meses (centro o el fisio elegido)
+ async function pintaResenasSt(box){if(!box)return;const c=box.querySelector('.st-rsc');
+  try{if(!ST.res||Date.now()-(ST.resT||0)>5*60000){const r=await (await fetch(`/api/schedule?action=seg-agenda-resenas-hist&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw 0;ST.res=r;ST.resT=Date.now();}}catch(e){c.innerHTML='<p class="st-p fp-mu">No se han podido cargar.</p>';return;}
+  if(!box.isConnected)return;
+  const MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],f=ST.fis,meta=f?0:ST.res.meta;
+  let L=ST.res.meses.map(m=>{const x=f?(m.pf[f]||{resenas:0,env:0,resp:0,google:0}):{resenas:m.resenas,env:m.enviadas,resp:m.respondidas,google:m.google};return Object.assign({mes:m.mes},x);});
+  const i0=L.findIndex(x=>x.resenas||x.env||x.resp);if(i0<0){c.innerHTML='<p class="st-p fp-mu">Todavía no hay datos.</p>';return;}L=L.slice(i0);
+  const hoyM=agHoyIso().slice(0,7),mx=Math.max(meta,...L.map(x=>x.resenas),1),lab=m=>MS[+m.slice(5,7)-1]+(m.slice(5,7)==='01'||m===L[0].mes?' '+m.slice(2,4):'');
+  const pct=(a,b)=>b?Math.round(a*100/b)+'%':'—';
+  c.innerHTML=`<div class="st-rsg">${meta?`<div class="st-rsm" style="bottom:${16+Math.round(meta/mx*130)}px"><span>Objetivo ${meta}</span></div>`:''}<div class="st-ib">${L.map(x=>`<div class="st-ic${x.mes===hoyM?' top':''}${meta&&x.resenas>=meta?' ok':''}" title="${escH(lab(x.mes))}: ${x.resenas} reseñas"><em>${x.resenas}</em><i style="height:${Math.max(2,Math.round(x.resenas/mx*130))}px"></i><span>${escH(lab(x.mes))}</span></div>`).join('')}</div></div>
+   <div class="st-tb st-rsT"><div class="st-tr st-th"><span>Mes</span><span>Encuestas</span><span>Respondidas</span><span>A Google</span><span>Reseñas</span></div>${L.slice().reverse().map(x=>`<div class="st-tr${x.mes===hoyM?' st-tt':''}"><span>${escH(lab(x.mes))}${x.mes===hoyM?' <small>(en curso)</small>':''}</span><span>${x.env}</span><span>${x.resp}<small>${x.env?' · '+pct(x.resp,x.env):''}</small></span><span>${x.google}<small>${x.resp?' · '+pct(x.google,x.resp):''}</small></span><span><b>${x.resenas}</b></span></div>`).join('')}</div>
+   <p class="st-p fp-mu" style="font-size:12px">Encuestas: las de primera visita${f?' de sus pacientes':''}. Reseñas: las marcadas como «La puso» en Valoraciones › Reseñas del mes${f?', que cuentan para el fisio de la última sesión':''}.</p>`;
  }
  async function pintaIngTodo(box){if(!box)return;const c=box.querySelector('.st-itc');
   try{if(!ST.ing||Date.now()-(ST.ingT||0)>60000){ST.ingT=Date.now();const r=await (await fetch(`/api/schedule?action=seg-ingresos-todo&pwd=${encodeURIComponent(apiPwd)}`)).json();if(!r.ok)throw 0;ST.ing=r.semanas;ST.ingM=r.meses||[];ST.ingH=null;}}catch(e){c.innerHTML='<p class="st-p fp-mu">No se han podido cargar.</p>';return;}
@@ -14299,6 +14316,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-24',dir:1,ver:{sec:'stats',pasos:[{el:'.st-res',txt:'Reseñas y primeras visitas, mes a mes.'}]},t:'Estadísticas: nueva tarjeta «Reseñas y primeras visitas» con los últimos meses: reseñas comprobadas frente al objetivo, y encuestas enviadas, respondidas y que fueron a Google. También por fisio.'},
  {f:'2026-11-20',t:'Ficha del paciente: si tiene una factura pendiente de pago, sale arriba (como los packs a medias) y al tocarla te lleva a Facturas para cobrarla.',ver:{sec:'pac'}},
  {f:'2026-11-20',aviso:1,t:'Cobrar y facturar: nueva forma de pago «Pendiente de pago» para facturar una sesión que todavía no han pagado. Cuando pague, en su ficha › Facturas toca «Pendiente de pago · Cobrar».',ver:{sec:'pac'}},
  {f:'2026-11-20',adm:1,t:'Consentimiento de alta oncológica: ahora nombra también la electroterapia y la radiofrecuencia (además de la bomba diamagnética).'},

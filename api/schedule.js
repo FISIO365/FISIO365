@@ -6235,6 +6235,30 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           global._resMeta = { mes, t: Date.now(), v };
           return res.status(200).json({ ok: true, ...v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
         }
+        if (action === 'seg-agenda-resenas-hist') { // Estadísticas › Reseñas: los últimos 12 meses (reseñas comprobadas y embudo de primeras visitas), todo el centro y por fisio
+          if (global._resHist && Date.now() - global._resHist.t < 30 * 60e3 && !q.fresco) return res.status(200).json({ ok: true, meses: global._resHist.v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
+          const k = f => String((f && f.name) || f || '').trim().split(' ')[0].toLowerCase(), M = [];
+          { const [y, m] = hoyF.slice(0, 7).split('-').map(Number); for (let i = 11; i >= 0; i--) { const d = new Date(Date.UTC(y, m - 1 - i, 1)); M.push(d.toISOString().slice(0, 7)); } }
+          const desde = M[0] + '-01', mesDe = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')`, mesR = (r, c) => { const v = r.fields[c]; if (!v) return ''; return new Date(v).toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' }).slice(0, 7); };
+          const [env, resp] = await Promise.all([
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA ENVIADA},NOT(IS_BEFORE({ENCUESTA ENVIADA},'${desde}')))`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA ENVIADA')}`).catch(() => []),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND({ENCUESTA RESPONDIDA},NOT(IS_BEFORE({ENCUESTA RESPONDIDA},'${desde}')))`)}&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('ENCUESTA RESPONDIDA')}&fields[]=${encodeURIComponent('ENCUESTA IR A RESEÑA')}`).catch(() => [])]);
+          const R = {}; M.forEach(m => { R[m] = { mes: m, resenas: 0, enviadas: 0, respondidas: 0, google: 0, pf: {} }; });
+          const pf = (m, f) => { const x = k(f) || '—'; return (R[m].pf[x] = R[m].pf[x] || { resenas: 0, env: 0, resp: 0, google: 0 }); };
+          env.forEach(r => { const m = mesR(r, 'ENCUESTA ENVIADA'); if (!R[m]) return; R[m].enviadas++; pf(m, r.fields['PREF.']).env++; });
+          resp.forEach(r => { const m = mesR(r, 'ENCUESTA RESPONDIDA'); if (!R[m]) return; R[m].respondidas++; const x = pf(m, r.fields['PREF.']); x.resp++; if (r.fields['ENCUESTA IR A RESEÑA']) { R[m].google++; x.google++; } });
+          // Reseñas comprobadas («La puso») de cada mes; cuentan para el fisio elegido a mano o el de su última sesión hasta fin de ese mes
+          const VER = {}; for (const m of M) VER[m] = (await ajuste('resenas-ok-' + m, {})) || {};
+          const todos = [...new Set(M.flatMap(m => Object.keys(VER[m]).filter(id => VER[m][id] && VER[m][id].ok && okId(id))))], ses = {};
+          for (let i = 0; i < todos.length; i += 40) { const l = todos.slice(i, i + 40);
+            (await todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',OR(${l.map(id => `FIND('${id}',ARRAYJOIN({PacienteRec}))`).join(',')}))`)}&fields[]=FECHA&fields[]=${encodeURIComponent('PREF.')}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`).catch(() => []))
+              .forEach(c => { const f = String(c.fields.FECHA || '').slice(0, 10); (c.fields['RELACIÓN - CITA'] || []).forEach(id => { if (l.includes(id)) (ses[id] = ses[id] || []).push({ f, k: k(c.fields['PREF.']) }); }); }); }
+          M.forEach(m => { const fin = m + '-31'; Object.keys(VER[m]).forEach(id => { const v = VER[m][id]; if (!(v && v.ok && okId(id))) return; R[m].resenas++;
+            let f = String(v.fisio || '').trim().split(' ')[0].toLowerCase(); if (!f) { const u = (ses[id] || []).filter(x => x.f <= fin).sort((a, b) => b.f.localeCompare(a.f))[0]; f = u ? u.k : ''; }
+            pf(m, f).resenas++; }); });
+          const v = M.map(m => R[m]); global._resHist = { t: Date.now(), v };
+          return res.status(200).json({ ok: true, meses: v, meta: Number(await ajuste('meta-resenas', 10)) || 10 });
+        }
         if (action === 'seg-agenda-val-fisios') { // Valoraciones por fisio de un mes (solo dirección lo ve en el panel)
           const mes = /^\d{4}-\d{2}$/.test(q.mes || '') ? q.mes : hoyF.slice(0, 7), enMes = c => `DATETIME_FORMAT(SET_TIMEZONE({${c}},'Europe/Madrid'),'YYYY-MM')='${mes}'`;
           const nmV = v => (v && typeof v === 'object') ? (v.name || '') : (v || ''), k = f => String(nmV(f) || '').trim().split(' ')[0].toLowerCase();
@@ -6282,6 +6306,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (q.op === 'anadir' && okId(q.pacienteId)) { ver[q.pacienteId] = { ok: true, manual: true, quien: String(q.quien || '').slice(0, 40), cuando: new Date().toISOString() }; await guardarAjuste(claveV, ver, String(q.quien || '')); }
           { const man = Object.keys(ver).filter(id => ver[id] && ver[id].manual && !P[id] && okId(id));
             for (let i = 0; i < man.length; i += 40) { const l = man.slice(i, i + 40); (await todosT(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${l.map(id => `RECORD_ID()='${id}'`).join(',')})`)}&fields[]=${encodeURIComponent('FULL NAME')}&fields[]=NOMBRE&fields[]=WHATSAPP&fields[]=TELF`).catch(() => [])).forEach(r => pon(r.id, r.fields, String(ver[r.id].cuando || '').slice(0, 10))); } }
+          if ((q.op === 'verificar' || q.op === 'anadir') && okId(q.pacienteId)) { global._resHist = null; global._resMeta = null; }
           if (q.op === 'verificar' && okId(q.pacienteId)) { if (q.v === true || q.v === false) ver[q.pacienteId] = { ok: q.v, quien: String(q.quien || '').slice(0, 40), cuando: new Date().toISOString() }; else delete ver[q.pacienteId]; await guardarAjuste(claveV, ver, String(q.quien || '')); }
           const listaTodos = Object.values(P).filter(x => x.nombre).sort((a, b) => a.fecha.localeCompare(b.fecha)).map(x => Object.assign(x, { resena: ver[x.pacienteId] ? (ver[x.pacienteId].ok ? 'si' : 'no') : '', manual: !!(ver[x.pacienteId] && ver[x.pacienteId].manual) }));
           const lista = listaTodos.filter(x => x.resena === 'si');
