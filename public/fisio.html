@@ -17760,7 +17760,7 @@ async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='ticket
  c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>fxLista(c,clase)));
  c.querySelector('.fx-perw').replaceWith(fxPeriodo(()=>fxLista(c,clase)));
  {const se=c.querySelector('.fx-ser');if(se)se.onchange=e=>{FX.serie=e.target.value;fxLista(c,clase);};}
- const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
+ const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c,clase).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
 // Comparar con Holded: primero el resumen del periodo (un día por fila, si cuadra o no) y, al tocar un día, su detalle
 async function fxComparar(c,dia){if(!dia&&!FX.cmpDia)return fxCompararRango(c);if(dia)FX.cmpDia=dia;return fxCompararDia(c,FX.cmpDia);}
 async function fxCompararRango(c){FX.cmpDia='';const [desde,hasta]=fxPerIni();c.innerHTML='<div class="fx-fil"><span class="fx-perw"></span></div><div class="card"><div class="fac-vacio">Cargando…</div></div>';

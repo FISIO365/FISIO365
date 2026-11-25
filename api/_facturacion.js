@@ -19,7 +19,7 @@ alter table fac_facturas add column if not exists enviada jsonb not null default
 alter table fac_facturas add column if not exists sustituye jsonb;
 alter table fac_facturas add column if not exists sustituida_por text;
 alter table fac_facturas add column if not exists rect_simpl boolean not null default false;
-update fac_facturas set rect_simpl=true where tipo='rectificativa' and not rect_simpl and por='Holded (traída)' and codigo like 'TN%';
+update fac_facturas set rect_simpl=true where tipo='rectificativa' and not rect_simpl and (codigo like 'TN%' or holded_num like 'TN%');
 create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
 create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
 `;
