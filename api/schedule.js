@@ -5845,7 +5845,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         if (!(await ajuste('lesiones-mig-sp', null))) {
           const k = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
           cat = cat.map(x => k(x.t) === 'embarazo' && !cat.some(y => k(y.t) === 'preparto') ? { id: x.id, t: 'Preparto' } : x);
-          ['Preparto', 'Postparto', 'IUE', 'IUU', 'Prostatectomía', 'Prolapso', 'Coloproctología', 'Menopausia', 'Hormonal'].forEach((t, i) => { if (!cat.some(x => k(x.t) === k(t)) && cat.length < 25) cat.push({ id: 'lsp' + i, t }); });
+          ['Preparto', 'Postparto', 'IUE', 'IUU', 'Prostatectomía', 'Prolapso', 'Coloproctología', 'Menopausia', 'Hormonal'].forEach((t, i) => { if (!cat.some(x => k(x.t) === k(t)) && cat.length < 60) cat.push({ id: 'lsp' + i, t }); });
           await guardarAjuste('lesiones-cat', cat, 'sistema'); await guardarAjuste('lesiones-mig-sp', 1, 'sistema');
         }
         if (req.method === 'POST') {
@@ -5856,7 +5856,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
             await guardarAjuste('lesiones-pac', pac, quien);
           } else if (q.op === 'cat' && Array.isArray(q.tags)) {
             const vistos = new Set(), L = [];
-            q.tags.slice(0, 25).forEach(x => { const t = String((x && x.t) || '').trim().replace(/\s+/g, ' ').slice(0, 30), k = t.toLowerCase(); if (!t || vistos.has(k)) return; vistos.add(k); L.push({ id: x.id && /^l[a-z0-9]{1,12}$/.test(x.id) ? x.id : 'l' + Date.now().toString(36) + L.length, t }); });
+            q.tags.slice(0, 60).forEach(x => { const t = String((x && x.t) || '').trim().replace(/\s+/g, ' ').slice(0, 30), k = t.toLowerCase(); if (!t || vistos.has(k)) return; vistos.add(k); L.push({ id: x.id && /^l[a-z0-9]{1,12}$/.test(x.id) ? x.id : 'l' + Date.now().toString(36) + L.length, t }); });
             cat = L; await guardarAjuste('lesiones-cat', cat, quien);
             // Las etiquetas borradas se quitan de los pacientes
             const ok = new Set(cat.map(x => x.id)); let cambio = false;

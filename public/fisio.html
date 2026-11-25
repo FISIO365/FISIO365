@@ -3233,7 +3233,7 @@ function lesEditarLista(onDone){let L=LES.cat.map(x=>({id:x.id,t:x.t}));
  const pinta=()=>{const c=m.querySelector('.les-l');c.innerHTML=L.map((x,j)=>`<div class="les-r"><input type="text" maxlength="30" value="${escH(x.t)}" placeholder="Nombre"><button type="button" data-j="${j}" aria-label="Quitar">✕</button></div>`).join('');
   c.querySelectorAll('.les-r button').forEach(b=>b.onclick=()=>{lee();L.splice(+b.dataset.j,1);pinta();});};
  m.querySelector('.hz-x').onclick=()=>m.remove();
- m.querySelector('.les-mas').onclick=()=>{lee();if(L.length>=25)return toast('Máximo 25 etiquetas',false);L.push({id:'',t:''});pinta();const ins=m.querySelectorAll('.les-r input');ins[ins.length-1].focus();};
+ m.querySelector('.les-mas').onclick=()=>{lee();if(L.length>=60)return toast('Máximo 60 etiquetas',false);L.push({id:'',t:''});pinta();const ins=m.querySelectorAll('.les-r input');ins[ins.length-1].focus();};
  m.querySelector('.hz-ok').onclick=async e=>{lee();const b=e.target;const quita=LES.cat.filter(x=>!L.some(y=>y.id===x.id));
   if(quita.length){const n=quita.reduce((a,x)=>a+Object.values(LES.pac).filter(v=>v.includes(x.id)).length,0);if(n&&!await pregunta(`Se quitará «${quita.map(x=>x.t).join('», «')}» de ${n} paciente${n===1?'':'s'}. ¿Seguimos?`,{si:'Sí, guardar',no:'Cancelar'}))return;}
   b.disabled=true;b.textContent='Guardando…';try{await lesPost({op:'cat',tags:L.filter(x=>x.t.trim())});m.remove();toast('Lista guardada',true);onDone&&onDone();}catch(err){b.disabled=false;b.textContent='Guardar';toast(err.message,false);}};
