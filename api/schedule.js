@@ -1933,8 +1933,8 @@ h1{font-size:23px;font-weight:700;margin:14px 0 4px;line-height:1.25}.sub{font-s
 .hs{display:flex;flex-wrap:wrap;gap:7px}
 .h{border:1.5px solid #f1d9cc;background:#fff;color:#c2552e;border-radius:12px;padding:8px 0;width:calc(33.33% - 5px);font:600 14.5px Poppins,sans-serif;cursor:pointer;transition:transform .15s,background .15s,color .15s;opacity:0;animation:pop .35s forwards}
 .h:hover{background:#fdf1ea}.h:active{transform:scale(.94)}.h.on{background:#c2552e;color:#fff;border-color:#c2552e}
-.h{position:relative;overflow:visible}.hs.dos{row-gap:16px;padding-bottom:6px}.h small{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);font:600 10px/1.6 Poppins,sans-serif;color:#fff;background:#6b5d55;border:0;border-radius:99px;padding:0 8px;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px #faf7f4}.h.on small{background:#fff;color:#c2552e;box-shadow:0 0 0 1.5px #c2552e}.ley2 svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.ley2{font-size:12px;line-height:1.45;color:#8a7d74;margin:0 0 12px}.ley2 b{display:inline-block;font:600 10px/1.6 Poppins,sans-serif;color:#fff;background:#6b5d55;border-radius:99px;padding:0 8px;margin-right:5px;vertical-align:1px}
+.h{position:relative;overflow:visible}.hs.dos{row-gap:7px;padding-bottom:0}.hs.dos .h{display:flex;flex-direction:column;align-items:center;padding:9px 0 7px;line-height:1.15}.h small{display:block;font:500 10.5px/1.3 Poppins,sans-serif;color:#9a8c82;margin-top:2px;min-height:13px;white-space:nowrap}.h.on small{color:#fde3d6}.ley2 svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ley2{font-size:12px;line-height:1.45;color:#8a7d74;margin:0 0 12px}.ley2 b{font-weight:600;color:#6b5d55}
 .sbn{font-size:12.5px;line-height:1.5;color:#7d6a60;background:#faf8f6;border:1.5px dashed #e6ddd5;border-radius:12px;padding:9px 12px;margin:0 0 12px}.sbn.c{color:#c2552e;background:#fdf1ea;border:1.5px solid #f1d9cc}
 @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 .pasos{display:flex;align-items:flex-start;justify-content:center;gap:6px;margin:22px 0 40px;font-size:11.5px;line-height:1.35;color:#7d6a60;text-align:center}.pasos div{flex:1;max-width:110px}.pasos span{display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:0 auto 5px;border-radius:50%;background:#fdf1ea;color:#c2552e;font-weight:700;font-size:12px}.pasos i{flex:none;width:18px;height:1.5px;background:#f1d9cc;margin-top:12px}
@@ -2015,7 +2015,7 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 /* Día elegido: todo dentro de una tarjeta, con el mismo margen */
 .hrs{margin-top:14px;background:#faf7f4;border-radius:20px;padding:16px 14px 18px}
 .hrt{display:block;margin:0 2px}.hrt b{display:block;line-height:1.25}.hrt span{display:block;background:none!important;padding:0!important;color:#8a7d74!important;font-weight:500!important;font-size:12.5px!important;margin-top:3px}
-.hrs .ley2{background:#fff;border-radius:12px;padding:9px 11px;margin:12px 0 2px}
+.hrs .ley2{margin:8px 2px 0;font-size:12.5px}
 .hrs .fr{margin:14px 2px 8px}
 .fp{margin-top:14px}.fpb{width:100%;max-width:340px;justify-content:center}.fps{display:none}
 </style></head>
@@ -2102,8 +2102,8 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  var L=dias[SEL],dd=new Date(SEL+'T12:00:00'),G=[['Mañana',L.filter(function(h){return h.hora<'14:00';})],['Tarde',L.filter(function(h){return h.hora>='14:00';})]];
  html+='<div class="hrs">'+(TOC?'<button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Volver al calendario</button>':'')+'<div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
  var SB=L.some(function(h){return h.sb;}),MIX=SB&&L.some(function(h){return !h.sb;}),BS='<svg viewBox="0 0 24 24"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/><path d="M4 4l16 16"/></svg>';
- if(SB)html+=MIX?'<p class="ley2"><b>sin bomba</b>= a esa hora la bomba diamagnética no está disponible</p>':'<p class="ley2">Este día, a estas horas, la bomba diamagnética no está disponible.</p>';
- G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs'+(MIX?' dos':'')+'">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+(h.id===p.id?' pr1':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb&&MIX?'<small>sin bomba</small>':'')+'</button>';}).join('')+'</div>';});
+ if(SB)html+=MIX?'<p class="ley2">En las horas que pone <b>sin bomba</b>, la bomba diamagnética no está disponible.</p>':'<p class="ley2">Este día, a estas horas, la bomba diamagnética no está disponible.</p>';
+ G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs'+(MIX?' dos':'')+'">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+(h.id===p.id?' pr1':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(MIX?'<small>'+(h.sb?'sin bomba':'')+'</small>':'')+'</button>';}).join('')+'</div>';});
  html+='</div>';
  z.innerHTML=html+fpick();ata(z);ANI=false;}
 function ata(z){[].forEach.call(z.querySelectorAll('.h,.pri'),function(b){b.onclick=function(){[].forEach.call(z.querySelectorAll('.h'),function(x){x.classList.toggle('on',x===b);});abrir(porId(b.getAttribute('data-id')));};});
