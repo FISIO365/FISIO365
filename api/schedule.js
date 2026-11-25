@@ -1207,6 +1207,7 @@ h1{font-size:23px;font-weight:700;margin:16px 0 4px;line-height:1.25}.sub{font-s
 .tk small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c2552e}.tk b{display:block;font-size:52px;line-height:1.05;color:#c2552e;margin:6px 0 2px}.tk span{display:block;font-size:14px;color:#2b2420;font-weight:500}
 .tk hr{border:none;border-top:2px dashed #f1d9cc;margin:16px 6px 12px}.tk em{display:block;font-style:normal;font-size:13px;color:#7d6a60}
 @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+
 .pasos{margin:22px 0 0;text-align:left}.pa{display:flex;gap:11px;align-items:center;background:#faf7f4;border-radius:14px;padding:11px 12px;margin-bottom:7px;font-size:13.5px;color:#2b2420}.pa span{flex:none;width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}.pa svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.pa small{display:block;font-size:12px;color:#7d6a60}
 .bt{display:flex;align-items:center;justify-content:center;width:100%;margin-top:16px;font:600 16px Poppins,sans-serif;color:#fff;background:#c2552e;border-radius:14px;padding:15px;text-decoration:none;animation:resp 2.6s 2.2s ease-in-out infinite}@keyframes resp{0%,100%{box-shadow:0 0 0 0 rgba(194,85,46,0)}50%{box-shadow:0 0 0 7px rgba(194,85,46,.13)}}
 .fi{opacity:0;transform:translateY(8px);animation:fi .5s forwards}@keyframes fi{to{opacity:1;transform:none}}.pie{margin-top:18px;font-size:12.5px;color:#7d6a60}
@@ -2009,8 +2010,15 @@ label{display:block;font-size:12.5px;font-weight:500;color:#7d6a60;margin:12px 0
 .cal.ani .cd.si{opacity:0;animation:pop .4s cubic-bezier(.2,.9,.3,1.3) forwards}
 .pri{position:relative;overflow:hidden}.pri:after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:brillo 4.5s 2s ease-in-out infinite}
 @keyframes brillo{0%,70%{left:-60%}100%{left:130%}}
-@media(min-width:540px){.emb #z{display:grid;grid-template-columns:1.1fr 1fr;gap:4px 20px;align-items:start}.emb #z>.pri,.emb #z>.fp,.emb #z>.ley,.emb #z>p.sub{grid-column:1/-1}.emb #z>.hrs{margin-top:12px;background:#faf7f4;border-radius:20px;padding:14px 12px}.emb #z .hs{grid-template-columns:repeat(3,1fr)}}
-.emb .fondo{position:static;background:none;opacity:1;display:block;z-index:auto}.emb .hoja{transform:none;max-height:none;margin:0 auto;border-radius:26px;padding:20px 18px 22px}.emb .asa{display:none}</style></head>
+@media(min-width:540px){.emb #z{display:grid;grid-template-columns:1.1fr 1fr;gap:4px 20px;align-items:start}.emb #z>.pri,.emb #z>.fp,.emb #z>.ley,.emb #z>p.sub{grid-column:1/-1}.emb #z .hs{grid-template-columns:repeat(3,1fr)}}
+.emb .fondo{position:static;background:none;opacity:1;display:block;z-index:auto}.emb .hoja{transform:none;max-height:none;margin:0 auto;border-radius:26px;padding:20px 18px 22px}.emb .asa{display:none}
+/* Día elegido: todo dentro de una tarjeta, con el mismo margen */
+.hrs{margin-top:14px;background:#faf7f4;border-radius:20px;padding:16px 14px 18px}
+.hrt{display:block;margin:0 2px}.hrt b{display:block;line-height:1.25}.hrt span{display:block;background:none!important;padding:0!important;color:#8a7d74!important;font-weight:500!important;font-size:12.5px!important;margin-top:3px}
+.hrs .ley2{background:#fff;border-radius:12px;padding:9px 11px;margin:12px 0 2px}
+.hrs .fr{margin:14px 2px 8px}
+.fp{margin-top:14px}.fpb{width:100%;max-width:340px;justify-content:center}.fps{display:none}
+</style></head>
 <body><div class="c" id="c"></div><script>(function(){var D=${J},C=document.getElementById('c');
 // Dentro de la web (iframe): sin fondo, avisa de su altura y el formulario sale en la página (no como hoja de abajo)
 var EMB=window.self!==window.top||/[?&]embed=1/.test(location.search);
@@ -2077,7 +2085,7 @@ function lista(){if(!D.huecos.length){C.innerHTML='<div class="cab">'+cara+'<h1>
  C.innerHTML='<div class="cab">'+cara+'<h1 class="fi" style="animation-delay:.8s">'+esc(RS.titulo||'Reserva tu cita')+'</h1>'+(RS.sub===''?'':'<p class="sub fi" style="animation-delay:.9s">'+esc(RS.sub||'Elige día y hora. En un minuto la tienes reservada.')+'</p>')+'</div>'
   +(function(){var SL=(RS.sellos||['Confirmada al momento','Pagas en el centro','1 h con tu fisio','Valoración incluida']).filter(Boolean).map(function(t){return D.pago&&/pagas? en (el centro|la clínica)/i.test(t)?'Pago seguro':t;});return SL.length?'<div class="tr fi" style="animation-delay:.95s">'+SL.map(function(t){return '<span>'+OKI+esc(t)+'</span>';}).join('')+'</div>':'';})()
   +'<div id="z" class="fi" style="animation-delay:1s"></div>'+faq+dudas+pie;pinta();}
-function fpick(){if(!VARIOS)return '';if(!FPO&&!ELEG)return '<div class="fp"><button type="button" class="fpb"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>Elegir fisio</button><small class="fps">Si prefieres que te atienda alguien en concreto</small></div>';
+function fpick(){if(!VARIOS)return '';if(!FPO&&!ELEG)return '<div class="fp"><button type="button" class="fpb"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>Elegir un fisio en concreto</button><small class="fps">Si prefieres que te atienda alguien en concreto</small></div>';
  return '<div class="fp"><p class="fr" style="text-align:center;margin-top:4px">¿Con quién?</p><div class="fch"><button type="button" data-n=""'+(ELEG?'':' class="on"')+'>Me da igual</button>'+NOMS.map(function(n){return '<button type="button" data-n="'+esc(n)+'"'+(ELEG===n?' class="on"':'')+'>'+esc(n)+'</button>';}).join('')+'</div></div>';}
 function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  if(!H.length){z.innerHTML='<p class="sub" style="text-align:center;margin-top:20px">'+esc(ELEG)+' no tiene huecos libres estos días. Prueba con otro fisio o escríbenos.</p>'+fpick();ata(z);return;}
@@ -2094,8 +2102,8 @@ function pinta(){var z=document.getElementById('z');if(!z)return;var H=vis();
  var L=dias[SEL],dd=new Date(SEL+'T12:00:00'),G=[['Mañana',L.filter(function(h){return h.hora<'14:00';})],['Tarde',L.filter(function(h){return h.hora>='14:00';})]];
  html+='<div class="hrs">'+(TOC?'<button type="button" class="vcal"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Volver al calendario</button>':'')+'<div class="hrt"><b>'+capf(DS[dd.getDay()])+' '+dd.getDate()+' de '+MS[dd.getMonth()]+'</b><span>'+(L.length===1?'Queda 1 hora':L.length+' horas libres')+'</span></div>';
  var SB=L.some(function(h){return h.sb;}),MIX=SB&&L.some(function(h){return !h.sb;}),BS='<svg viewBox="0 0 24 24"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/><path d="M4 4l16 16"/></svg>';
- if(SB)html+='<p class="ley2"><b>sin bomba</b>'+(MIX?'= a esa hora la bomba diamagnética no está disponible':'= ese día la bomba diamagnética no está disponible a estas horas')+'</p>';
- G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs'+(SB?' dos':'')+'">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+(h.id===p.id?' pr1':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb?'<small>sin bomba</small>':'')+'</button>';}).join('')+'</div>';});
+ if(SB)html+=MIX?'<p class="ley2"><b>sin bomba</b>= a esa hora la bomba diamagnética no está disponible</p>':'<p class="ley2">Este día, a estas horas, la bomba diamagnética no está disponible.</p>';
+ G.forEach(function(g){if(!g[1].length)return;html+='<p class="fr">'+g[0]+'</p><div class="hs'+(MIX?' dos':'')+'">'+g[1].map(function(h,j){return '<button type="button" class="h'+(h.sb?' sb':'')+(h.id===p.id?' pr1':'')+'" style="animation-delay:'+(j*.03)+'s" data-id="'+h.id+'">'+h.hora+(h.sb&&MIX?'<small>sin bomba</small>':'')+'</button>';}).join('')+'</div>';});
  html+='</div>';
  z.innerHTML=html+fpick();ata(z);ANI=false;}
 function ata(z){[].forEach.call(z.querySelectorAll('.h,.pri'),function(b){b.onclick=function(){[].forEach.call(z.querySelectorAll('.h'),function(x){x.classList.toggle('on',x===b);});abrir(porId(b.getAttribute('data-id')));};});
