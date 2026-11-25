@@ -98,19 +98,31 @@ async function gastosComprasMeses() {
 // Ingresos por día desde Holded: todos los tickets de venta (borradores y cobrados incluidos) menos sus rectificativas
 const HOLDED_DESDE = '2026-10-01'; // desde aquí los ingresos salen de Holded; antes, de las tablas que llevabais a mano
 let _ingH = { t: 0, k: '', v: null };
+// Día en que se cobró cada ticket de Holded que sale de un cobro del panel (HOLDED ID → fecha), de 60 días antes a «hasta»
+async function fechasCobroHolded(desde, hasta) {
+  const fCob = {}; try { const d0 = new Date(desde + 'T12:00:00Z'); d0.setUTCDate(d0.getUTCDate() - 60); const h1 = new Date(hasta + 'T12:00:00Z'); h1.setUTCDate(h1.getUTCDate() + 1);
+    (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({HOLDED ID}!='',TRIM({ESTADO})='Emitida',NOT(IS_BEFORE(IF({FECHA DE COBRO},{FECHA DE COBRO},{FECHA}),'${d0.toISOString().slice(0, 10)}')),IS_BEFORE(IF({FECHA DE COBRO},{FECHA DE COBRO},{FECHA}),'${h1.toISOString().slice(0, 10)}'))`)}&fields[]=${encodeURIComponent('HOLDED ID')}&fields[]=${encodeURIComponent('FECHA DE COBRO')}&fields[]=FECHA`))
+      .forEach(r => { const F = r.fields || {}, f = String(F['FECHA DE COBRO'] || F['FECHA'] || '').slice(0, 10); if (F['HOLDED ID'] && f) fCob[String(F['HOLDED ID'])] = f; }); } catch (e) { console.error('ingresos fechas de cobro', e.message); }
+  return fCob;
+}
 async function ingresosHoldedDias(desde, hasta) {
   const k = desde + '|' + hasta; if (_ingH.k === k && Date.now() - _ingH.t < 10 * 60e3) return _ingH.v;
   // Tickets de venta (borradores y cobrados incluidos) menos sus rectificativas (receipt-notes), sin pacientes de prueba
   const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(e => { console.error('receipt-notes', e.message); return []; })]);
   const vistos = new Set(), dias = {};
+  // Los tickets que salen de un cobro del panel cuentan el día que se cobraron (aunque en Holded se aprobaran otro día y lleven esa fecha)
+  const fCob = await fechasCobroHolded(desde, hasta);
   const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
-    const f = String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
+    const f = (sg > 0 && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
   // Packs cobrados enteros «con factura por sesión»: cuenta el dinero que entra de verdad, el pack entero el día que se paga;
   // los tickets de cada sesión no son dinero nuevo y no se suman
   const PS = await packsPorSesion(desde, hasta).catch(e => { console.error('packs por sesión', e.message); return { tickets: new Set(), cobros: [], filas: new Set() }; });
   PS.tickets.forEach(id => vistos.add(id));
   suma(tk, 1); suma(rn, -1);
+  // Cobrados en el periodo pero aprobados en Holded más tarde (llevan otra fecha): se traen uno a uno
+  { const falta = Object.keys(fCob).filter(hid => fCob[hid] >= desde && fCob[hid] <= hasta && !vistos.has(hid)).slice(0, 40);
+    for (let i = 0; i < falta.length; i += 5) suma((await Promise.all(falta.slice(i, i + 5).map(hid => holded('/sales-receipts/' + hid).catch(() => null)))).filter(d => d && d.id && d.document_number), 1); }
   PS.cobros.forEach(c => { dias[c.f] = Math.round(((dias[c.f] || 0) + c.v) * 100) / 100; });
   // Facturas del panel (desde el día del cambio, ya sin Holded): también son ingresos
   try { const D = await FACX.db(); (await D.query(`select fecha::text f, total::float v, cobro, cliente from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).rows
@@ -6947,12 +6959,15 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const desde = q.desde < HOLDED_DESDE ? HOLDED_DESDE : q.desde;
         const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${q.hasta}`, 20).catch(() => [])]);
         const vistos = new Set(), L = [];
-        const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
+        const fCob = await fechasCobroHolded(desde, q.hasta);
+        const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = (!rect && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
           const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
           L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
         // Packs cobrados enteros «con factura por sesión»: cuenta el pack entero el día que se pagó; los tickets de sus sesiones no
         const PS = await packsPorSesion(desde, q.hasta).catch(() => ({ tickets: new Set(), cobros: [] }));
         mete(tk, false); mete(rn, true);
+        { const falta = Object.keys(fCob).filter(hid => fCob[hid] >= desde && fCob[hid] <= q.hasta && !vistos.has(hid)).slice(0, 40);
+          for (let i = 0; i < falta.length; i += 5) mete((await Promise.all(falta.slice(i, i + 5).map(hid => holded('/sales-receipts/' + hid).catch(() => null)))).filter(d => d && d.id && d.document_number), false); }
         L.forEach(x => { if (x.hid && PS.tickets.has(x.hid) && x.cuenta) { x.cuenta = false; x.motivo = 'Sesión de un pack · el pack cuenta el día que se pagó'; } });
         const nomP = {}; await Promise.all([...new Set(PS.cobros.map(c => c.pac).filter(Boolean))].map(id => at(`${PACIENTES}/${id}`).then(d => { nomP[id] = (d.fields || {})['FULL NAME'] || ''; }).catch(() => {})));
         PS.cobros.forEach(c => L.push({ f: c.f, num: '', pac: nomP[c.pac] || '', imp: c.v, estado: 'paid', rect: false, borrador: false, cuenta: true, motivo: 'Pack cobrado entero', pack: true }));
