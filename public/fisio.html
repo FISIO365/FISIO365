@@ -17746,8 +17746,8 @@ const fxSel=(cls,opts,val,label)=>`<select class="fx-in fx-sel ${cls}" aria-labe
 async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='tickets';
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  let I;try{I=await fxInicio();}catch(e){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(e.message)}</div></div>`;return;}
- // Lo hecho en Holded (p. ej., las facturas de Vilfer) entra solo: como mucho una vez cada 10 min, sin esperar más de 8 s
- {let t0=0;try{t0=+sessionStorage.getItem('f365_holauto')||0;}catch(e){}if(Date.now()-t0>600000){try{sessionStorage.setItem('f365_holauto',Date.now());}catch(e){}await Promise.race([agPost('fac-holded-auto',{}).catch(()=>null),new Promise(ok=>setTimeout(ok,8000))]);}}
+ // Lo hecho en Holded (p. ej., las facturas de Vilfer) entra solo: como mucho una vez cada 2 min, sin esperar más de 8 s
+ {let t0=0;try{t0=+sessionStorage.getItem('f365_holauto')||0;}catch(e){}if(Date.now()-t0>120000){try{sessionStorage.setItem('f365_holauto',Date.now());}catch(e){}await Promise.race([agPost('fac-holded-auto',{}).catch(()=>null),new Promise(ok=>setTimeout(ok,8000))]);}}
  const [desde,hasta]=fxPerIni();
  const r=await (await fetch(`/api/schedule?action=fac-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}${FX.serie?'&serie='+FX.serie:''}${FX.q?'&q='+encodeURIComponent(FX.q):''}&actividad=${FX.act}&clase=${clase}`)).json().catch(()=>({}));
  const L=r.facturas||[],S=Object.fromEntries(I.series.map(s=>[s.id,s]));
