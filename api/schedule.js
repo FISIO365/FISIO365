@@ -6987,7 +6987,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         // Desde octubre 2026 los meses salen de Holded (tickets de venta del mes, lunes a domingo da igual aquí: mes natural)
         let holdedMeses = [];
         if (HOLDED_KEY) try { const dias = await ingresosHoldedDias(HOLDED_DESDE, hoyF); const g = {};
-          Object.entries(dias).forEach(([f, v]) => { g[f.slice(0, 7)] = (g[f.slice(0, 7)] || 0) + v; });
+          const oh = (global._ingO || {})[HOLDED_DESDE + '|' + hoyF] || {};
+          Object.entries(dias).forEach(([f, v]) => { g[f.slice(0, 7)] = (g[f.slice(0, 7)] || 0) + v - (oh[f] || 0); });
           holdedMeses = Object.entries(g).map(([m, v]) => ({ m, v: Math.round(v * 100) / 100 })); } catch (e) {}
         ms = ms.filter(x => x.m < HOLDED_DESDE.slice(0, 7)).concat(holdedMeses).sort((a, b) => a.m.localeCompare(b.m));
         return res.status(200).json({ ok: true, fuente, meses: ms, semanas: rs.map(r => ({ s: String(r.fields['SEMANA'] || '').slice(0, 10), v: Number(r.fields['INGRESOS'] || 0) })).filter(x => x.s) });
@@ -7058,7 +7059,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           horario[k] = h; });
         const trabaja = new Set(C.filter(c => !/DIA BLOQUEADO/.test(c.e) && (c.pid || /LIBRE|PENDIENTE|REALIZADA/.test(c.e))).map(c => String(c.fisio).toLowerCase() + '|' + c.f));
         let diasH = {}; if (HOLDED_KEY && hasta >= HOLDED_DESDE) diasH = await ingresosHoldedDias(HOLDED_DESDE, hoyF).catch(() => ({}));
-        const ingH = a => { if (a < HOLDED_DESDE || !HOLDED_KEY) return undefined; let t = 0; for (let d = 0; d < 7; d++) t += diasH[mv(a, d)] || 0; return Math.round(t * 100) / 100; };
+        // Ingresos de la semana: los cobros de esa semana (los borradores de días anteriores aprobados en ella van aparte, en ingresosOtros)
+        const otrosH = (global._ingO || {})[HOLDED_DESDE + '|' + hoyF] || {};
+        const ingO = a => { if (a < HOLDED_DESDE || !HOLDED_KEY) return 0; let t = 0; for (let d = 0; d < 7; d++) t += otrosH[mv(a, d)] || 0; return Math.round(t * 100) / 100; };
+        const ingH = a => { if (a < HOLDED_DESDE || !HOLDED_KEY) return undefined; let t = 0; for (let d = 0; d < 7; d++) t += diasH[mv(a, d)] || 0; return Math.round((t - ingO(a)) * 100) / 100; };
         const semanas = [], usados = new Set();
         for (let k = 0; k < N; k++) {
           const a = mv(desde, 7 * k), b = mv(a, 6), en = f => f >= a && f <= b;
@@ -7103,11 +7107,12 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           semanas.push({ semana: a, sesiones: real.length, dias, atendidos: atend.length, conBono, noVino: enS.filter(c => /NO ASIST|PERDIDA/.test(c.e)).length, canceladas: enS.filter(c => /CANCELADA/.test(c.e)).length,
             nuevos: nuevos.length, vinieron: vin, reagendaron: reag, porFisio: fis, prod: pf, ocupadas: ocup, capacidad: cap, ocupacion: cap ? Math.round(ocup * 100 / cap) : null,
             recuperadas: ll.filter(r => /RECUPERADA/.test(nmS(r.fields.RESULTADO))).length, resenasPedidas: ll.filter(r => r.fields['RESEÑA']).length,
-            ingresos: ingH(a) !== undefined ? ingH(a) : (m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null), ingresosHolded: ingH(a) !== undefined, resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
+            ingresos: ingH(a) !== undefined ? ingH(a) : (m && m.fields.INGRESOS != null ? m.fields.INGRESOS : null), ingresosHolded: ingH(a) !== undefined, ingresosOtros: ingO(a), resenas: m && m.fields['RESEÑAS GOOGLE'] != null ? m.fields['RESEÑAS GOOGLE'] : null, quejas: m && m.fields.QUEJAS != null ? m.fields.QUEJAS : null, notas: m ? (m.fields.NOTAS || '') : '' });
         }
         const nombres = {}; { const ids = [...usados]; const lt = []; for (let i = 0; i < ids.length; i += 50) lt.push(ids.slice(i, i + 50));
           for (let i = 0; i < lt.length; i += 4) (await Promise.all(lt.slice(i, i + 4).map(t => todosT(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + t.map(x => `RECORD_ID()='${x}'`).join(',') + ')')}&fields[]=FULL%20NAME`).catch(() => [])))).forEach(rs => rs.forEach(r => nombres[r.id] = r.fields['FULL NAME'] || '')); }
-        return { ok: true, hoy: hoyF, semanas, nombres, ingDias: diasH, holdedDesde: HOLDED_DESDE };
+        const ingDiasC = {}, ingOtros = {}; Object.entries(diasH).forEach(([f, v]) => { ingDiasC[f] = Math.round((v - (otrosH[f] || 0)) * 100) / 100; if (otrosH[f]) ingOtros[f] = otrosH[f]; });
+        return { ok: true, hoy: hoyF, semanas, nombres, ingDias: ingDiasC, ingOtros, holdedDesde: HOLDED_DESDE };
         };
         // Periodos largos: por trimestres de 13 semanas. Los trimestres ya pasados se guardan calculados en Airtable
         // (ESTADISTICAS CACHE) y solo se recalcula lo reciente: así 2 años salen en lo que tardan unas pocas semanas.
@@ -7134,10 +7139,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
               partes.push(d);
             } else { const a2 = semK(st), b2 = semK(Math.min(st + CH - 1, iL)); partes.push(await calcM(a2, mv(b2, 6), futuro, idx(b2) - st + 1)); }
           }
-          const vistas = new Set(), sems = [], noms = {}; let ingD = {};
-          partes.forEach(d => { Object.assign(noms, d.nombres || {}); if (d.ingDias) ingD = d.ingDias; (d.semanas || []).forEach(w => { if (w.semana >= desde && w.semana <= lun0 && !vistas.has(w.semana)) { vistas.add(w.semana); sems.push(w); } }); });
+          const vistas = new Set(), sems = [], noms = {}; let ingD = {}, ingO2 = {};
+          partes.forEach(d => { Object.assign(noms, d.nombres || {}); if (d.ingDias) ingD = d.ingDias; if (d.ingOtros) ingO2 = d.ingOtros; (d.semanas || []).forEach(w => { if (w.semana >= desde && w.semana <= lun0 && !vistas.has(w.semana)) { vistas.add(w.semana); sems.push(w); } }); });
           sems.sort((x, y) => x.semana.localeCompare(y.semana));
-          data = { ok: true, hoy: hoyF, semanas: sems, nombres: noms, ingDias: ingD, holdedDesde: HOLDED_DESDE, incompleto: faltan };
+          data = { ok: true, hoy: hoyF, semanas: sems, nombres: noms, ingDias: ingD, ingOtros: ingO2, holdedDesde: HOLDED_DESDE, incompleto: faltan };
         }
         if (!data.incompleto) { global._estCache = { key, t: Date.now(), data }; (global._estCaches = global._estCaches || {})[key] = global._estCache; }
         return res.status(200).json(data);
