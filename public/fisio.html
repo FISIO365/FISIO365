@@ -13177,16 +13177,16 @@ async function renderControl(wrap){
   const pon=(b,html,fn)=>{if(!vivo())return;setTimeout(marca,0);const el=res.querySelector(`[data-b="${b}"]`);el.innerHTML=html;el.querySelectorAll('.pc-t[data-go]').forEach(x=>x.onclick=()=>{if(x.dataset.go==='ingdet'){ingresosDetalle(d,h);return;}showSection(x.dataset.go);window.scrollTo(0,0);});fn&&fn(el);};
   // 1 · Negocio
   Promise.all([Q.cur,Q.prev,Q.nv,Q.ingR,Q.ingP,Q.nvP,Q.prevF||Q.prev,Q.ingF||Q.ingP,Q.nvF||Q.nvP]).then(([cur,prev,nv,ingR,ingP0,nvP,prevF,ingF0,nvF])=>{
-  const PF=prevF.fisios||[],ingF=ingF0&&ingF0.total!=null?ingF0.total:null;
-  const L=cur.fisios||[],P=prev.fisios||[],ingP=ingP0&&ingP0.total!=null?ingP0.total:null;
-  const ing=ingR&&ingR.total!=null?ingR.total:null,okN=x=>x&&x.ok;
+  const PF=prevF.fisios||[],ingF=ingF0&&ingF0.total!=null?Math.round((ingF0.total-(ingF0.deOtrosDias||0))*100)/100:null;
+  const L=cur.fisios||[],P=prev.fisios||[],ingP=ingP0&&ingP0.total!=null?Math.round((ingP0.total-(ingP0.deOtrosDias||0))*100)/100:null;
+  const ing=ingR&&ingR.total!=null?Math.round((ingR.total-(ingR.deOtrosDias||0))*100)/100:null,okN=x=>x&&x.ok;
   const conv=okN(nv)?nv.conversion:null,convP=okN(nvP)?nvP.conversion:null;
   const oc=ocup(L),ocP=ocup(P),at=sum(L,'atendidos'),re=sum(L,'reagendan'),reP=sum(P,'reagendan'),atP=sum(P,'atendidos');
   const falt=sum(L,'noAsistio')+sum(L,'perdidas'),faltP=sum(P,'noAsistio')+sum(P,'perdidas'),canc=sum(L,'canceladas'),cancP=sum(P,'canceladas');
   const X={fullL,fullLc:fullL};
   pon('neg',sec('Cómo va el negocio',`<span class="pc-ley"><i class="pc-lb"></i>${parcial?'barra: lo que llevas de '+(k==='semana'?'la semana pasada':fullL.toLowerCase()):'barra: comparado con '+fullL.toLowerCase()} · <em>↑↓</em> ${parcial?'a estas alturas':'diferencia'}</span>`,`<div class="pc-g">
    ${tile({...X,t:'Ocupación',v:oc,prev:ocP,full:ocup(PF),suf:'%',cls:cl(oc,85,65),go:'rend'})}
-   ${tile({...X,t:'Ingresos',v:ing,prev:ingP,full:ingF,add:1,fmt:eur,go:'ingdet',nota:ingR&&ingR.deOtrosDias>0?`${eur(ingR.deOtrosDias)} de cobros de otros días`:''})}
+   ${tile({...X,t:'Ingresos',v:ing,prev:ingP,full:ingF,add:1,fmt:eur,go:'ingdet',nota:ingR&&ingR.deOtrosDias>0?`+ ${eur(ingR.deOtrosDias)} de cobros de otros días (emitido en total: ${eur(ingR.total)})`:''})}
    ${tile({...X,t:'Citas hechas',v:sum(L,'realizadas'),prev:sum(P,'realizadas'),full:sum(PF,'realizadas'),add:1,go:'stats'})}
    <div class="pc-at" style="display:contents">${tile({t:'Pacientes atendidos',v:null,sub:'Calculando…'})}</div>
    <div class="pc-pk" style="display:contents">${tile({t:'Pacientes con pack',v:null,sub:'Calculando…'})}</div>

@@ -129,7 +129,7 @@ async function ingresosHoldedDias(desde, hasta) {
   // Facturas del panel (desde el día del cambio, ya sin Holded): también son ingresos
   try { const D = await FACX.db(); (await D.query(`select fecha::text f, total::float v, cobro, cliente from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).rows
     .forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return; dias[x.f] = Math.round(((dias[x.f] || 0) + x.v) * 100) / 100; }); } catch (e) {}
-  _ingH = { t: Date.now(), k, v: dias, o: otros }; return dias;
+  _ingH = { t: Date.now(), k, v: dias, o: otros }; (global._ingO = global._ingO || {})[k] = otros; return dias;
 }
 // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
 // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia). Se mira en la ficha y en la agenda.
@@ -6951,7 +6951,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
       if (action === 'seg-ingresos-rango') { // Panel de control: ingresos de días exactos (lo mismo que cuenta Estadísticas: tickets de Holded + facturas del panel + packs)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         if (!HOLDED_KEY || q.desde < HOLDED_DESDE) return res.status(200).json({ ok: true, total: null });
-        const dias = await ingresosHoldedDias(q.desde, q.hasta), O = (_ingH.k === q.desde + '|' + q.hasta && _ingH.o) || {};
+        const dias = await ingresosHoldedDias(q.desde, q.hasta), O = ((global._ingO || {})[q.desde + '|' + q.hasta]) || {};
         return res.status(200).json({ ok: true, total: Math.round(Object.values(dias || {}).reduce((a, v) => a + v, 0) * 100) / 100, dias, deOtrosDias: Math.round(Object.values(O).reduce((a, v) => a + v, 0) * 100) / 100 });
       }
       if (action === 'seg-ingresos-detalle') {
