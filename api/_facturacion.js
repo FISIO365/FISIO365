@@ -322,6 +322,9 @@ function muestra(diseno, tipo, C, o) {
 
 // Tickets que se hicieron en borrador en Holded: cuando Holded les da número, la factura de prueba coge el mismo.
 // getDoc(holdedId) → el ticket de Holded ({ document_number }) o null si ya no existe.
+// Fecha de emisión de un documento de Holded (al aprobar un borrador, Holded le pone la fecha de ese día)
+const fechaDocH = d => { const v = d && d.date; if (v == null || v === '') return null; if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) return String(v).slice(0, 10);
+  const n = Number(v), t = new Date(n > 1e12 ? n : n * 1000); return isNaN(t) ? null : new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(t); };
 async function sincronizaHolded(getDoc, max = 25) {
   const D = await db();
   // Las primeras que se hicieron con numeración propia pasan a ser de prueba con el número de Holded
@@ -333,7 +336,7 @@ async function sincronizaHolded(getDoc, max = 25) {
   for (const [i, x] of L.entries()) { if (!docs[i]) continue; const d = docs[i].d;
     if (d === null) { await anular(x.id, 'Ticket borrado en Holded').catch(() => {}); continue; }
     const num = String((d && d.document_number) || '').trim(); if (!num) continue;
-    await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2 where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num])).rows[0];
+    const fe = fechaDocH(d); await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2, fecha=coalesce($3::date, fecha), anio=coalesce(extract(year from $3::date)::int, anio) where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num, fe])).rows[0];
       if (F && !(F.vf && F.vf.alta)) await registrarVF(q, 'pruebas', { id: F.id, emisor: F.emisor, codigo: num, fecha: F.fecha, tipo: F.tipo, total: F.total, cuota: F.cuota }); }).catch(e => console.log('VF sincroniza', e.message)); n++; }
   return n;
 }
@@ -395,4 +398,4 @@ async function guardarModo(o) { const D = await db(), ya = await modo(); const v
   await D.query(`insert into fac_config(k,v) values('modo',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { RECT_ENTERA, quitarRepetidas, vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { fechaDocH, RECT_ENTERA, quitarRepetidas, vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
