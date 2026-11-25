@@ -1564,6 +1564,7 @@ button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;
 .clv{display:flex;justify-content:center;padding:48px 16px}.clv-c{background:#fff;border:1px solid #ede5dd;border-radius:20px;padding:30px 26px;width:100%;max-width:360px;text-align:center;display:flex;flex-direction:column;align-items:center}.clv-i{width:54px;height:54px;border-radius:50%;background:#fbeee7;display:flex;align-items:center;justify-content:center;margin-bottom:12px}.clv-i svg{width:26px;height:26px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.clv-c>b{font-size:17px}.clv-p{font-size:13px;color:#8a7d74;margin:6px 0 16px;line-height:1.5}.clv-in{width:100%;box-sizing:border-box;font:15px var(--font);padding:11px 14px;border:1.5px solid #e6ddd3;border-radius:12px;margin-bottom:8px;text-align:center;outline:none}.clv-in:focus{border-color:#c2552e}.clv-e{color:#b42318;font-size:12.5px;margin:2px 0 8px}.clv-b{width:100%;font:600 14.5px var(--font);padding:12px;border:0;border-radius:12px;background:#c2552e;color:#fff;cursor:pointer;margin-top:4px}.clv-b:disabled{opacity:.6}.clv-l{background:none;border:0;color:#c2552e;font:600 12.5px var(--font);cursor:pointer;margin-top:12px}
 .vl-gt{display:flex;align-items:center;justify-content:space-between;gap:10px}.vl-man{font:600 12.5px var(--font);color:#c2552e;background:#fff;border:1.5px solid #f0cdbd;border-radius:99px;padding:6px 13px;cursor:pointer;text-transform:none;letter-spacing:0}.vm-b .ag-in{width:100%;box-sizing:border-box}.vm-2{display:flex;gap:8px;margin-top:8px}.vm-e{color:#b42318;font-size:12.5px;margin:10px 0 0}.vm-ok{text-align:center;padding:10px 0 4px}.vm-ok small{color:#8a7d74;font-size:12.5px}.vm-cod{font-size:30px;font-weight:700;letter-spacing:2px;color:#c2552e;margin:8px 0 10px;border:1.5px dashed #f0cdbd;border-radius:14px;padding:12px}.vm-ok p{font-size:13px;color:#5f554e;line-height:1.6;margin:0}
 .cc-l{display:flex;flex-direction:column;gap:8px}.cc-c{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:500 14px var(--font);padding:12px 14px;border:1.5px solid #e6ddd3;border-radius:12px;background:#fff;color:#2b2420;cursor:pointer}.cc-c:hover{border-color:#c2552e}.cc-c svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.6;flex:none}.cc-c.cc-new{border-style:dashed;color:#c2552e;font-weight:600}
+.fac-resb{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;font:600 13px var(--font);color:#c2552e;background:#fff;border:1.5px solid #f0cdbd;border-radius:12px;padding:10px;margin:0 0 10px;cursor:pointer}.fac-resb svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.rcu-p{display:flex;flex-wrap:wrap;gap:6px}.rcu-ch{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font);padding:6px 12px;border-radius:99px;background:#fbeee7;color:#c2552e}.rcu-ch button{border:0;background:none;color:#c2552e;cursor:pointer;font-size:12px;padding:0}.rcu-pr{width:100%;box-sizing:border-box}
 .st-tb{display:flex;flex-direction:column}.st-tr{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr;gap:6px;font-size:13px;padding:6px 0;border-top:1px solid #efe8e1}.st-tr span:not(:first-child){text-align:right}.st-th{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a8d84;border-top:none}.st-tt{font-weight:700}
 .st-p{font-size:13px;margin:8px 0 0;line-height:1.5}
 .st-dias{display:flex;align-items:flex-end;gap:8px;height:130px}.st-dias div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}.st-dias i{display:block;width:100%;max-width:34px;background:#c2552e;border-radius:6px 6px 3px 3px;min-height:2px}.st-dias b{font-size:12.5px}.st-dias small{font-size:11px;color:#9a8d84}
@@ -2957,6 +2958,90 @@ function chatElegirCarpeta(pid){return new Promise(async ok=>{const C=await chat
  m.querySelector('.cc-new').onclick=async()=>{const n=String(await pideTexto('Nombre de la carpeta (p. ej. «Rodilla derecha»)','')||'').trim().slice(0,60);if(!n)return;fin(C.c.find(x=>x.toLowerCase()===n.toLowerCase())||n);};});}
 async function chatMoverACarpeta(pid,att,c){const C=await chatCarpetas(pid);if(!C)return false;if(!C.c.includes(c))C.c.push(c);C.de[att]=c;
  const r=await agPost('seg-ficha-carpetas',{id:pid,carpetas:C,quien:miNombreCorto()}).catch(()=>({}));return !!r.ok;}
+
+// ── Resumen de cuenta para dar al paciente (o a una pareja con pack compartido): qué ha pagado y qué sesiones ha hecho, de un vistazo ──
+function resumenCuenta(pacId,pacNombre,con){
+ const sel=[{id:pacId,nombre:pacNombre}];(con||[]).forEach(c=>{if(c&&c.id&&!sel.some(x=>x.id===c.id))sel.push({id:c.id,nombre:c.nombre||''});});
+ const m=hzModal(`<div class="hz-top"><div><small>Para dar al paciente</small><b>Resumen de cuenta</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <p class="fp-mu" style="font-size:13px;margin:0 0 10px">Lo que ha pagado y las sesiones que ha hecho, en una hoja. Si comparten pack, pon a los dos y sale todo junto.</p>
+  <div class="hz-lab">Pacientes</div><div class="rcu-p"></div>
+  <div class="ag-pf ag-busca" style="margin-top:8px"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="text" class="ag-in ag-pb rcu-in" placeholder="Añadir a otro paciente" autocomplete="off"></div><div class="pc-res rcu-res"></div>
+  <div class="hz-lab" style="margin-top:12px">Precio por sesión <span>(para calcular lo pendiente)</span></div><input type="text" inputmode="decimal" class="ag-in rcu-pr" placeholder="Se rellena con lo último que pagó">
+  <div class="hz-bts"><button type="button" class="hz-ok rcu-go">Ver resumen</button></div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();
+ const pinta=()=>{const c=m.querySelector('.rcu-p');c.innerHTML=sel.map((x,i)=>`<span class="rcu-ch">${escH(capTit(x.nombre||'—'))}${i?`<button type="button" data-i="${i}" aria-label="Quitar">✕</button>`:''}</span>`).join('');c.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel.splice(+b.dataset.i,1);pinta();});};pinta();
+ const inp=m.querySelector('.rcu-in'),res=m.querySelector('.rcu-res'),nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ inp.oninput=()=>{const q=nrm(inp.value).trim();if(q.length<2){res.innerHTML='';return;}const pal=q.split(/\s+/);const fl=(pacs||[]).filter(p=>!sel.some(x=>x.id===p.id)&&pal.every(w=>nrm(p.nombre).includes(w))).slice(0,6);
+  res.innerHTML=fl.map(p=>`<button type="button" class="pc-op" data-id="${p.id}">${escH(capTit(p.nombre))}</button>`).join('')||'<small class="fp-mu">No encontrado</small>';
+  res.querySelectorAll('.pc-op').forEach(b=>b.onclick=()=>{if(sel.length>=4)return toast('Máximo 4',false);const p=(pacs||[]).find(x=>x.id===b.dataset.id);sel.push({id:p.id,nombre:p.nombre});inp.value='';res.innerHTML='';pinta();});};
+ const go=m.querySelector('.rcu-go');
+ go.onclick=async()=>{go.disabled=true;go.textContent='Preparando…';
+  try{const r=await (await fetch(`/api/schedule?action=seg-resumen-cuenta&pwd=${encodeURIComponent(apiPwd)}&ids=${sel.map(x=>x.id).join(',')}`)).json();if(!r.ok)throw new Error(r.error||'No se ha podido preparar');
+   r.pacientes.forEach(p=>{const s0=sel.find(x=>x.id===p.id);if(s0&&s0.nombre)p.nombre=s0.nombre;});
+   let pr=parseFloat(String(m.querySelector('.rcu-pr').value).replace(',','.'));
+   if(!(pr>0)){const L=r.pacientes.flatMap(p=>p.pagos.flatMap(x=>x.lineas.filter(l=>/^Sesi/i.test(l.c)&&l.n>0).map(l=>({f:x.f,p:x.enPack&&x.packTotal?0:(l.p||0)})))).filter(x=>x.p>0).sort((a,b)=>b.f.localeCompare(a.f));pr=L.length?L[0].p:0;}
+   const w=window.open('','_blank');if(!w)throw new Error('El navegador ha bloqueado la ventana: permite las ventanas emergentes');
+   w.document.write(resumenCuentaHtml(r,pr));w.document.close();m.remove();}
+  catch(e){go.disabled=false;go.textContent='Ver resumen';toast(e.message,false);}};
+}
+function resumenCuentaHtml(r,precio){
+ const P=r.pacientes,marca=(window.CLINICA&&CLINICA.marca)||'FISIO365',nom=p=>capTit(p.nombre||'—'),pila=p=>nom(p).split(' ')[0];
+ const fd=f=>f?f.split('-').reverse().join('/'):'',eur=n=>(Math.round((+n||0)*100)/100).toLocaleString('es-ES',{minimumFractionDigits:(Math.round(n*100)%100)?2:0,maximumFractionDigits:2})+' €';
+ const COL=['#c2552e','#2b2420','#d99a7e','#8a7d74'];
+ const ses=P.flatMap((p,i)=>p.ses.map(x=>Object.assign({i},x))).sort((a,b)=>(a.f+a.h).localeCompare(b.f+b.h));
+ const pagos=P.flatMap((p,i)=>p.pagos.map(x=>Object.assign({i},x))).sort((a,b)=>a.f.localeCompare(b.f));
+ const prev=P.map((p,i)=>p.previo?{i,n:p.previo.n,u:p.previo.usadas}:null).filter(Boolean);
+ const pagSes=pagos.reduce((t,x)=>t+(x.ses||0),0)+prev.reduce((t,x)=>t+(x.n-x.u),0)+ses.filter(x=>x.fuera).length;
+ const hechas=ses.length,pend=hechas-pagSes,total=pagos.reduce((t,x)=>t+x.total,0);
+ const desde=P.map(p=>p.desde).filter(Boolean).sort()[0]||r.inicio,hoy=agHoyIso();
+ const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+ const porMes={};ses.forEach((x,k)=>{const mk=x.f.slice(0,7);(porMes[mk]=porMes[mk]||[]).push(Object.assign({k:k+1},x));});
+ const lin=x=>x.lineas.map(l=>`${l.n>1?l.n+' × ':''}${escH(l.c)}`).join(' + ')+(x.enPack?' <i>(parte del pack)</i>':'');
+ const multi=P.length>1;
+ return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Resumen de cuenta · ${escH(P.map(nom).join(' y '))}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#2b2420;background:#F5F2EE;margin:0;padding:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hoja{max-width:760px;margin:0 auto;background:#fff;border-radius:22px;padding:34px 38px;border:1px solid #E6DDD3}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:1.5px solid #E6DDD3;padding-bottom:18px;margin-bottom:22px}
+.marca{font-weight:700;color:#c2552e;letter-spacing:1.5px;font-size:13px}h1{font-size:22px;margin:4px 0 2px}.sub{color:#8a7d74;font-size:12.5px}
+.quien{text-align:right;font-size:13px}.quien b{display:block;font-size:14.5px}
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.bx{border:1.5px solid #E6DDD3;border-radius:16px;padding:14px 16px}.bx small{display:block;color:#8a7d74;font-size:11.5px}.bx b{font-size:26px;line-height:1.2}.bx span{display:block;font-size:11.5px;color:#8a7d74;margin-top:2px}
+.bx.pe{border-color:#c2552e;background:#fbeee7}.bx.pe b{color:#c2552e}.bx.ok{border-color:#bfdcc7;background:#f2faf4}.bx.ok b{color:#2e6b34}
+.nota{font-size:12px;color:#8a7d74;margin:0 0 24px;line-height:1.55}
+h2{font-size:14px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}h2 em{font-style:normal;font-weight:500;color:#8a7d74;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th{text-align:left;font-weight:600;color:#8a7d74;font-size:11px;padding:6px 8px;border-bottom:1.5px solid #E6DDD3}td{padding:8px;border-bottom:1px solid #F0EAE3;vertical-align:top}td.n{text-align:right;white-space:nowrap}tr.tot td{font-weight:700;border-bottom:none;border-top:1.5px solid #E6DDD3}
+td i{color:#8a7d74;font-style:normal;font-size:11.5px}
+.mes{margin-bottom:14px;break-inside:avoid}.mes>b{font-size:12.5px;display:block;margin-bottom:6px}.mes>b span{color:#8a7d74;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.ch{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #E6DDD3;border-radius:99px;padding:4px 10px 4px 5px;font-size:11.5px}
+.ch i{font-style:normal;width:20px;height:20px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}.ch.per{border-style:dashed}
+.ley{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#5f554e;margin:0 0 10px}.ley span{display:inline-flex;align-items:center;gap:6px}.ley i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pie{margin-top:28px;padding-top:14px;border-top:1.5px solid #E6DDD3;font-size:11px;color:#8a7d74;line-height:1.6}
+.bar{position:sticky;top:0;display:flex;justify-content:center;gap:10px;margin:-8px 0 16px}.bar button{font:600 14px Poppins,sans-serif;padding:11px 22px;border-radius:99px;border:0;background:#c2552e;color:#fff;cursor:pointer}
+@media print{body{background:#fff;padding:0}.hoja{border:0;border-radius:0;padding:0;max-width:none}.bar{display:none}}
+</style></head><body>
+<div class="bar"><button onclick="window.print()">Descargar / imprimir PDF</button></div>
+<div class="hoja">
+ <div class="top"><div><div class="marca">${escH(marca.toUpperCase())}</div><h1>Resumen de sesiones y pagos</h1><div class="sub">Del ${fd(desde)} al ${fd(hoy)}</div></div><div class="quien">${P.map(p=>`<b>${escH(nom(p))}</b>`).join('')}</div></div>
+ <div class="res">
+  <div class="bx"><small>Sesiones hechas</small><b>${hechas}</b>${multi?`<span>${P.map((p,i)=>`${escH(pila(p))}: ${ses.filter(x=>x.i===i).length}`).join(' · ')}</span>`:''}</div>
+  <div class="bx"><small>Sesiones pagadas</small><b>${pagSes}</b><span>${eur(total)} en total</span></div>
+  ${pend>0?`<div class="bx pe"><small>Pendiente de pagar</small><b>${pend} ${pend===1?'sesión':'sesiones'}</b>${precio>0?`<span><b style="font-size:15px;color:#c2552e">${eur(pend*precio)}</b> (a ${eur(precio)} la sesión)</span>`:''}</div>`
+   :pend<0?`<div class="bx ok"><small>Sesiones que le quedan</small><b>${-pend}</b><span>Pagadas y todavía sin hacer</span></div>`:`<div class="bx ok"><small>Pendiente de pagar</small><b>0</b><span>Está todo al día</span></div>`}
+ </div>
+ <p class="nota">${multi?`Las sesiones de ${P.length===2?'los dos':'todos'} cuentan juntas. `:''}Cuentan las sesiones hechas${ses.some(x=>x.perdida)?' y las citas perdidas sin avisar':''} desde el ${fd(desde)}.${prev.length?' Incluye el pack pagado antes en el centro.':''}</p>
+ <h2>Pagos <em>${pagos.length}</em></h2>
+ ${pagos.length||prev.length?`<table><thead><tr><th>Fecha</th>${multi?'<th>Pagó</th>':''}<th>Concepto</th><th>Forma</th><th class="n">Sesiones</th><th class="n">Importe</th></tr></thead><tbody>
+  ${prev.map(x=>`<tr><td>—</td>${multi?`<td>${escH(pila(P[x.i]))}</td>`:''}<td>Pack pagado antes en el centro${x.u?` <i>(ya había usado ${x.u})</i>`:''}</td><td></td><td class="n">${x.n-x.u}</td><td class="n">—</td></tr>`).join('')}
+  ${pagos.map(x=>`<tr><td>${fd(x.f)}</td>${multi?`<td>${escH(pila(P[x.i]))}</td>`:''}<td>${lin(x)}${x.num?` <i>· ${escH(x.num)}</i>`:''}</td><td>${escH(x.modo)}</td><td class="n">${x.ses||(x.enPack?'—':'')}</td><td class="n">${eur(x.total)}</td></tr>`).join('')}
+  <tr class="tot"><td colspan="${multi?4:3}">Total</td><td class="n">${pagSes}</td><td class="n">${eur(total)}</td></tr></tbody></table>`:'<p class="nota">No hay pagos en este periodo.</p>'}
+ <h2>Sesiones hechas <em>${hechas}</em></h2>
+ ${multi?`<div class="ley">${P.map((p,i)=>`<span><i style="background:${COL[i]}"></i>${escH(pila(p))}</span>`).join('')}</div>`:''}
+ ${Object.keys(porMes).sort().map(mk=>{const L=porMes[mk];return `<div class="mes"><b>${MES[+mk.slice(5,7)-1]} ${mk.slice(0,4)} <span>· ${L.length} ${L.length===1?'sesión':'sesiones'}</span></b><div class="chips">${L.map(x=>`<span class="ch${x.perdida?' per':''}"><i style="background:${COL[x.i]}">${x.k}</i>${fd(x.f).slice(0,5)}${x.fisio?' · '+escH(x.fisio):''}${x.perdida?' · no vino':''}${x.fuera?' · pagada aparte':''}</span>`).join('')}</div></div>`;}).join('')||'<p class="nota">No hay sesiones en este periodo.</p>'}
+ <div class="pie">Si algo no te cuadra, escríbenos o pregúntanos en tu próxima sesión y lo revisamos juntos.<br>${escH(marca)} · Resumen generado el ${fd(hoy)}</div>
+</div></body></html>`;
+}
 
 // ── Avisos del panel (mensajes de pacientes) ──────────────────
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
@@ -13375,6 +13460,7 @@ async function fpTabFacturas(pacId, body, pacNombre, tok){
  if(sd.activo){const b=ce('div','fac-saldo'+(sd.saldo<0?' neg':sd.saldo>0?' pos':''));
   b.innerHTML=sd.saldo<0?`<b>⚠️ ${-sd.saldo} sesi${sd.saldo===-1?'ón':'ones'} sin facturar</b><span>Ha hecho ${sd.gastadas} y ha pagado ${sd.pagadas}</span>`:sd.saldo>0?`<b>Le quedan ${sd.saldo} sesi${sd.saldo===1?'ón':'ones'} pagada${sd.saldo===1?'':'s'}</b><span>Ha pagado ${sd.pagadas} y ha hecho ${sd.gastadas}</span>`:`<b>Todo facturado</b><span>Sin sesiones pendientes ni pagadas por adelantado</span>`;
   body.appendChild(b);
+  {const rb=ce('button','fac-resb');rb.type='button';rb.innerHTML='<svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z"/><path d="M14 3.5V8h4M9 12.5h6M9 16h4"/></svg>Resumen de cuenta para el paciente (PDF)';rb.onclick=()=>resumenCuenta(pacId,pacNombre,(sd.compartido||[]).flatMap(x=>x.con||[]));body.appendChild(rb);}
   // Sesiones de antes de que el panel contara: si eran de su pack, que cuenten desde la primera de ese pack
   {const fd=x=>x.split('-').reverse().slice(0,2).join('/'),ini=fd(sd.inicio||''),guarda=async v=>{const r=await (await fetch('/api/schedule?action=seg-ficha-guardar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,id:pacId,cuentaDesde:v})})).json().catch(()=>({}));if(!r.ok){toast('No se ha podido guardar',false);return;}toast(v?'Hecho: ya cuentan':'Quitado',true);fpTabFacturas(pacId,body,pacNombre,body.dataset.token);};
    if(d.cuentaDesde&&d.cuentaDesde<(sd.inicio||'')){const cb=ce('div','fac-bp fac-cd');cb.innerHTML=`<span>Cuentan también sus sesiones <b>desde el ${fd(d.cuentaDesde)}</b> (de antes del ${ini})</span><button type="button">Quitar</button>`;
@@ -14452,6 +14538,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-25',adm:1,t:'Ficha › Facturas › «Resumen de cuenta para el paciente (PDF)»: lo que ha pagado y las sesiones hechas en una hoja, con lo pendiente. Si comparten pack, salen los dos juntos.'},
 {f:'2026-11-25',aviso:1,t:'Racha: si un paciente hizo los ejercicios y se le olvidó marcarlo, toca ese día en su ficha › Más › Racha. Él también puede hacerlo en su app (hasta 7 días atrás).'},
 {f:'2026-11-25',t:'Chat: al tocar «Guardar en su ficha» te pregunta en qué carpeta lo guardas (o creas una nueva).'},
 {f:'2026-11-25',adm:1,aviso:1,t:'Tarjetas regalo hechas a mano: en Mensajes › Regalos › Vales regalo, «+ Tarjeta hecha a mano». Pones para quién, sesiones, importe y cómo pagó, y te da el código para escribirlo en la tarjeta.'},
@@ -17050,6 +17137,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Dirección: listas y ajustes',sub:'Solo lo ve dirección',dir:1,
  cards:[
+ {ti:'Resumen de cuenta para el paciente',body:`Ficha › <b>Facturas</b> › <b>Resumen de cuenta para el paciente (PDF)</b>: en una hoja, lo que ha pagado y todas las sesiones que ha hecho, y si debe alguna (con su importe).<br><br>Si comparten pack (p. ej. una pareja), añade al otro paciente y sale todo junto. Se abre en otra pestaña con el botón <b>Descargar / imprimir PDF</b>.`},
  {ti:'Tarjeta regalo hecha a mano',body:`Si hacéis una tarjeta regalo a mano en el centro: <b>Mensajes › Regalos › Vales regalo › + Tarjeta hecha a mano</b>. Pones para quién, de parte de quién, tipo, sesiones y cómo lo ha pagado (o <b>Gratis</b> si es una donación), y te da un <b>código</b> (M-…) para escribirlo en la tarjeta.<br><br>Queda en la lista de vales como pagado, y cuando venga se marca <b>Canjeado</b> igual que los de la web.`},
  {ti:'Pantallas con clave',body:`<b>Panel de control</b>, <b>Estadísticas</b>, <b>Facturación</b> y <b>Rendimiento</b> piden una clave para entrar. Al salir de ellas siguen abiertas 5 minutos; pasado eso, la vuelve a pedir.<br><br>La pone dirección la primera vez que entra; para cambiarla, en la pantalla de la clave, <b>Cambiar la clave</b>.`},
  {ti:'Cambiar el check-list',body:`En <b>Dirección › Check-list</b> editas los puntos del check-list del equipo (con sub-puntos), los ordenas o los ocultas.<br><br>¿Te has liado? <b>Volver a la original</b>.`,ver:{sec:'admin',pasos:[{el:'.adm-tabs [data-k="chk"] || .adm-tabs',txt:'Check-list.'}]}},

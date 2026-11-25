@@ -5816,6 +5816,27 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         }
         return res.status(200).json({ ok: true, puesta: !!(g && g.h) });
       }
+      if (action === 'seg-resumen-cuenta') { // Resumen de cuenta para dar al paciente (uno o varios, p. ej. una pareja con pack compartido): pagos y sesiones hechas, desde que el panel cuenta
+        const SD = require('./_push').saldo, ids = String(q.ids || '').split(',').filter(x => /^rec[A-Za-z0-9]{14}$/.test(x)).slice(0, 4);
+        if (!ids.length) return res.status(400).json({ ok: false });
+        const inicio = await SD.inicioControl(); if (!inicio) return res.status(200).json({ ok: false, error: 'El panel todavía no cuenta sesiones' });
+        const FU = await SD.citasFuera().catch(() => ({})), out = [];
+        for (const id of ids) {
+          const pr = await at(`${PACIENTES}/${id}`); if (pr.error) continue; const PF = pr.fields || {};
+          const desde = SD.cuentaDesde(inicio, PF['CUENTA DESDE']);
+          const [facs, citas, fuera] = await Promise.all([SD.facturasEmitidas(id), SD.citasGastadas(desde, id),
+            todosT(CIT, `filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',FIND('${id}',ARRAYJOIN({PacienteRec})),IS_AFTER({FECHA},DATEADD('${desde}',-1,'days')))`)}&fields[]=FECHA&fields[]=HORA&fields[]=ESTADO&fields[]=${encodeURIComponent('PREF.')}`).then(L => L.filter(c => FU[c.id])).catch(() => [])]);
+          const fis = c => String((c.fields['PREF.'] && (c.fields['PREF.'].name || c.fields['PREF.'])) || '').trim().split(' ')[0];
+          const ses = citas.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), h: String(c.fields.HORA || '').slice(0, 5), fisio: fis(c), perdida: String(nmA(c.fields.ESTADO)).trim() === 'CITA PERDIDA' }))
+            .concat(fuera.map(c => ({ f: String(c.fields.FECHA || '').slice(0, 10), h: String(c.fields.HORA || '').slice(0, 5), fisio: fis(c), fuera: true }))).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
+          const pagos = facs.map(r => { const F = r.fields, lin = [[F['CONCEPTO 1'], F['Nº SESIONES 1'], F['PRECIO 1']], [F['CONCEPTO 2'], F['Nº SESIONES 2'], F['PRECIO 2']]].filter(([c]) => c).map(([c, n, p]) => ({ c: nmA(c), n: Number(n) || 0, p: Number(p) || 0 }));
+            return { f: String(SD.fechaCobro(F)).slice(0, 10), num: F['Nº FACTURA'] || '', lineas: lin, ses: SD.sesionesDe(F), total: Number(F['TOTAL'] || 0), modo: nmA(F['MODO DE PAGO']) || '', enPack: !!F['EN PACK'], packTotal: Number(F['PACK TOTAL'] || 0) }; })
+            .filter(x => x.modo !== PEND_PAGO).sort((a, b) => a.f.localeCompare(b.f));
+          const nPrev = Number(PF['SESIONES BONO PREVIO'] || 0), uPrev = nPrev > 0 ? Math.min(nPrev, Number(PF['BONO PREVIO YA USADAS'] || 0)) : 0;
+          out.push({ id, nombre: PF['Nombre'] || PF['NOMBRE Y APELLIDOS'] || PF['Name'] || '', desde, ses, pagos, previo: nPrev ? { n: nPrev, usadas: uPrev, desde: String(PF['BONO PREVIO DESDE'] || '') } : null, precioEsp: precioEspDe(PF) });
+        }
+        return res.status(200).json({ ok: true, pacientes: out, inicio });
+      }
       if (action === 'seg-lesiones') { // Etiquetas de lesión de los pacientes (postparto, IUE, hombro…): una lista corta que solo cambia dirección, y qué etiquetas tiene cada paciente
         const DEF = ['Embarazo', 'Postparto', 'Diástasis', 'IUE', 'Suelo pélvico', 'Cervical', 'Lumbar', 'Hombro', 'Codo', 'Muñeca / mano', 'Cadera', 'Rodilla', 'Tobillo / pie', 'ATM'].map((t, i) => ({ id: 'l' + i, t }));
         let cat = (await ajuste('lesiones-cat', null)) || DEF; if (!Array.isArray(cat)) cat = DEF;
