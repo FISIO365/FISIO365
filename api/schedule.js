@@ -111,7 +111,7 @@ async function ingresosHoldedDias(desde, hasta) {
   const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(e => { console.error('receipt-notes', e.message); return []; })]);
   const vistos = new Set(), dias = {};
   // Los tickets que salen de un cobro del panel cuentan el día que se cobraron (aunque en Holded se aprobaran otro día y lleven esa fecha)
-  const fCob = await fechasCobroHolded(desde, hasta);
+  const fCob = {}; // por la fecha del ticket (la de emisión: si un borrador se aprueba otro día, cuenta ese día)
   const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
     const f = (sg > 0 && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
@@ -6959,7 +6959,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const desde = q.desde < HOLDED_DESDE ? HOLDED_DESDE : q.desde;
         const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${q.hasta}`, 20).catch(() => [])]);
         const vistos = new Set(), L = [];
-        const fCob = await fechasCobroHolded(desde, q.hasta);
+        const fCob = {};
         const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = (!rect && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
           const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
           L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
@@ -8571,7 +8571,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
           const docs = await Promise.all(borr.map(r => holded('/sales-receipts/' + r.fields['HOLDED ID']).catch(() => null)));
           for (const [i, r] of borr.entries()) { const d = docs[i]; if (!d || !d.document_number) continue; r.fields['Nº FACTURA'] = String(d.document_number);
             await at(`${FACTURAS_TABLE}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [FF.num]: String(d.document_number) }, typecast: true }) }).catch(() => {});
-            const D0 = await FACX.db(); await D0.query(`update fac_facturas set codigo=$2, holded_num=$2, fecha=coalesce($3::date, fecha), anio=coalesce(extract(year from $3::date)::int, anio) where holded=$1 and coalesce(holded_num,'')='' and not exists (select 1 from fac_facturas o where o.codigo=$2)`, [String(d.id), String(d.document_number), FACX.fechaDocH(d)]).catch(() => {});
+            const D0 = await FACX.db(); await D0.query(`update fac_facturas set codigo=$2, holded_num=$2, fecha_cobro=case when $3::date is not null and $3::date<>fecha then coalesce(fecha_cobro, fecha) else fecha_cobro end, fecha=coalesce($3::date, fecha), anio=coalesce(extract(year from $3::date)::int, anio) where holded=$1 and coalesce(holded_num,'')='' and not exists (select 1 from fac_facturas o where o.codigo=$2)`, [String(d.id), String(d.document_number), FACX.fechaDocH(d)]).catch(() => {});
             diasArr.add(String(r.fields['FECHA DE COBRO'] || '').slice(0, 10)); }
           for (const d0 of diasArr) { if (Date.now() - t0 > 15000) break; await arreglarDia(d0, filasR.filter(r => String(r.fields['FECHA DE COBRO'] || '').slice(0, 10) === d0), t0 + 15000).catch(() => {}); } } catch (e) { console.log('rango borradores', e.message); }
         const nuestrasR = await FACX.lista({ desde, hasta, limite: 2000 }), porDia = {}, dDe = r => { const v = String(r.fields['FECHA DE COBRO'] || ''); return /T/.test(v) ? FACX.isoMad(new Date(v)) : v.slice(0, 10); };

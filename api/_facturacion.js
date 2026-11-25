@@ -19,6 +19,7 @@ alter table fac_facturas add column if not exists enviada jsonb not null default
 alter table fac_facturas add column if not exists sustituye jsonb;
 alter table fac_facturas add column if not exists sustituida_por text;
 alter table fac_facturas add column if not exists rect_simpl boolean not null default false;
+alter table fac_facturas add column if not exists fecha_cobro date;
 update fac_facturas set rect_simpl=true where tipo='rectificativa' and not rect_simpl and (codigo like 'TN%' or holded_num like 'TN%');
 create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
 create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
@@ -252,7 +253,7 @@ async function lista(f) {
   if (f.clase === 'facturas') w.push(`(tipo='completa' or (tipo='rectificativa' and not rect_simpl and coalesce(${rTipo},'completa')<>'simplificada'))`);
   if (f.clase === 'tickets') w.push(`(tipo='simplificada' or (tipo='rectificativa' and (rect_simpl or ${rTipo}='simplificada')))`);
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded, holded_num, por, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo, (tipo<>'rectificativa' and ${RECT_ENTERA('fac_facturas')}) rectificada from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded, holded_num, por, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, fecha_cobro::text fecha_cobro, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo, (tipo<>'rectificativa' and ${RECT_ENTERA('fac_facturas')}) rectificada from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
@@ -336,7 +337,7 @@ async function sincronizaHolded(getDoc, max = 25) {
   for (const [i, x] of L.entries()) { if (!docs[i]) continue; const d = docs[i].d;
     if (d === null) { await anular(x.id, 'Ticket borrado en Holded').catch(() => {}); continue; }
     const num = String((d && d.document_number) || '').trim(); if (!num) continue;
-    const fe = fechaDocH(d); await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2, fecha=coalesce($3::date, fecha), anio=coalesce(extract(year from $3::date)::int, anio) where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num, fe])).rows[0];
+    const fe = fechaDocH(d); await D.tx(async q => { const F = (await q.query(`update fac_facturas set codigo=$2, holded_num=$2, fecha_cobro=case when $3::date is not null and $3::date<>fecha then coalesce(fecha_cobro, fecha) else fecha_cobro end, fecha=coalesce($3::date, fecha), anio=coalesce(extract(year from $3::date)::int, anio) where id=$1 and coalesce(holded_num,'')='' returning *, fecha::text fecha`, [x.id, num, fe])).rows[0];
       if (F && !(F.vf && F.vf.alta)) await registrarVF(q, 'pruebas', { id: F.id, emisor: F.emisor, codigo: num, fecha: F.fecha, tipo: F.tipo, total: F.total, cuota: F.cuota }); }).catch(e => console.log('VF sincroniza', e.message)); n++; }
   return n;
 }
