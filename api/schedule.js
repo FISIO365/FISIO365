@@ -111,10 +111,12 @@ async function ingresosHoldedDias(desde, hasta) {
   const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(e => { console.error('receipt-notes', e.message); return []; })]);
   const vistos = new Set(), dias = {};
   // Los tickets que salen de un cobro del panel cuentan el día que se cobraron (aunque en Holded se aprobaran otro día y lleven esa fecha)
-  const fCob = {}; // por la fecha del ticket (la de emisión: si un borrador se aprueba otro día, cuenta ese día)
+  // Cuentan por la fecha del ticket (la de emisión). Aparte se apunta cuánto de cada día es de cobros de días anteriores (borradores aprobados después)
+  const fC = await fechasCobroHolded(desde, hasta), fCob = {}, otros = {};
   const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
     const f = (sg > 0 && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
-    dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100; });
+    dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100;
+    const c = sg > 0 && fC[String(d.id)]; if (c && c < f) otros[f] = Math.round(((otros[f] || 0) + importeAbs(d)) * 100) / 100; });
   // Packs cobrados enteros «con factura por sesión»: cuenta el dinero que entra de verdad, el pack entero el día que se paga;
   // los tickets de cada sesión no son dinero nuevo y no se suman
   const PS = await packsPorSesion(desde, hasta).catch(e => { console.error('packs por sesión', e.message); return { tickets: new Set(), cobros: [], filas: new Set() }; });
@@ -127,7 +129,7 @@ async function ingresosHoldedDias(desde, hasta) {
   // Facturas del panel (desde el día del cambio, ya sin Holded): también son ingresos
   try { const D = await FACX.db(); (await D.query(`select fecha::text f, total::float v, cobro, cliente from fac_facturas where not prueba and estado='emitida' and actividad='principal' and fecha between $1 and $2`, [desde, hasta])).rows
     .forEach(x => { if (x.cobro && PS.filas.has(x.cobro)) return; if (/\btest\b|prueba/i.test((x.cliente || {}).nombre || '')) return; dias[x.f] = Math.round(((dias[x.f] || 0) + x.v) * 100) / 100; }); } catch (e) {}
-  _ingH = { t: Date.now(), k, v: dias }; return dias;
+  _ingH = { t: Date.now(), k, v: dias, o: otros }; return dias;
 }
 // Arreglo: el 23/11 el primer pago de un pack en partes se guardó como «Otros · 1» y el pack no contaba sus sesiones.
 // Se deja como debía (sesiones del pack a su precio + «Otros» en negativo con lo ya pagado; el total no cambia). Se mira en la ficha y en la agenda.
@@ -6949,8 +6951,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
       if (action === 'seg-ingresos-rango') { // Panel de control: ingresos de días exactos (lo mismo que cuenta Estadísticas: tickets de Holded + facturas del panel + packs)
         const ok = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ''); if (!ok(q.desde) || !ok(q.hasta)) return res.status(400).json({ ok: false });
         if (!HOLDED_KEY || q.desde < HOLDED_DESDE) return res.status(200).json({ ok: true, total: null });
-        const dias = await ingresosHoldedDias(q.desde, q.hasta);
-        return res.status(200).json({ ok: true, total: Math.round(Object.values(dias || {}).reduce((a, v) => a + v, 0) * 100) / 100, dias });
+        const dias = await ingresosHoldedDias(q.desde, q.hasta), O = (_ingH.k === q.desde + '|' + q.hasta && _ingH.o) || {};
+        return res.status(200).json({ ok: true, total: Math.round(Object.values(dias || {}).reduce((a, v) => a + v, 0) * 100) / 100, dias, deOtrosDias: Math.round(Object.values(O).reduce((a, v) => a + v, 0) * 100) / 100 });
       }
       if (action === 'seg-ingresos-detalle') {
         // Desglose de los tickets de Holded de un periodo: cuáles cuentan en Estadísticas y cuáles no (y por qué)
@@ -6959,10 +6961,10 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const desde = q.desde < HOLDED_DESDE ? HOLDED_DESDE : q.desde;
         const [tk, rn] = await Promise.all([holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${q.hasta}`, 40), holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${q.hasta}`, 20).catch(() => [])]);
         const vistos = new Set(), L = [];
-        const fCob = {};
+        const fCob = {}, fC = await fechasCobroHolded(desde, q.hasta);
         const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = (!rect && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
           const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
-          L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo }); });
+          L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo, cobro: !rect && fC[String(d.id)] && fC[String(d.id)] < f ? fC[String(d.id)] : '' }); });
         // Packs cobrados enteros «con factura por sesión»: cuenta el pack entero el día que se pagó; los tickets de sus sesiones no
         const PS = await packsPorSesion(desde, q.hasta).catch(() => ({ tickets: new Set(), cobros: [] }));
         mete(tk, false); mete(rn, true);
