@@ -9,6 +9,8 @@ const eur = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigit
 const num = n => (Number(n) || 0).toLocaleString('es-ES', { maximumFractionDigits: 4 });
 const fechaL = f => { const [a, m, d] = String(f).slice(0, 10).split('-'); return `${+d}/${+m}/${a}`; };
 const TITULOS = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa', presupuesto: 'Presupuesto' };
+// Rectificativa de un ticket: «Factura simplificada rectificativa» (como en Holded el ticket rectificativo)
+const tituloDe = F => F.tipo === 'rectificativa' && F.rectifica_tipo === 'simplificada' ? 'Factura simplificada rectificativa' : (TITULOS[F.tipo] || 'Factura');
 const EXENC = { E1: 'Operación exenta de IVA (art. 20.Uno.3º de la Ley 37/1992 del IVA: asistencia sanitaria)', E6: 'Operación exenta de IVA', NS: 'Operación no sujeta a IVA' };
 // pdf-lib con fuentes TTF: quitar caracteres que la fuente no tenga (emojis…)
 const limpio = s => String(s == null ? '' : s).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}️]/gu, '').replace(/\s+/g, ' ').trim();
@@ -21,7 +23,7 @@ async function pdfFactura(F, o) {
   o = o || {};
   const doc = await PDFDocument.create(); doc.registerFontkit(fontkit);
   const B = fuentes(), fR = await doc.embedFont(B.reg, { subset: true }), fM = await doc.embedFont(B.med, { subset: true }), fB = await doc.embedFont(B.bold, { subset: true });
-  doc.setTitle(`${TITULOS[F.tipo] || 'Factura'} ${F.codigo}`); doc.setAuthor(limpio((F.emisor || {}).razon || o.marca || '')); doc.setCreator('Panel de la clínica');
+  doc.setTitle(`${tituloDe(F)} ${F.codigo}`); doc.setAuthor(limpio((F.emisor || {}).razon || o.marca || '')); doc.setCreator('Panel de la clínica');
   const d = F.diseno || 'clasico', colH = o.color || F.serie_color || '#c2552e', AC = d === 'minimal' ? rgb(0.12, 0.10, 0.09) : hex(colH), ACs = mezcla(colH, 0.93);
   const NEGRO = rgb(0.12, 0.10, 0.09), GRIS = rgb(0.42, 0.37, 0.34), GRIS2 = rgb(0.62, 0.57, 0.54), LINEA = rgb(0.91, 0.88, 0.85), CREMA = rgb(0.976, 0.965, 0.95), BLANCO = rgb(1, 1, 1);
   const X0 = 56, X1 = W - 56, AN = X1 - X0;
@@ -62,7 +64,7 @@ async function pdfFactura(F, o) {
   y = yC - hCab - 40;
 
   // ── Título, número, fecha y si está pagada ──
-  const tit = TITULOS[F.tipo] || 'Factura';
+  const tit = tituloDe(F);
   txt(tit, X0, y, fM, 19, NEGRO);
   txt('Nº ' + F.codigo, X0, y - 17, fR, 9.5, GRIS);
   const fw = txt(fechaL(F.fecha), X1, y, fM, 11, NEGRO, 'd'); esp('Fecha', X1, y + 15, 6.2, GRIS2, 'd');

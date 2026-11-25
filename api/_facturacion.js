@@ -269,7 +269,7 @@ const fechaL = f => { const [a, m, d] = String(f).slice(0, 10).split('-'); retur
 const num = n => (Number(n) || 0).toLocaleString('es-ES', { maximumFractionDigits: 4 });
 function html(F, o) {
   o = o || {}; const E = F.emisor || {}, Cl = F.cliente || {}, L = F.lineas || [], I = F.impuestos || [], col = F.serie_color || o.color || '#c2552e', d = F.diseno || 'clasico';
-  const titulo = { simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' }[F.tipo] || 'Factura';
+  const titulo = F.tipo === 'rectificativa' && F.rectifica_tipo === 'simplificada' ? 'Factura simplificada rectificativa' : ({ simplificada: 'Factura simplificada', completa: 'Factura', rectificativa: 'Factura rectificativa' }[F.tipo] || 'Factura');
   const exentas = [...new Set(L.filter(l => !l.iva.tipo).map(l => EXENCIONES[l.iva.exencion] || EXENCIONES.E1))];
   const dirE = [E.direccion, [E.cp, E.ciudad].filter(Boolean).join(' '), E.provincia].filter(Boolean).join(' · ');
   const dirC = [Cl.direccion, [Cl.cp, Cl.ciudad].filter(Boolean).join(' '), Cl.provincia, Cl.pais && Cl.pais !== 'España' ? Cl.pais : ''].filter(Boolean).join(' · ');
