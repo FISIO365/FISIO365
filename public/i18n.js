@@ -40,6 +40,13 @@
 "sáb": ["ds", "Sat"],
 "dom": ["dg", "Sun"],
 "sin bomba": ["sense bomba", "no magnetic pump"],
+"con bomba": ["amb bomba", "with magnetic pump"],
+"Con bomba diamagnética": ["Amb bomba diamagnètica", "With the diamagnetic pump"],
+"Sin bomba: la sesión es igual, sin la máquina": ["Sense bomba: la sessió és igual, sense la màquina", "No pump: same session, without the machine"],
+"Solo con bomba": ["Només amb bomba", "Only with pump"],
+"Esta hora es ": ["Aquesta hora és ", "This slot is "],
+"sin bomba diamagnética": ["sense bomba diamagnètica", "without the diamagnetic pump"],
+": la sesión es igual, pero sin la máquina.": [": la sessió és igual, però sense la màquina.", ": same session, but without the machine."],
 "Esta hora es sin bomba diamagnética.": ["Aquesta hora és sense bomba diamagnètica.", "This slot is without the diamagnetic pump."],
 "Ya tienes otra cita": [
 "Ja tens una altra cita",

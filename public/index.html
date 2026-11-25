@@ -587,7 +587,11 @@ button.ses-vid{display:block;width:100%;border:none;padding:0;cursor:pointer}
 .rv-h b{display:block;font-size:15px;font-weight:700;color:#1a1a1a}
 .rv-h span{display:block;font-size:11.5px;color:#c2552e;font-weight:600;margin-top:1px}
 .rv-h:active{transform:scale(.97)}
-.rv-h i{display:block;font-style:normal;font-size:10.5px;color:#8a7b6f;margin-top:1px}
+.rv-h i{display:inline-flex;align-items:center;gap:3px;font-style:normal;font-size:10px;font-weight:600;margin-top:4px;padding:1px 7px 1px 5px;border-radius:99px;background:#fff;color:#c2552e;border:1px solid #efc7b4}
+.rv-h i svg,.rv-ley svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rv-h.sb{background:#fff;border:1.5px dashed #d9cfc6}.rv-h.sb span{color:#8a7b6f}.rv-h.sb i{color:#8a7b6f;border-color:#e3dbd3;background:#f6f3ef}
+.rv-ley{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:#6b6058;background:#fbf6f1;border:1px solid #efe2d6;border-radius:14px;padding:10px 12px;margin:0 0 12px;line-height:1.45}.rv-ley span{display:inline-flex;align-items:center;gap:5px}.rv-ley .c{color:#c2552e;font-weight:600}.rv-ley .s{color:#8a7b6f;font-weight:600}
+.rv-chip.bm{display:inline-flex;align-items:center;gap:5px}.rv-chip.bm svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
 .rv-sbn{font-size:13px;color:#8a7b6f;margin-top:4px}
 .rv-ya{display:flex;gap:12px;align-items:flex-start;background:#fbf6f1;border:1px solid #efd9c8;border-radius:16px;padding:14px;margin-bottom:12px}
 .rv-ya-ic{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #efd9c8;display:flex;align-items:center;justify-content:center}.rv-ya-ic svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -1442,7 +1446,9 @@ function pintarCitaHoy(lista){const el=document.getElementById('citaHoy');if(!el
  else{el.innerHTML=`<div class="ch-fecha"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><div class="ch-tx"><small>Citas</small><b>Reserva tu cita</b><span>Elige día, hora y fisio</span></div><button class="ch-btn" onclick="event.stopPropagation();abrirReserva()">Reservar</button>`;el.onclick=()=>abrirReserva();}
  el.classList.add('on');}
 // ── Reservar cita ─────────────────────────────────────────────
-let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='',rvNuevas=[];
+let rvHuecos=[],rvFisio='',rvSel=null,rvCardHTML='',rvNuevas=[],rvSoloBomba=false;
+// Bomba diamagnética: icono (rayo) y tachado para las horas sin bomba
+const RV_BOMBA='<svg viewBox="0 0 24 24"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/></svg>',RV_SINB='<svg viewBox="0 0 24 24"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/><path d="M4 4l16 16"/></svg>';
 // Sus citas activas (para no dejar dos el mismo día y avisar si son días seguidos)
 function rvMias(){if(!patient)return rvNuevas;let l=null;try{l=JSON.parse(localStorage.getItem('f365_citas_'+patient.id)||'null');}catch(e){}
  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1456,16 +1462,17 @@ async function abrirReserva(){document.getElementById('reservaSheet').classList.
  rvFisio='';pintarReserva();}
 function cerrarReserva(){document.getElementById('reservaSheet').classList.remove('on');document.body.style.overflow='';}
 function pintarReserva(){const fisios=[...new Set(rvHuecos.map(h=>h.fisio))].sort();
- document.getElementById('rvChips').innerHTML=fisios.length>1?['',...fisios].map(f=>`<button class="rv-chip${f===rvFisio?' on':''}" data-f="${f}" onclick="rvFisio=this.dataset.f;pintarReserva()">${f||'Todos'}</button>`).join(''):'';
- const lista=rvHuecos.filter(h=>!rvFisio||h.fisio===rvFisio);const L=document.getElementById('rvLista');
+ document.getElementById('rvChips').innerHTML=(fisios.length>1?['',...fisios].map(f=>`<button class="rv-chip${f===rvFisio?' on':''}" data-f="${f}" onclick="rvFisio=this.dataset.f;pintarReserva()">${f||'Todos'}</button>`).join(''):'')+(rvHuecos.some(h=>h.sb)&&rvHuecos.some(h=>!h.sb)?`<button class="rv-chip bm${rvSoloBomba?' on':''}" onclick="rvSoloBomba=!rvSoloBomba;pintarReserva()">${RV_BOMBA}Solo con bomba</button>`:'');
+ const hayCon=rvHuecos.some(h=>!h.sb),haySin=rvHuecos.some(h=>h.sb);if(!haySin||!hayCon)rvSoloBomba=false;
+ const lista=rvHuecos.filter(h=>(!rvFisio||h.fisio===rvFisio)&&(!rvSoloBomba||!h.sb));const L=document.getElementById('rvLista');
  if(!lista.length){L.innerHTML='<div class="rv-vacio">Ahora mismo no hay huecos libres'+(rvFisio?' con '+rvFisio:'')+'.<br>Escríbenos por el chat y te buscamos uno.</div>';return;}
  const porDia={};lista.forEach(h=>{(porDia[h.fecha]=porDia[h.fecha]||[]).push(h);});
  const mias=rvMias();
- L.innerHTML=Object.keys(porDia).sort().map(f=>{const ya=mias.find(c=>c.f===f);const hs=porDia[f].map(h=>ya?`<button class="rv-h off" disabled><b>${h.hora}</b><span>${h.fisio}</span>${h.sb?'<i>sin bomba</i>':''}</button>`:`<button class="rv-h" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span>${h.sb?'<i>sin bomba</i>':''}</button>`).join('');
+ L.innerHTML=(haySin?`<div class="rv-ley"><span class="c">${RV_BOMBA}Con bomba diamagnética</span><span class="s">${RV_SINB}Sin bomba: la sesión es igual, sin la máquina</span></div>`:'')+Object.keys(porDia).sort().map(f=>{const ya=mias.find(c=>c.f===f);const tg=h=>haySin?(h.sb?`<i>${RV_SINB}sin bomba</i>`:`<i>${RV_BOMBA}con bomba</i>`):'';const hs=porDia[f].map(h=>ya?`<button class="rv-h off${h.sb?' sb':''}" disabled><b>${h.hora}</b><span>${h.fisio}</span>${tg(h)}</button>`:`<button class="rv-h${h.sb?' sb':''}" onclick="elegirHueco('${h.id}')"><b>${h.hora}</b><span>${h.fisio}</span>${tg(h)}</button>`).join('');
  return `<div class="rv-dia"><div class="rv-dia-t">${rvFechaTxt(f)}</div>${ya?`<div class="rv-ya"><div class="rv-ya-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M16 3v4M8 3v4M3.5 10h17M9 15l2 2 4-4"/></svg></div><div class="rv-ya-tx"><b>Ya tienes cita a las ${ya.hora}</b><span>Si quieres cambiarla de hora, escribe a administración.</span><button type="button" onclick="rvChatAdmin()"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></svg>Chat con administración</button></div></div>`:''}<div class="rv-horas">${hs}</div></div>`;}).join('');}
 async function rvChatAdmin(){cerrarReserva();showSection('mensajes');try{await volverChats();const c=chatsCache.find(x=>x.admin);if(c)abrirConv(c);}catch(e){}}
 function elegirHueco(id){const c=document.querySelector('#rvModal .rv-card');if(!rvCardHTML)rvCardHTML=c.innerHTML;else c.innerHTML=rvCardHTML;rvSel=rvHuecos.find(h=>h.id===id);if(!rvSel)return;
- document.getElementById('rvRes').innerHTML=`<div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div>${rvSel.sb?'<div class="rv-sbn">Esta hora es sin bomba diamagnética.</div>':''}<div class="l">FISIO365 · Gran de Sant Andreu 163</div>`;
+ document.getElementById('rvRes').innerHTML=`<div class="d">${rvFechaTxt(rvSel.fecha)}</div><div class="h">${rvSel.hora}</div><div class="f">con <b>${rvSel.fisio}</b></div>${rvSel.sb?'<div class="rv-sbn">Esta hora es <b>sin bomba diamagnética</b>: la sesión es igual, pero sin la máquina.</div>':(rvHuecos.some(h=>h.sb)?'<div class="rv-sbn" style="color:#c2552e">Con bomba diamagnética</div>':'')}<div class="l">FISIO365 · Gran de Sant Andreu 163</div>`;
  // Si ya tiene otras citas, se lo recordamos: hay quien cree que al reservar otra se anula la que tenía
  {const hoyI=rvMasDias(TODAY,0),otras=rvMias().filter(c=>c.f>=hoyI&&c.f!==rvSel.fecha).sort((a,b)=>(a.f+a.hora).localeCompare(b.f+b.hora));
   if(otras.length){const pegada=c=>c.f===rvMasDias(rvSel.fecha,-1)?' · el día anterior':c.f===rvMasDias(rvSel.fecha,1)?' · el día siguiente':'';
