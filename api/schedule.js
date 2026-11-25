@@ -5244,6 +5244,23 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const d = await todosT(VALES, 'sort[0][field]=CREADO&sort[0][direction]=desc').catch(() => []);
         return res.status(200).json({ ok: true, vales: d.map(valeVista) });
       }
+      if (action === 'seg-vale-manual') { // Tarjeta regalo hecha a mano en el centro: se registra (ya pagada) y da su código para escribirlo en la tarjeta
+        const CF = await conf().catch(() => CONF_DEF), OPS = valeOpciones(CF);
+        if (req.method !== 'POST') return res.status(200).json({ ok: true, tipos: OPS.map(s => ({ nombre: s.nombre, ops: s.ops.map(o => ({ n: o.n, p: o.p, pack: o.pack })) })) });
+        const L = (v, n) => String(v == null ? '' : v).replace(/[\r\t\n]+/g, ' ').trim().slice(0, n);
+        const tipo = OPS.find(x => x.nombre === q.tipo), n = Math.round(Number(q.n)), imp = Math.round(Number(String(q.importe).replace(',', '.')) * 100) / 100;
+        const vias = { tarjeta: 'tarjeta', efectivo: 'efectivo', bizum: 'Bizum', transferencia: 'transferencia' }, via = vias[q.via];
+        if (!L(q.para, 40)) return res.status(200).json({ ok: false, error: 'Falta para quién es' });
+        if (!tipo || !(n >= 1 && n <= 50) || !(imp >= 0 && imp <= 5000) || !via) return res.status(200).json({ ok: false, error: 'Revisa el tipo, las sesiones, el importe y cómo se pagó' });
+        const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()), cad = new Date(hoy + 'T12:00:00Z'); cad.setUTCFullYear(cad.getUTCFullYear() + 1);
+        const quien = L(q.quien, 40).split(' ')[0];
+        const f = { 'CÓDIGO': valeCodigo().replace(/^R-/, 'M-'), PARA: L(q.para, 40), DE: L(q.de, 50), COMPRADOR: L(q.de, 60) || L(q.para, 40), TIPO: tipo.nombre, SESIONES: n, IMPORTE: imp, IDIOMA: 'Castellano', 'OCASIÓN': 'clasico',
+          ENTREGA: 'impresa', PAGO: via === 'transferencia' ? 'transferencia' : 'centro', ESTADO: 'PAGADO', PAGADO: `${pagoAhora()} · ${via}`, CADUCA: cad.toISOString().slice(0, 10), CREADO: new Date().toISOString(),
+          REGISTRO: `${pagoAhora()} · Hecha a mano en el centro · pagada (${via})${quien ? ' · apuntada por ' + quien : ''}` };
+        const c = await at(VALES, { method: 'POST', body: JSON.stringify({ fields: f, typecast: true }) });
+        if (c.error || !c.id) return res.status(200).json({ ok: false, error: 'No se ha podido guardar. Inténtalo de nuevo.' });
+        return res.status(200).json({ ok: true, vale: valeVista(c) });
+      }
       if (action === 'seg-vale-op') {
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
         const id = String(q.id || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(id)) return res.status(400).json({ ok: false });
