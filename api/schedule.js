@@ -5841,6 +5841,13 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const DEF = ['Embarazo', 'Postparto', 'Diástasis', 'IUE', 'Suelo pélvico', 'Cervical', 'Lumbar', 'Hombro', 'Codo', 'Muñeca / mano', 'Cadera', 'Rodilla', 'Tobillo / pie', 'ATM'].map((t, i) => ({ id: 'l' + i, t }));
         let cat = (await ajuste('lesiones-cat', null)) || DEF; if (!Array.isArray(cat)) cat = DEF;
         let pac = (await ajuste('lesiones-pac', {})) || {};
+        // Etiquetas de suelo pélvico pedidas por dirección (25/11): se añaden una sola vez a la lista; «Embarazo» pasa a llamarse «Preparto» (las pacientes que la tenían la conservan)
+        if (!(await ajuste('lesiones-mig-sp', null))) {
+          const k = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+          cat = cat.map(x => k(x.t) === 'embarazo' && !cat.some(y => k(y.t) === 'preparto') ? { id: x.id, t: 'Preparto' } : x);
+          ['Preparto', 'Postparto', 'IUE', 'IUU', 'Prostatectomía', 'Prolapso', 'Coloproctología', 'Menopausia', 'Hormonal'].forEach((t, i) => { if (!cat.some(x => k(x.t) === k(t)) && cat.length < 25) cat.push({ id: 'lsp' + i, t }); });
+          await guardarAjuste('lesiones-cat', cat, 'sistema'); await guardarAjuste('lesiones-mig-sp', 1, 'sistema');
+        }
         if (req.method === 'POST') {
           const quien = String(q.quien || '').trim().slice(0, 40), okP = x => /^rec[A-Za-z0-9]{14}$/.test(x || '');
           if (q.op === 'pac' && okP(q.pacienteId)) {
