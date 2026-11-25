@@ -40,7 +40,7 @@
 "sáb": ["ds", "Sat"],
 "dom": ["dg", "Sun"],
 "sin bomba": ["sense bomba", "no magnetic pump"],
-"bomba disp.": ["bomba disp.", "pump avail."],
+"Las horas marcadas «sin bomba» no tienen la bomba diamagnética disponible.": ["Les hores marcades «sense bomba» no tenen la bomba diamagnètica disponible.", "Times marked «no pump» don't have the diamagnetic pump available."],
 "Bomba diamagnética disponible (si tu tratamiento la lleva)": ["Bomba diamagnètica disponible (si el teu tractament la porta)", "Diamagnetic pump available (if your treatment uses it)"],
 "Sin bomba: a esa hora la bomba no está disponible": ["Sense bomba: a aquesta hora la bomba no està disponible", "No pump: the pump isn't available at that time"],
 "Solo con bomba disponible": ["Només amb bomba disponible", "Only with pump available"],
