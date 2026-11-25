@@ -18,6 +18,7 @@ alter table fac_facturas add column if not exists actividad text not null defaul
 alter table fac_facturas add column if not exists enviada jsonb not null default '[]'::jsonb;
 alter table fac_facturas add column if not exists sustituye jsonb;
 alter table fac_facturas add column if not exists sustituida_por text;
+alter table fac_facturas add column if not exists rect_simpl boolean not null default false;
 create table if not exists fac_clientes (id text primary key, actividad text not null default 'principal', nombre text not null, nif text, direccion text, cp text, ciudad text, provincia text, pais text, email text, tel text, nota text, usado timestamptz not null default now(), creado timestamptz not null default now());
 create table if not exists fac_presupuestos (id text primary key, actividad text not null default 'principal', anio int not null, numero int not null, codigo text not null unique, fecha date not null, validez date, cliente jsonb not null, lineas jsonb not null, impuestos jsonb not null, base numeric(12,2) not null, cuota numeric(12,2) not null, total numeric(12,2) not null, nota text, estado text not null default 'pendiente', factura text, por text, creado timestamptz not null default now(), modificado timestamptz not null default now())
 `;
@@ -245,15 +246,15 @@ async function lista(f) {
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   // Como en Holded: «facturas» = completas y sus rectificativas; «tickets» = simplificadas y sus rectificativas
   const rTipo = `(select o.tipo from fac_facturas o where o.id=fac_facturas.rectifica)`;
-  if (f.clase === 'facturas') w.push(`(tipo='completa' or (tipo='rectificativa' and coalesce(${rTipo},'completa')<>'simplificada'))`);
-  if (f.clase === 'tickets') w.push(`(tipo='simplificada' or (tipo='rectificativa' and ${rTipo}='simplificada'))`);
+  if (f.clase === 'facturas') w.push(`(tipo='completa' or (tipo='rectificativa' and not rect_simpl and coalesce(${rTipo},'completa')<>'simplificada'))`);
+  if (f.clase === 'tickets') w.push(`(tipo='simplificada' or (tipo='rectificativa' and (rect_simpl or ${rTipo}='simplificada')))`);
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
   const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded, holded_num, por, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
   (select codigo from fac_facturas o where o.id=f.rectifica) rectifica_codigo,
-  (select tipo from fac_facturas o where o.id=f.rectifica) rectifica_tipo,
+  case when f.rect_simpl then 'simplificada' else (select tipo from fac_facturas o where o.id=f.rectifica) end rectifica_tipo,
   (select json_build_object('estado',r.estado,'entorno',r.entorno,'csv',r.csv) from fac_registros r where r.factura=f.id and r.tipo='alta' order by r.id desc limit 1) vf_reg,
   (select coalesce(json_agg(json_build_object('id',x.id,'codigo',x.codigo,'total',x.total,'fecha',x.fecha::text,'motivo',x.motivo) order by x.emitida),'[]'::json) from fac_facturas x where x.rectifica=f.id and x.estado='emitida') rects
   from fac_facturas f join fac_series s on s.id=f.serie where f.id=$1`, [id])).rows[0];

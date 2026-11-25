@@ -68,7 +68,7 @@ async function traer(h, desde, hasta, mapa, conCompras) {
   let nv = 0, rep = 0, ng = 0; const vistos = new Set(), hayCP = C.actividades.some(a => a.id === 'cerrapoint');
   for (const [t, d] of X.ventas) {
     const hid = String(d.id), num = txt(d.document_number, 60);
-    if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; continue; }
+    if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; if (t === 'rect-simplificada') await D.query(`update fac_facturas set rect_simpl=true where (holded=$1 or codigo=$2) and tipo='rectificativa' and not rect_simpl`, [hid, num]); continue; }
     if ((mapa || {})[prefijo(num)] === '_no') continue; // serie que no es de la empresa (p. ej., de cuando se facturaba como autónoma)
     const act = actDoc(h, d, hayCP), tipo = t.startsWith('rect') ? 'rectificativa' : t, c = lineas(h, d);
     if (tipo === 'rectificativa' && c.total > 0) { c.lineas.forEach(l => { l.precio = -l.precio; }); Object.assign(c, FACX.calcular(c.lineas)); }
@@ -78,6 +78,7 @@ async function traer(h, desde, hasta, mapa, conCompras) {
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,true,$20)`,
       [id, serie(act, tipo === 'rectificativa' ? 'rectificativa' : tipo), +f.slice(0, 4), n, num, tipo, f, C.emisor, { nombre: txt(d.contact_name || (d.contact || {}).name, 200), nif: txt(d.contact_code || (d.contact || {}).code, 30).toUpperCase() }, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, hid, num,
         JSON.stringify(tipo === 'rectificativa' ? {} : { estado: pagada ? 'pagada' : 'pendiente', fecha: pagada ? f : null }), txt(d.notes || d.desc, 1000) || null, 'Holded (traída)', act]);
+    if (t === 'rect-simplificada') await D.query(`update fac_facturas set rect_simpl=true where id=$1`, [id]); // ticket rectificativo de Holded: va con los tickets
     // Los clientes de las otras actividades (CerraPoint) se guardan con sus datos; los de la clínica ya son pacientes del panel
     if (act !== 'principal') { const c0 = d.contact || d.contact_id, cid = c0 && typeof c0 === 'object' ? c0.id : c0; if (cid && !vistos.has(cid)) { vistos.add(cid);
       let c = null; try { c = h.holded ? await h.holded('/contacts/' + cid) : null; } catch (e) {}
