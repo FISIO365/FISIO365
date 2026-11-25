@@ -7515,6 +7515,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         if (d.error || !d.records) return res.status(200).json({ ok: false, error: (d.error && (d.error.message || d.error.type)) || 'No se ha podido crear' });
         return res.status(200).json({ ok: true, paciente: { id: d.records[0].id, nombre, email, pin, telefono: tel, estados: est } });
       }
+      if (action === 'seg-ficha-carpetas-ver') { if (!/^rec[A-Za-z0-9]{14}$/.test(q.id || '')) return res.status(400).json({ ok: false }); const C = (await ajuste('carpetas-' + q.id, null)) || {}; return res.status(200).json({ ok: true, carpetas: { c: Array.isArray(C.c) ? C.c : [], de: C.de || {} } }); }
       if (action === 'seg-ficha-carpetas') { // carpetas de los archivos de un paciente: { c: [nombres], de: { idArchivo: carpeta } }
         const c0 = q.carpetas || {}, c = [...new Set((Array.isArray(c0.c) ? c0.c : []).map(x => String(x || '').trim().slice(0, 60)).filter(Boolean))].slice(0, 30), de = {};
         Object.entries(c0.de || {}).forEach(([k, v]) => { if (/^att[A-Za-z0-9]{14}$/.test(k) && c.includes(v)) de[k] = v; });

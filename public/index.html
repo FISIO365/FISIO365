@@ -1723,7 +1723,11 @@ async function loadAdherencia(containerId){
   try{
     const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(patient.id)}`);
     const data=await r.json();
-    FisioRacha.pintar(el,(data.tareas||[]).map(t=>t.fecha),{quien:'paciente',nombre:patient.nombre});
+    const dd=new Date();dd.setDate(dd.getDate()-7);const desde=`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`;
+    FisioRacha.pintar(el,(data.tareas||[]).map(t=>t.fecha),{quien:'paciente',nombre:patient.nombre,desde,alTocar:async(fecha,hecho)=>{
+      try{const r=await (await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-dia',pacienteId:patient.id,pacienteNombre:patient.nombre,fecha,hecho})})).json();if(!r.ok)throw 0;
+        if(fecha===TODAY){try{if(hecho)localStorage.setItem(`hechos_${patient.id}_${TODAY}`,JSON.stringify([...ejercicios.map(e=>e.id)]));else localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);}catch(e){}}
+        toast(hecho?'Día marcado ✓':'Día quitado',true);return true;}catch(e){toast('No se ha podido guardar',false);return false;}}});
   }catch(e){el.innerHTML='<div class="empty"><div class="empty-title">No se ha podido cargar tu racha</div></div>';}
 }
 
@@ -1937,8 +1941,8 @@ async function loadPuntos(){
 </script>
 <script src="/consent-pdf.js"></script>
 <script src="/avisos.js"></script>
-<script src="/chat-ui.js?v=2"></script>
-<script src="/racha-ui.js"></script>
+<script src="/chat-ui.js?v=3"></script>
+<script src="/racha-ui.js?v=4"></script>
 <script src="/equipo.js?v=7"></script>
 
 <div id="reservaSheet">

@@ -70,6 +70,24 @@ export default async function handler(req) {
       const body = await req.json();
 
       // Guardar tarea hecha en TAREAS
+      // Marcar o quitar a mano un día de ejercicios (si se le olvidó). El paciente: solo los últimos 7 días; el fisio (con la contraseña): cualquier día pasado.
+      if (body.action === 'marcar-dia') {
+        const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4', pid = String(body.pacienteId || ''), f = String(body.fecha || '');
+        const esFisio = !!body.pwd && String(body.pwd).trim() === String(process.env.FISIO_PASSWORD || 'FISIO365App').trim();
+        const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+        const lim = new Date(hoy + 'T12:00:00Z'); lim.setUTCDate(lim.getUTCDate() - 7); const min = lim.toISOString().slice(0, 10);
+        if (!/^rec[A-Za-z0-9]{14}$/.test(pid) || !/^\d{4}-\d{2}-\d{2}$/.test(f) || f > hoy || (!esFisio && f < min)) return new Response(JSON.stringify({ ok: false, error: 'Ese día no se puede cambiar' }), { status: 400, headers: corsHeaders });
+        try {
+          const ex = await airtableGet(TAREAS_TABLE, `AND({PacienteId}='${pid}',DATETIME_FORMAT({Fecha},'YYYY-MM-DD')='${f}')`);
+          const recs = ex.records || [];
+          if (body.hecho) {
+            if (!recs.length) await airtableCreate(TAREAS_TABLE, { 'fld9vav48MeCYpZXA': pid, 'fldMVdTRZUzYsUhZg': String(body.pacienteNombre || '').toUpperCase(), 'fldZsAjUSEegQk8Xq': f, 'fldOTlWCJgMl074Uo': esFisio ? `Marcado desde el panel${body.quien ? ' por ' + String(body.quien).slice(0, 40) : ''}` : 'Marcado después por el paciente' });
+          } else {
+            for (let i = 0; i < recs.length; i += 10) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TAREAS_TABLE}?${recs.slice(i, i + 10).map(r => 'records[]=' + r.id).join('&')}`, { method: 'DELETE', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } });
+          }
+          return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+        } catch (e) { return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: corsHeaders }); }
+      }
       if (body.action === 'guardar-tarea') {
         const TAREAS_TABLE = 'tblIXYE5ToRNY7MN4';
         try {

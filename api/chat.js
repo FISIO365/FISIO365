@@ -234,14 +234,15 @@ export default async function handler(req) {
       const pr = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pacienteId}?returnFieldsByFieldId=true`, { headers: AT });
       const pd = await pr.json();
       const actuales = pd.fields?.[ARCHIVOS_PAC] || [];
-      if (actuales.some(x => x.filename === a.filename)) return json({ ok: true, ya: true });
+      { const y = actuales.filter(x => x.filename === a.filename).pop(); if (y) return json({ ok: true, ya: true, att: y.id }); }
       const ur = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pacienteId}`, {
         method: 'PATCH', headers: AT,
         body: JSON.stringify({ fields: { [ARCHIVOS_PAC]: [...actuales.map(x => ({ id: x.id })), { url: a.url, filename: a.filename }] } })
       });
       const ud = await ur.json();
       if (!ur.ok) return json({ ok: false, error: ud.error?.message || 'No se ha podido guardar' }, 500);
-      return json({ ok: true });
+      const nuevo = ((ud.fields || {})[ARCHIVOS_PAC] || []).filter(x => x.filename === a.filename).pop();
+      return json({ ok: true, att: nuevo ? nuevo.id : '' });
     } catch (e) { return json({ ok: false, error: e.message }, 500); }
   }
 

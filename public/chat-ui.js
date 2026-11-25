@@ -106,14 +106,17 @@
     const guardados = new Set();
     hilo.addEventListener('click', async ev => {
       const b = ev.target.closest('.fc-guardar[data-m]'); if (!b) return;
-      b.disabled = true; const txt = b.innerHTML; b.textContent = 'Guardando…';
+      const txt = b.innerHTML; let carpeta = '';
+      if (o.elegirCarpeta) { carpeta = await o.elegirCarpeta(o.pacienteId); if (carpeta === null) return; } // null = cancelado; '' = sin carpeta
+      b.disabled = true; b.textContent = 'Guardando…';
       try {
         const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'guardar-archivo', pwd: o.pwd || '', pacienteId: o.pacienteId, mensajeId: b.dataset.m, i: +b.dataset.i }) });
         const d = await r.json();
         if (!d.ok) throw new Error(d.error || 'Error');
+        let enC = false; if (carpeta && d.att && o.moverACarpeta) enC = await o.moverACarpeta(o.pacienteId, d.att, carpeta).catch(() => false);
         guardados.add(b.dataset.m + ':' + b.dataset.i);
-        b.className = 'fc-guardar ok'; b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' + (d.ya ? 'Ya estaba en su ficha' : 'Guardado en su ficha');
-      } catch (e) { b.disabled = false; b.innerHTML = txt; alert('No se ha podido guardar: ' + e.message); }
+        b.className = 'fc-guardar ok'; b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' + (enC ? 'Guardado en «' + esc(carpeta) + '»' : d.ya ? 'Ya estaba en su ficha' : 'Guardado en su ficha');
+      } catch (e) { b.disabled = false; b.innerHTML = txt; if (o.aviso) o.aviso('No se ha podido guardar: ' + e.message); else alert('No se ha podido guardar: ' + e.message); }
     });
     function puedeEnviar() { env.disabled = preparando || !(ta.value.trim() || adjunto) || (yo === 'paciente' && !fisio); }
 

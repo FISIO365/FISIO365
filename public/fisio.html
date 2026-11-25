@@ -1563,6 +1563,7 @@ button.fx-f{width:100%;background:none;border:0;border-bottom:1px solid #f3eee9;
 .les-r{display:flex;gap:6px;margin-bottom:6px}.les-r input{flex:1;font:14px var(--font);padding:8px 11px;border:1.5px solid #e6ddd3;border-radius:10px}.les-r button{width:36px;border:1.5px solid #e6ddd3;background:#fff;border-radius:10px;color:#9a8d84;cursor:pointer}.les-mas{background:none;border:1.5px dashed #ddd2c8;border-radius:10px;width:100%;padding:8px;font:500 13px var(--font);color:#7d6a60;cursor:pointer;margin:2px 0 12px}
 .clv{display:flex;justify-content:center;padding:48px 16px}.clv-c{background:#fff;border:1px solid #ede5dd;border-radius:20px;padding:30px 26px;width:100%;max-width:360px;text-align:center;display:flex;flex-direction:column;align-items:center}.clv-i{width:54px;height:54px;border-radius:50%;background:#fbeee7;display:flex;align-items:center;justify-content:center;margin-bottom:12px}.clv-i svg{width:26px;height:26px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.clv-c>b{font-size:17px}.clv-p{font-size:13px;color:#8a7d74;margin:6px 0 16px;line-height:1.5}.clv-in{width:100%;box-sizing:border-box;font:15px var(--font);padding:11px 14px;border:1.5px solid #e6ddd3;border-radius:12px;margin-bottom:8px;text-align:center;outline:none}.clv-in:focus{border-color:#c2552e}.clv-e{color:#b42318;font-size:12.5px;margin:2px 0 8px}.clv-b{width:100%;font:600 14.5px var(--font);padding:12px;border:0;border-radius:12px;background:#c2552e;color:#fff;cursor:pointer;margin-top:4px}.clv-b:disabled{opacity:.6}.clv-l{background:none;border:0;color:#c2552e;font:600 12.5px var(--font);cursor:pointer;margin-top:12px}
 .vl-gt{display:flex;align-items:center;justify-content:space-between;gap:10px}.vl-man{font:600 12.5px var(--font);color:#c2552e;background:#fff;border:1.5px solid #f0cdbd;border-radius:99px;padding:6px 13px;cursor:pointer;text-transform:none;letter-spacing:0}.vm-b .ag-in{width:100%;box-sizing:border-box}.vm-2{display:flex;gap:8px;margin-top:8px}.vm-e{color:#b42318;font-size:12.5px;margin:10px 0 0}.vm-ok{text-align:center;padding:10px 0 4px}.vm-ok small{color:#8a7d74;font-size:12.5px}.vm-cod{font-size:30px;font-weight:700;letter-spacing:2px;color:#c2552e;margin:8px 0 10px;border:1.5px dashed #f0cdbd;border-radius:14px;padding:12px}.vm-ok p{font-size:13px;color:#5f554e;line-height:1.6;margin:0}
+.cc-l{display:flex;flex-direction:column;gap:8px}.cc-c{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:500 14px var(--font);padding:12px 14px;border:1.5px solid #e6ddd3;border-radius:12px;background:#fff;color:#2b2420;cursor:pointer}.cc-c:hover{border-color:#c2552e}.cc-c svg{width:18px;height:18px;fill:none;stroke:#c2552e;stroke-width:1.6;flex:none}.cc-c.cc-new{border-style:dashed;color:#c2552e;font-weight:600}
 .st-tb{display:flex;flex-direction:column}.st-tr{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr;gap:6px;font-size:13px;padding:6px 0;border-top:1px solid #efe8e1}.st-tr span:not(:first-child){text-align:right}.st-th{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a8d84;border-top:none}.st-tt{font-weight:700}
 .st-p{font-size:13px;margin:8px 0 0;line-height:1.5}
 .st-dias{display:flex;align-items:flex-end;gap:8px;height:130px}.st-dias div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}.st-dias i{display:block;width:100%;max-width:34px;background:#c2552e;border-radius:6px 6px 3px 3px;min-height:2px}.st-dias b{font-size:12.5px}.st-dias small{font-size:11px;color:#9a8d84}
@@ -2945,6 +2946,18 @@ async function valeManual(alGuardar){
   }catch(x){bt.disabled=false;bt.textContent='Crear y ver el código';err(x.message);}};
 }
 
+// Chat › «Guardar en su ficha»: pregunta en qué carpeta (las suyas, sin carpeta o una nueva)
+async function chatCarpetas(pid){try{const r=await (await fetch(`/api/schedule?action=seg-ficha-carpetas-ver&pwd=${encodeURIComponent(apiPwd)}&id=${pid}`)).json();return r.ok?r.carpetas:null;}catch(e){return null;}}
+function chatElegirCarpeta(pid){return new Promise(async ok=>{const C=await chatCarpetas(pid);if(!C){ok('');return;}
+ const m=hzModal(`<div class="hz-top"><div><small>Guardar en su ficha</small><b>¿En qué carpeta?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div>
+  <div class="cc-l">${C.c.map(c=>`<button type="button" class="cc-c" data-c="${escH(c)}"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg><span>${escH(c)}</span></button>`).join('')}<button type="button" class="cc-c" data-c=""><span>Sin carpeta</span></button><button type="button" class="cc-c cc-new"><span>+ Carpeta nueva</span></button></div>`);
+ const fin=v=>{m.remove();ok(v);};
+ m.querySelector('.hz-x').onclick=()=>fin(null);
+ m.querySelectorAll('.cc-c[data-c]').forEach(b=>b.onclick=()=>fin(b.dataset.c));
+ m.querySelector('.cc-new').onclick=async()=>{const n=String(await pideTexto('Nombre de la carpeta (p. ej. «Rodilla derecha»)','')||'').trim().slice(0,60);if(!n)return;fin(C.c.find(x=>x.toLowerCase()===n.toLowerCase())||n);};});}
+async function chatMoverACarpeta(pid,att,c){const C=await chatCarpetas(pid);if(!C)return false;if(!C.c.includes(c))C.c.push(c);C.de[att]=c;
+ const r=await agPost('seg-ficha-carpetas',{id:pid,carpetas:C,quien:miNombreCorto()}).catch(()=>({}));return !!r.ok;}
+
 // ── Avisos del panel (mensajes de pacientes) ──────────────────
 const VAPID_PUBLIC='BI32ty3ZY7XihYoArCZXx9JsHvx55YRlRpi0-OWxCfkjDmE1FMcprKMq3bodpzXFeo2puW4XYeXF6c9AMX5wln8';
 let avisoPendiente=(()=>{try{const u=new URL(location.href);return u.searchParams.get('s')?location.href:'';}catch(e){return '';}})();
@@ -3473,7 +3486,7 @@ function renderPacLista(q, lista){
  else if(op.key==='seg'){panel.style.display='none';row.dataset.active='0';row.style.color='var(--black)';if(SEG_PAC[p.id]){toast(segYaTxt(p.id),true);return;}abrirNuevoSeg({pacienteId:p.id,nombre:p.nombre,onSave:()=>{SEG_PAC[p.id]={fecha:'',quien:''};row.innerHTML='<span class="seg-ya">✓ En seguimiento</span>';}});}
  else if(op.key==='racha') fpTabRacha(p.id, panel, tok);
  else if(op.key==='diario') fpTabDiario(p.id, p.nombre, panel, tok);
- else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
+ else if(op.key==='chat'){panel.innerHTML='<div class="chatp-ficha"></div>';FisioChat.montar(panel.querySelector('.chatp-ficha'),{rol:'fisio',pwd:apiPwd,elegirCarpeta:chatElegirCarpeta,moverACarpeta:chatMoverACarpeta,aviso:t=>toast(t,false),pacienteId:p.id,pacienteNombre:p.nombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},onLeido:()=>checkMensajesBadge(),onEnviado:m=>{const txt=m.texto||'Te ha enviado un archivo';notificarPaciente(p.id,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(p.id,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');}});}
  };
  menu.appendChild(row);
  });
@@ -13812,7 +13825,9 @@ async function fpTabRacha(pacId, body, tok){
    const r=await fetch(`/api/pacientes?action=get-tareas&pacienteId=${encodeURIComponent(pacId)}`);
    const data=await r.json();
    if(tok&&body.dataset.token!==tok)return;
-   FisioRacha.pintar(body,(data.tareas||[]).map(t=>t.fecha),{quien:'fisio'});
+   FisioRacha.pintar(body,(data.tareas||[]).map(t=>t.fecha),{quien:'fisio',alTocar:async(fecha,hecho)=>{
+    if(!await pregunta(hecho?`¿Marcar el ${fecha.split('-').reverse().join('/')} como hecho? Le sale también en su app.`:`¿Quitar el ${fecha.split('-').reverse().join('/')}?`,{si:hecho?'Marcar':'Quitar',no:'Cancelar'}))return false;
+    try{const r=await (await fetch('/api/diario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'marcar-dia',pwd:apiPwd,quien:miNombreCorto(),pacienteId:pacId,fecha,hecho})})).json();if(!r.ok)throw new Error(r.error||'');toast(hecho?'Día marcado ✓':'Día quitado',true);return true;}catch(e){toast('No se ha podido guardar',false);return false;}}});
  }catch(e){body.innerHTML='<div style="color:#c0392b;padding:20px">Error al cargar la racha</div>';}
 }
 
@@ -14437,6 +14452,8 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-25',aviso:1,t:'Racha: si un paciente hizo los ejercicios y se le olvidó marcarlo, toca ese día en su ficha › Más › Racha. Él también puede hacerlo en su app (hasta 7 días atrás).'},
+{f:'2026-11-25',t:'Chat: al tocar «Guardar en su ficha» te pregunta en qué carpeta lo guardas (o creas una nueva).'},
 {f:'2026-11-25',adm:1,aviso:1,t:'Tarjetas regalo hechas a mano: en Mensajes › Regalos › Vales regalo, «+ Tarjeta hecha a mano». Pones para quién, sesiones, importe y cómo pagó, y te da el código para escribirlo en la tarjeta.'},
 {f:'2026-11-24',adm:1,aviso:1,t:'Panel de control, Estadísticas, Facturación y Rendimiento ahora piden clave para entrar (al salir siguen abiertas 5 minutos). Dirección la pone la primera vez y la puede cambiar desde esa misma pantalla.'},
 {f:'2026-11-24',aviso:1,ver:{sec:'pac',pasos:[{el:'#pacLes',txt:'Aquí ves a los pacientes por lesión.'}]},t:'Etiquetas de lesión: en la ficha del paciente, debajo del nombre, toca «+ Lesión» y marca postparto, IUE, hombro, rodilla… Salen al abrir su cita en la agenda y en Pacientes › Por lesión. La lista la lleva dirección.'},
@@ -16884,7 +16901,7 @@ function renderFormacion(wrap, ruta){
  {t:'El chat con pacientes',sub:'Te escribe un paciente: cómo le contestas',
  cards:[
  {ti:'Te escribe un paciente',shot:'/img/school/panel-b-chat.jpg',body:`Te llega un aviso y lo ves en <b>Chat</b>: la última conversación arriba, con los mensajes sin leer.<br><br>¿Quieres escribirle tú? <b>＋ Nuevo</b> y busca al paciente.`,ver:{sec:'msg',pasos:[{el:'.chatp-items || .chatp-nuevo',txt:'Tus conversaciones.'},{el:'.chatp-nuevo',txt:'Para escribir a un paciente.'}]}},
- {ti:'Te manda una prueba',shot:'/img/school/panel-b-hilo.jpg',body:`<b>Cuándo:</b> te manda una foto o un PDF (una resonancia, un informe…).<br><br><b>Qué haces:</b> toca <b>Guardar en su ficha</b>.<br><br><b>Para qué:</b> así queda en sus archivos y lo ve todo el equipo.`},
+ {ti:'Te manda una prueba',shot:'/img/school/panel-b-hilo.jpg',body:`<b>Cuándo:</b> te manda una foto o un PDF (una resonancia, un informe…).<br><br><b>Qué haces:</b> toca <b>Guardar en su ficha</b> y elige la <b>carpeta</b> (una de las suyas, sin carpeta o una nueva).<br><br><b>Para qué:</b> así queda en sus archivos, ordenado, y lo ve todo el equipo.`},
  {ti:'Mandarle algo tú',body:`Con el <b>clip</b> mandas fotos o PDF (hasta 2,5 MB).<br><br>Desde la conversación, <b>Ver ficha</b> te lleva a su ficha.`},
  {ti:'¿Lo ha leído?',body:`Un tic gris: enviado. Doble tic verde: visto.<br><br>Cada fisio ve sus conversaciones. El paciente elige a quién escribe: a su fisio o a administración.`}
  ],
@@ -17125,6 +17142,7 @@ function renderFormacion(wrap, ruta){
  {t:'Racha',sub:'Que no deje de hacerlos',
  cards:[
  {ti:'Su progreso',shot:'/img/school/app-04-racha.jpg',body:`En <b>Progreso</b> (antes «Racha») ve cuántos <b>días seguidos</b> lleva haciendo sus ejercicios, los de este mes, el total y su mejor racha, con un calendario de los días hechos.<br><br>Si un día no los ha hecho, la app le manda un <b>recordatorio</b> por la tarde.`},
+ {ti:'Si se le olvidó marcar un día',body:`Si hizo los ejercicios pero no lo marcó, en su ficha › Más › <b>Racha</b> toca ese día en el calendario para marcarlo (o quitarlo). Le sale también en su app.<br><br>El paciente también puede hacerlo él mismo en <b>Progreso</b>, hasta 7 días atrás.`},
  {ti:'Úsala en la sesión',body:`Pregúntale por su racha: «¿cómo vas con los ejercicios?». Si lleva muchos días, felicítale; si la ha perdido, anímale a retomarla. Tú también la ves en su ficha › Más › <b>Racha</b>.`}
  ],
  qs:[
@@ -18820,7 +18838,7 @@ async function renderMensajes(wrap, abrirPacId){
   h.innerHTML=`<div class="chatp-cab"><button class="chatp-volver" type="button" aria-label="Volver">‹</button><button type="button" class="chatp-fic" title="Abrir su ficha"><div class="chatp-av">${escH(iniciales(pacNombre))}</div><div><b>${escH(pacNombre)}</b><span>Ver ficha ›</span></div></button></div><div class="chatp-caja"></div>`;
   h.querySelector('.chatp-fic').onclick=()=>abrirFichaPaciente(pacId,pacNombre);
   h.querySelector('.chatp-volver').onclick=()=>{wrap.querySelector('.chatp').classList.remove('abierto');if(ctl)ctl.parar();ctl=null;cargarLista();};
-  ctl=FisioChat.montar(h.querySelector('.chatp-caja'),{rol:'fisio',pwd:apiPwd,pacienteId:pacId,pacienteNombre:pacNombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},
+  ctl=FisioChat.montar(h.querySelector('.chatp-caja'),{rol:'fisio',pwd:apiPwd,elegirCarpeta:chatElegirCarpeta,moverACarpeta:chatMoverACarpeta,aviso:t=>toast(t,false),pacienteId:pacId,pacienteNombre:pacNombre,fisio:{id:fisioActual.id,nombre:fisioActual.nombre},
    onLeido:()=>{checkMensajesBadge();const it=wrap.querySelector(`.chatp-item[data-id="${pacId}"] .chatp-n`);if(it)it.remove();},
    onEnviado:m=>{const txt=m.texto||(m.adjuntos&&m.adjuntos[0]?(/^image\//.test(m.adjuntos[0].tipo)?'Te ha enviado una foto':'Te ha enviado un PDF'):'');notificarPaciente(pacId,`Mensaje de ${fisioActual.nombre}`,txt);crearNotificacion(pacId,`Mensaje de ${fisioActual.nombre}`,txt,'mensaje');cargarLista();}});
  }
@@ -19181,8 +19199,8 @@ function cerrarLightbox(){
   return F(u,o);};
 })();
 </script>
-<script src="/chat-ui.js?v=2"></script>
-<script src="/racha-ui.js?v=3"></script>
+<script src="/chat-ui.js?v=3"></script>
+<script src="/racha-ui.js?v=4"></script>
 <script>window.MARCA_TEXTOS=1;</script><script src="/marca.js?v=4"></script>
 <script>
 // ── Desplegables, fechas y horas con el estilo del panel (en vez de las listas del navegador) ──

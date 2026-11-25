@@ -4,6 +4,18 @@
 // Para añadir un texto nuevo: ponlo en D con su traducción [catalán, inglés]. «{}» = un trozo que cambia (nombre, número…).
 (function () {
   var D = {
+"¿Se te olvidó marcar un día? Tócalo en el calendario (hasta 7 días atrás).": [
+"Se t'ha oblidat marcar un dia? Toca'l al calendari (fins a 7 dies enrere).",
+"Forgot to mark a day? Tap it on the calendar (up to 7 days back)."
+],
+"Día marcado ✓": [
+"Dia marcat ✓",
+"Day marked ✓"
+],
+"Día quitado": [
+"Dia tret",
+"Day removed"
+],
 "Tu entreno de la semana": [
 "El teu entrenament de la setmana",
 "Your training for the week"

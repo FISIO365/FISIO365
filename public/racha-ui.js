@@ -39,6 +39,8 @@
   .rc-d.hoy span{box-shadow:inset 0 0 0 2px #1a1a1a;color:#1a1a1a;font-weight:700}
   .rc-d.ok.hoy span{box-shadow:0 0 0 3px #fff,0 0 0 5px #1a1a1a;color:#fff}
   .rc-d.fut span{color:#ddd8d1}
+  .rc-d.toc{cursor:pointer}.rc-d.toc:not(.ok) span:hover{box-shadow:inset 0 0 0 1.5px #c2552e;color:#c2552e}.rc-d.esp span{opacity:.5}
+  .rc-toc{text-align:center;font-size:11.5px;color:#8a857e;margin-top:10px;line-height:1.45}
   .rc-ley{display:flex;gap:14px;justify-content:center;font-size:11px;color:#8a857e;margin-top:12px}
   .rc-ley i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#c2552e;margin-right:5px;vertical-align:-1px}
   .rc-ley i.h{background:#fff;box-shadow:inset 0 0 0 2px #1a1a1a}
@@ -88,7 +90,9 @@
     if (orden.length) { const y = +orden[0].slice(0, 4), m = +orden[0].slice(5, 7) - 1; minOff = Math.min(0, (y - hoy.getFullYear()) * 12 + (m - hoy.getMonth())); }
     // En el panel del fisio se puede mirar siempre hasta un año atrás, aunque no haya días marcados
     if (!tu) minOff = Math.min(minOff, -12);
-    let off = 0;
+    let off = Math.max(minOff, Math.min(0, +o.off || 0));
+    // Marcar a mano un día que se le olvidó: o.alTocar(fecha, hecho) → true si se ha guardado; o.desde = primer día que se puede tocar
+    const puedeTocar = k => !!o.alTocar && k <= kHoy && (!o.desde || k >= o.desde);
 
     el.innerHTML = `<div class="rc">
       <div class="rc-hero"><div class="rc-llama${actual ? '' : ' apagada'}">🔥</div><div style="flex:1;min-width:0">
@@ -103,7 +107,7 @@
       <div class="rc-cal"><div class="rc-cab"><button type="button" data-d="-1" aria-label="Mes anterior">‹</button><div class="rc-mes"><b></b><span></span></div><button type="button" data-d="1" aria-label="Mes siguiente">›</button></div>
         <div class="rc-dias"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
         <div class="rc-grid"></div>
-        <div class="rc-ley"><span><i></i>${tu ? 'Hecho' : 'Ejercicios hechos'}</span><span><i class="h"></i>Hoy</span></div></div>
+        <div class="rc-ley"><span><i></i>${tu ? 'Hecho' : 'Ejercicios hechos'}</span><span><i class="h"></i>Hoy</span></div>${o.alTocar ? `<div class="rc-toc">${tu ? '¿Se te olvidó marcar un día? Tócalo en el calendario (hasta 7 días atrás).' : 'Toca un día para marcarlo o quitarlo, si se le olvidó.'}</div>` : ''}</div>
       ${tu ? '' : `<div class="rc-nota"><span>¿Qué cuenta la racha?</span><button type="button" class="fp-i" data-info="Los días en que el paciente pulsa «He terminado por hoy» en la app.${orden.length ? '' : ' Si sale a 0, puede que no haga los ejercicios, que los haga sin marcarlo o que no use la app.'}" aria-label="Información">i</button></div>`}
     </div>`;
 
@@ -119,13 +123,20 @@
         const col = (hue + d - 1) % 7;
         const izq = ok && col > 0 && d > 1 && hechos.has(clave(sumar(f, -1)));
         const der = ok && col < 6 && d < nd && hechos.has(clave(sumar(f, 1)));
-        h += `<div class="rc-d${ok ? ' ok' : ''}${izq ? ' izq' : ''}${der ? ' der' : ''}${k === kHoy ? ' hoy' : ''}${k > kHoy ? ' fut' : ''}"><span>${d}</span></div>`;
+        h += `<div class="rc-d${ok ? ' ok' : ''}${izq ? ' izq' : ''}${der ? ' der' : ''}${k === kHoy ? ' hoy' : ''}${k > kHoy ? ' fut' : ''}${puedeTocar(k) ? ' toc' : ''}" data-k="${k}"><span>${d}</span></div>`;
       }
       el.querySelector('.rc-grid').innerHTML = h;
       el.querySelector('.rc-mes b').textContent = `${MESES[ref.getMonth()]} ${ref.getFullYear()}`;
       el.querySelector('.rc-mes span').textContent = cuenta === 1 ? '1 día hecho' : `${cuenta} días hechos`;
       el.querySelector('[data-d="-1"]').disabled = off <= minOff;
       el.querySelector('[data-d="1"]').disabled = off >= 0;
+      el.querySelectorAll('.rc-d.toc').forEach(c => c.onclick = async () => {
+        if (c.classList.contains('esp')) return; const k = c.dataset.k, era = hechos.has(k); c.classList.add('esp');
+        let ok = false; try { ok = await o.alTocar(k, !era); } catch (e) { ok = false; }
+        if (!ok) { c.classList.remove('esp'); return; }
+        if (era) hechos.delete(k); else hechos.add(k);
+        pintar(el, [...hechos], Object.assign({}, o, { off }));
+      });
     }
     el.querySelectorAll('.rc-cab button').forEach(b => b.onclick = () => { off = Math.max(minOff, Math.min(0, off + +b.dataset.d)); mes(); });
     mes();
