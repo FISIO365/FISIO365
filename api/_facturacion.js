@@ -206,6 +206,8 @@ async function anular(id, motivo) {
     return true; });
 }
 
+// ¿Rectificada entera? Las copias de Holded no traen el original enlazado: se busca su rectificativa por cliente, importe contrario y fecha
+const RECT_ENTERA = t => `(coalesce((select sum(x.total) from fac_facturas x where x.tipo='rectificativa' and x.estado='emitida' and x.rectifica=${t}.id),0) <= -${t}.total + 0.004 or (${t}.prueba and exists (select 1 from fac_facturas x where x.tipo='rectificativa' and x.estado='emitida' and x.prueba and x.rectifica is null and lower(coalesce(x.cliente->>'nombre',''))=lower(coalesce(${t}.cliente->>'nombre','')) and abs(x.total + ${t}.total) < 0.01 and x.fecha >= ${t}.fecha)))`;
 // ── Rectificativa: devuelve toda la factura o una parte (o corrige importes). Va en una serie de rectificativas ──
 // modo «total»: las mismas líneas en negativo. modo «parcial»: las líneas que se pasan (en negativo lo que se devuelve).
 async function rectificar(o) {
@@ -250,10 +252,11 @@ async function lista(f) {
   if (f.clase === 'facturas') w.push(`(tipo='completa' or (tipo='rectificativa' and not rect_simpl and coalesce(${rTipo},'completa')<>'simplificada'))`);
   if (f.clase === 'tickets') w.push(`(tipo='simplificada' or (tipo='rectificativa' and (rect_simpl or ${rTipo}='simplificada')))`);
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length} or lower(coalesce(cliente->>'nif','')) like $${p.length} or lower(coalesce(holded_num,'')) like $${p.length})`); }
-  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded, holded_num, por, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
+  const r = await D.query(`select id, serie, codigo, tipo, fecha::text, cliente, base, cuota, total, paciente, fisio, cobro, holded, holded_num, por, estado, emitida, impuestos, prueba, vf, pagos, sustituida_por, (select o.codigo from fac_facturas o where o.id=fac_facturas.rectifica) rectifica_codigo, (tipo<>'rectificativa' and ${RECT_ENTERA('fac_facturas')}) rectificada from fac_facturas ${w.length ? 'where ' + w.join(' and ') : ''} order by fecha desc, emitida desc limit ${Math.min(2000, Number(f.limite) || 500)}`, p);
   return r.rows.map(x => Object.assign(x, { base: Number(x.base), cuota: Number(x.cuota), total: Number(x.total) }));
 }
 async function una(id) { const D = await db(); const r = (await D.query(`select f.*, f.fecha::text fecha, s.nombre serie_nombre, s.color serie_color,
+  (f.tipo<>'rectificativa' and ${RECT_ENTERA('f')}) rectificada,
   (select codigo from fac_facturas o where o.id=f.rectifica) rectifica_codigo,
   case when f.rect_simpl then 'simplificada' else (select tipo from fac_facturas o where o.id=f.rectifica) end rectifica_tipo,
   (select json_build_object('estado',r.estado,'entorno',r.entorno,'csv',r.csv) from fac_registros r where r.factura=f.id and r.tipo='alta' order by r.id desc limit 1) vf_reg,
@@ -392,4 +395,4 @@ async function guardarModo(o) { const D = await db(), ya = await modo(); const v
   await D.query(`insert into fac_config(k,v) values('modo',$1::jsonb) on conflict (k) do update set v=excluded.v, modificado=now()`, [JSON.stringify(v)]); return v; }
 // Algo que se hace una sola vez (p. ej. crear una actividad de la empresa): si ya se hizo, no se repite aunque luego se borre
 async function unaVez(nombre, fn) { const D = await db(); const r = await D.query(`insert into fac_config(k,v) values($1,'{}'::jsonb) on conflict do nothing returning k`, ['hecho:' + nombre]); if (r.rows.length) await fn(); }
-module.exports = { quitarRepetidas, vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
+module.exports = { RECT_ENTERA, quitarRepetidas, vfPendientes, modo, guardarModo, marcaEnviada, guardarCliente, buscarClientes, listaClientes, borrarCliente, guardarPresupuesto, presupuestos, presupuesto, estadoPresupuesto, unaVez, actDe, pago, rectificar, codigoDe, sincronizaHolded, anular, registros, VF, db, config, guardarConfig, series, guardarSerie, emitir, desdeCobro, lista, una, firma, html, muestra, calcular, EXENCIONES, TIPOS, DISENOS, TIPOS_IVA, isoMad };
