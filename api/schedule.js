@@ -7676,6 +7676,38 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         return res.status(200).json({ ok: true });
       }
       // Enviar una factura al paciente: email desde info@ con el PDF adjunto, o enlace para WhatsApp
+      if (action === 'seg-fac-enviar-varias') { // Enviar varias facturas del paciente de una vez: un email con todos los PDF o un WhatsApp con todos los enlaces
+        const pid = String(q.pacienteId || ''); if (!/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Paciente no válido' });
+        const L = (Array.isArray(q.docs) ? q.docs : []).filter(x => x && /^[a-f0-9]{24}$/i.test(x.id || '')).slice(0, 40).map(x => ({ id: x.id, t: x.tipo === 'invoice' ? 'invoice' : 'salesreceipt' }));
+        if (!L.length) return res.status(200).json({ ok: false, error: 'Elige al menos una factura' });
+        const ids = await contactosDelPaciente(pid), docs = [];
+        for (let i = 0; i < L.length; i += 5) (await Promise.all(L.slice(i, i + 5).map(x => holded('/' + docTipo(x.t) + '/' + x.id).then(d => ({ x, d })).catch(() => ({ x, d: null }))))).forEach(o => docs.push(o));
+        const ok = docs.filter(o => o.d && ids.includes(o.d.contact_id) && o.d.document_number).sort((a, b) => (a.d.date || 0) - (b.d.date || 0));
+        if (!ok.length) return res.status(200).json({ ok: false, error: 'No hay facturas aprobadas para enviar' });
+        const pr = await at(`${PACIENTES}/${pid}`).catch(() => ({})), P = pr.fields || {};
+        const pila0 = (String(P['NOMBRE'] || '').trim() || String(P['FULL NAME'] || '').trim()).split(/\s+/)[0] || '', pila = pila0 ? pila0.charAt(0).toUpperCase() + pila0.slice(1).toLowerCase() : '';
+        const tel = String(P['WHATSAPP'] || P['TELF'] || '').replace(/\D/g, ''), F = ok.map(o => Object.assign({ id: o.x.id, t: o.x.t, url: enlaceFac(o.x.t, o.x.id) }, facDatos(o.d)));
+        if (q.op === 'datos') return res.status(200).json({ ok: true, email: String(P['EMAIL'] || '').trim(), tel: tel.length === 9 ? '34' + tel : tel, pila, facturas: F.map(f => ({ numero: f.numero, total: f.total, fecha: f.fecha, url: f.url })), saltadas: L.length - ok.length });
+        if (q.op !== 'email') return res.status(400).json({ ok: false });
+        const to = String(q.to || '').trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(200).json({ ok: false, error: 'Revisa el email' });
+        const att = [];
+        for (let i = 0; i < F.length; i += 4) { const R = await Promise.all(F.slice(i, i + 4).map(f => holdedPdf('/' + docTipo(f.t) + '/' + f.id + '/pdf').catch(() => null))); R.forEach((pdf, j) => { const f = F[i + j]; if (pdf) att.push({ content: pdf, name: `Factura_${String(f.numero).replace(/[^\w-]/g, '_')}.pdf` }); }); }
+        if (att.length < F.length) return res.status(200).json({ ok: false, error: `Holded no ha dado ${F.length - att.length} de los PDF. Inténtalo en un rato.` });
+        const yo = escHtml(String(q.yo || '').split(' ')[0]);
+        const filas = F.map(f => `<tr><td style="padding:7px 0;border-bottom:1px solid #eee6de;font-size:14px"><b>Factura ${escHtml(f.numero)}</b><br><span style="font-size:12.5px;color:#8a7d74">${escHtml(f.fecha)}${f.concepto ? ' · ' + escHtml(f.concepto) : ''}</span></td><td style="padding:7px 0;border-bottom:1px solid #eee6de;text-align:right;font-size:14px;white-space:nowrap"><b>${escHtml(f.total)}</b></td></tr>`).join('');
+        const html = `<!doctype html><html><body style="margin:0;background:#f5f2ee;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a"><div style="max-width:520px;margin:0 auto;padding:28px 18px">
+<div style="background:#fff;border-radius:18px;padding:26px 24px">
+<img src="https://app.fisioterapia365.com/informe/logo.png" alt="FISIO365" width="92" style="width:92px;height:auto;display:block;margin:4px 0 30px;border:0">
+<p style="font-size:16px;line-height:1.55;margin:0 0 14px">Hola${pila ? ' ' + escHtml(pila) : ''},</p>
+<p style="font-size:15px;line-height:1.6;color:#3c342f;margin:0 0 18px">${yo ? 'Soy ' + yo + ' de FISIO365. ' : ''}Te adjuntamos tus ${F.length} facturas en PDF, todas juntas, para que las tengas a mano o las envíes a tu seguro.</p>
+<div style="background:#faf7f4;border-radius:14px;padding:8px 16px;margin:0 0 18px"><table role="presentation" width="100%" style="border-collapse:collapse">${filas}</table></div>
+<p style="font-size:12.5px;line-height:1.5;color:#9a8f87;margin:0">También las tienes siempre en tu app de FISIO365. Si tienes cualquier duda, contesta a este email o llámanos al <span style="white-space:nowrap">672 89 39 49</span>.</p>
+</div><p style="font-size:11.5px;color:#9a8f87;text-align:center;margin:16px 0 0">FISIO365 · Gran de Sant Andreu, 163 · Barcelona</p></div></body></html>`;
+        const b = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { name: 'FISIO365', email: 'info@fisioterapia365.com' }, replyTo: { email: 'info@fisioterapia365.com', name: 'FISIO365' }, to: [{ email: to }], subject: `Tus facturas · FISIO365`, htmlContent: html, attachment: att }) });
+        if (!b.ok) { console.error('seg-fac-enviar-varias brevo', b.status, (await b.text().catch(() => '')).slice(0, 300)); return res.status(200).json({ ok: false, error: 'No se ha podido enviar (' + b.status + ')' }); }
+        return res.status(200).json({ ok: true, n: F.length });
+      }
       if (action === 'seg-fac-enviar') {
         const t = q.tipo === 'invoice' ? 'invoice' : 'salesreceipt', id = String(q.id || ''), pid = String(q.pacienteId || '');
         if (!/^[a-f0-9]{24}$/i.test(id) || !/^rec[A-Za-z0-9]{14}$/.test(pid)) return res.status(400).json({ ok: false, error: 'Factura no válida' });
