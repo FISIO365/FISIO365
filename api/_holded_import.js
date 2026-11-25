@@ -42,9 +42,10 @@ async function leer(h, desde, hasta) {
     h.holdedTodos(`/sales-receipts?${q}`, 60).catch(() => []), h.holdedTodos(`/invoices?${q}`, 60).catch(() => []),
     h.holdedTodos(`/receipt-notes?${q}`, 30).catch(() => []), h.holdedTodos(`/credit-notes?${q}`, 30).catch(() => []),
     h.holdedTodos(`/purchases?${q}`, 60).catch(() => [])]);
-  const ventas = [].concat(tk.map(d => ['simplificada', d]), fa.map(d => ['completa', d]), rn.map(d => ['rect-simplificada', d]), cn.map(d => ['rect-completa', d]))
-    .filter(([, d]) => d && d.id && d.document_number && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })());
-  return { ventas, compras: co.filter(d => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })()) };
+  const todas = [].concat(tk.map(d => ['simplificada', d]), fa.map(d => ['completa', d]), rn.map(d => ['rect-simplificada', d]), cn.map(d => ['rect-completa', d]))
+    .filter(([, d]) => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })());
+  const ventas = todas.filter(([, d]) => d.document_number), borradores = todas.filter(([, d]) => !d.document_number); // borradores: salen en la lista como «Borrador» hasta que se aprueban en Holded
+  return { ventas, borradores, compras: co.filter(d => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })()) };
 }
 // De qué actividad es cada venta, una a una (las series de Holded están mezcladas): CerraPoint solo factura a Vilfer y es la única que lleva IVA
 const conIva = (h, d) => (d.lines || d.items || d.products || []).some(l => tipoIva(h, l, d) > 0) || h.aNum(d.tax ?? d.total_tax) > 0;
@@ -66,17 +67,19 @@ async function traer(h, desde, hasta, mapa, conCompras) {
   const X = await leer(h, desde, hasta), C = await FACX.config(), S = (await D.query(`select id, tipo, actividad from fac_series where activa order by auto desc, orden`)).rows;
   const serie = (act, tipo) => (S.find(s => (s.actividad || 'principal') === act && s.tipo === tipo) || S.find(s => s.tipo === tipo) || S[0] || {}).id;
   let nv = 0, rep = 0, ng = 0; const vistos = new Set(), hayCP = C.actividades.some(a => a.id === 'cerrapoint');
-  for (const [t, d] of X.ventas) {
-    const hid = String(d.id), num = txt(d.document_number, 60);
+  for (const [t, d] of X.ventas.concat(X.borradores || [])) {
+    const hid = String(d.id), num = d.document_number ? txt(d.document_number, 60) : 'Borrador-' + hid.slice(-6);
+    // Un borrador que ya se ha aprobado en Holded: coge su número
+    if (d.document_number) await D.query(`update fac_facturas set codigo=$2, holded_num=$2 where holded=$1 and codigo like 'Borrador-%' and not exists (select 1 from fac_facturas o where o.codigo=$2)`, [hid, num]);
     if ((await D.query(`select 1 from fac_facturas where holded=$1 or codigo=$2 limit 1`, [hid, num])).rows.length) { rep++; if (t === 'rect-simplificada') await D.query(`update fac_facturas set rect_simpl=true where (holded=$1 or codigo=$2) and tipo='rectificativa' and not rect_simpl`, [hid, num]); continue; }
-    if ((mapa || {})[prefijo(num)] === '_no') continue; // serie que no es de la empresa (p. ej., de cuando se facturaba como autónoma)
+    if (d.document_number && (mapa || {})[prefijo(num)] === '_no') continue; // serie que no es de la empresa (p. ej., de cuando se facturaba como autónoma)
     const act = actDoc(h, d, hayCP), tipo = t.startsWith('rect') ? 'rectificativa' : t, c = lineas(h, d);
     if (tipo === 'rectificativa' && c.total > 0) { c.lineas.forEach(l => { l.precio = -l.precio; }); Object.assign(c, FACX.calcular(c.lineas)); }
     const f = fecha(h, d), st = String(d.status || '').toLowerCase(), pagada = /complet|paid|pagad/.test(st) || h.aNum(d.payments_pending) === 0;
     const id = 'fac' + crypto.randomBytes(8).toString('hex'), n = -Math.floor(Math.random() * 1e12) - 1;
     await D.query(`insert into fac_facturas(id,serie,anio,numero,codigo,tipo,fecha,emisor,cliente,lineas,impuestos,base,cuota,total,holded,holded_num,pagos,nota,por,prueba,actividad)
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,true,$20)`,
-      [id, serie(act, tipo === 'rectificativa' ? 'rectificativa' : tipo), +f.slice(0, 4), n, num, tipo, f, C.emisor, { nombre: txt(d.contact_name || (d.contact || {}).name, 200), nif: txt(d.contact_code || (d.contact || {}).code, 30).toUpperCase() }, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, hid, num,
+      [id, serie(act, tipo === 'rectificativa' ? 'rectificativa' : tipo), +f.slice(0, 4), n, num, tipo, f, C.emisor, { nombre: txt(d.contact_name || (d.contact || {}).name, 200), nif: txt(d.contact_code || (d.contact || {}).code, 30).toUpperCase() }, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, hid, d.document_number ? num : null,
         JSON.stringify(tipo === 'rectificativa' ? {} : { estado: pagada ? 'pagada' : 'pendiente', fecha: pagada ? f : null }), txt(d.notes || d.desc, 1000) || null, 'Holded (traída)', act]);
     if (t === 'rect-simplificada') await D.query(`update fac_facturas set rect_simpl=true where id=$1`, [id]); // ticket rectificativo de Holded: va con los tickets
     // Los clientes de las otras actividades (CerraPoint) se guardan con sus datos; los de la clínica ya son pacientes del panel
