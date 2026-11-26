@@ -10591,6 +10591,7 @@ async function renderReporte(wrap,ultimo){
  const pinta=()=>{
   let h='';
   if(d.resumen){const env=d.resumen.enviados||{};const fs=d.resumen.fisios||[];
+   if(!fs.length&&!esFisio)h+='<div class="rp-c"><div class="rp-h"><div><b>Check-list del equipo</b><small>Hoy no hay fisios con citas.</small></div></div></div>';
    if(fs.length)h+=`<div class="rp-c"><div class="rp-h"><div><b>Check-list del equipo</b><small>Fisios con citas hoy y si ya lo han enviado</small></div></div>${fs.map(f=>{const e=env[String(f.fisio).split(' ')[0].toLowerCase()];return `<div class="rp-eq"><b>${escH(f.fisio)} <small style="font-weight:400;color:#7d6a60">· ${f.citas} citas</small></b>${e?`<span class="si">✓ ${hora(e.enviado)}${e.pendientes?' · '+e.pendientes+' pend.':''}</span>`:`<span class="${new Date().getHours()>=19?'no':'pe'}">Sin enviar</span>`}</div>`;}).join('')}</div>`;
 }
   if(esFisio){

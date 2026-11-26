@@ -7456,7 +7456,8 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           if (t2[k2] && t2[k2].citas) { fecha = f; todos = t2; k = k2; break; }
         }
         const env = (await cierresEnviados(fecha))[fisioKey(q.fisio)] || null;
-        const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
+        const todosEq = q.todos ? (q.fisio ? await cierreDia(fecha, '') : todos) : null; // dirección: todos los fisios (no solo quien mira)
+        const resumen = q.todos ? { fisios: Object.entries(todosEq).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
         return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: await checklistItems(), dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
       }
       if (action === 'seg-docs') { // Mis documentos y bloc de notas (api/_docs.js)
