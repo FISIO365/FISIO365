@@ -291,7 +291,7 @@ module.exports = async function handler(req, res) {
     try { const na = SCH.avisosReservarDelDia ? await SCH.avisosReservarDelDia() : 0; if (na) console.log('avisos reservar', na); } catch (e) { console.log('avisos reservar', e.message); }
     if (!/forzar=1/.test(req.url || '') && (await SCH.ajuste('resumen_enviado', '').catch(() => '')) === ayer.fecha) return res.status(200).json({ ok: true, ya: true });
     await SCH.guardarAjuste('resumen_enviado', ayer.fecha, esCron ? 'cron' : 'panel').catch(() => {}); // se apunta antes para no mandarlo dos veces si entran varios a la vez
-    const etapas = await SCH.repasoEtapas().catch(e => ({ error: e.message })); // Activo → Pendiente de continuar
+    const etapas = await SCH.repasoEtapas(20).catch(e => ({ error: e.message })); // etapas automáticas de los pacientes (Activo, Fin pack, Sin próxima cita…)
     try { const resumen = await resumenFacturacion(ayer); if (!/^enviado/.test(resumen)) await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen', ayer.fecha, resumen, esCron ? 'cron' : 'panel'); return res.status(200).json({ ok: true, etapas, resumen }); }
     catch (e) { await SCH.guardarAjuste('resumen_enviado', '', 'error').catch(() => {}); console.log('resumen error', e.message); return res.status(500).json({ ok: false, error: e.message }); }
   }

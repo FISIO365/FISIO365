@@ -300,48 +300,86 @@ let emitiendo = Promise.resolve();
 // Si Airtable dice «demasiadas peticiones» (429), espera y lo reintenta
 const at = async (path, opt = {}) => { for (let i = 0; ; i++) { const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { ...opt, headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opt.headers || {}) } }); if (r.status === 429 && i < 4) { await new Promise(z => setTimeout(z, 600 * (i + 1))); continue; } return r.json(); } };
 
-// ── ETAPA DEL PACIENTE: solo una a la vez, y se pone sola según lo que pasa ──
-// Las demás etiquetas (Valoración, Fin pack, Evolución…, Mantenimiento…) no se tocan.
-// «SESIÓN ÚNICA» no es etapa: convive con Alta o Pendiente de continuar; se pone al hacer la 1ª sesión sin reagendar y se quita si vuelve a tener cita
-const ETAPAS_PAC = ['PACIENTE NUEVO', 'PENDIENTE DE COMENZAR', 'ACTIVO', 'SEGUIMIENTO', 'PENDIENTE DE CONTINUAR', 'ALTA', 'ABANDONO', 'NO ACUDIÓ'];
-// Repaso diario: «Activo» que lleva más de 3 semanas sin venir, sin cita dada y sin estar en «Por llamar» → «Pendiente de continuar»
-const SEMANAS_PDTE_CONTINUAR = 3;
-async function repasoEtapas() {
-  const todo = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
-  const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
-  if (!E['ACTIVO'] || !E['PENDIENTE DE CONTINUAR']) return { cambiados: 0 };
-  const activos = await todo(PACIENTES, `filterByFormula=${encodeURIComponent("FIND('ACTIVO',ARRAYJOIN({ESTADO}))")}&fields[]=ESTADO`);
-  if (!activos.length) return { cambiados: 0 };
-  const dias = SEMANAS_PDTE_CONTINUAR * 7;
-  // Quien ha venido en las últimas semanas o tiene cita dada
-  const recientes = await todo('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},DATEADD(TODAY(),-${dias + 1},'days')),OR(TRIM({ESTADO})='REALIZADA',TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA',TRIM({ESTADO})='POR REAGENDAR'))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`);
-  const conMovimiento = new Set(recientes.flatMap(r => r.fields['RELACIÓN - CITA'] || []));
-  const enLlamar = new Set((await todo('tblu9YxiktpAh5w87', `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&fields[]=PACIENTE`)).flatMap(r => r.fields['PACIENTE'] || []));
-  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean);
-  const cambiar = activos.filter(p => (p.fields['ESTADO'] || []).includes(E['ACTIVO']) && !conMovimiento.has(p.id) && !enLlamar.has(p.id)).slice(0, 150);
-  for (let i = 0; i < cambiar.length; i += 10) await at(PACIENTES, { method: 'PATCH', body: JSON.stringify({ records: cambiar.slice(i, i + 10).map(p => ({ id: p.id, fields: { ESTADO: [...(p.fields['ESTADO'] || []).filter(id => !vida.includes(id)), E['PENDIENTE DE CONTINUAR']] } })) }) });
-  return { cambiados: cambiar.length };
+// ── ETAPA DEL PACIENTE: una sola a la vez, se pone sola según sus citas y su pack ──
+//   Automáticas (por orden): No acudió · Paciente nuevo · Activo · Pack incompleto · Fin pack · Sin próxima cita
+//   A mano: Alta, Seguimiento, Abandono → mandan hasta que vuelva a reservar.
+//   Las clínicas (Evolución favorable, Sin evolución, Evolución incierta…) no se tocan.
+//   Si alguien quita a mano la automática, no se vuelve a poner hasta que cambie la situación (ajuste «etapa-quitada»).
+const ETAPAS_AUTO = ['NO ACUDIÓ', 'PACIENTE NUEVO', 'ACTIVO', 'PACK INCOMPLETO', 'FIN PACK', 'SIN PRÓXIMA CITA'];
+const ETAPAS_MANO = ['ALTA', 'SEGUIMIENTO', 'ABANDONO'];
+const ETAPAS_VIEJAS = /^(PENDIENTE|VALORACI|MANTENIMIENTO|SESIÓN ÚNICA|SESION UNICA)/; // ya no se usan
+const ETAPAS_PAC = [...ETAPAS_AUTO, ...ETAPAS_MANO];
+let _estE = { t: 0, v: null };
+async function estadosMapa() {
+  if (_estE.v && Date.now() - _estE.t < 300000) return _estE.v;
+  const leer = async () => { const E = {}, V = []; ((await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`)).records || []).forEach(x => { const n = String(x.fields['ESTADO'] || '').trim().toUpperCase(); if (!n) return; E[n] = x.id; if (ETAPAS_VIEJAS.test(n)) V.push(x.id); }); return { E, V }; };
+  let m = await leer(); const falta = ETAPAS_PAC.filter(n => !m.E[n]);
+  if (falta.length) { await at('tbldOsLe8iw78Wun7', { method: 'POST', body: JSON.stringify({ records: falta.map(n => ({ fields: { ESTADO: n } })), typecast: true }) }).catch(() => null); m = await leer(); }
+  _estE = { t: Date.now(), v: m }; return m;
 }
+const hoyMad = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+// Qué etapa automática le toca ahora (sin mirar las de a mano)
+async function etapaQueToca(pid) {
+  const hoy = hoyMad(); let cs = [], off = '';
+  do { const d = await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`FIND('${pid}',ARRAYJOIN({PacienteRec}))`)}&fields[]=FECHA&fields[]=ESTADO&pageSize=100${off ? '&offset=' + off : ''}`); cs = cs.concat(d.records || []); off = d.offset || ''; } while (off);
+  const est = c => String((c.fields['ESTADO'] && c.fields['ESTADO'].name) || c.fields['ESTADO'] || '').trim().toUpperCase(), fe = c => String(c.fields['FECHA'] || '').slice(0, 10);
+  const futura = cs.some(c => /^(PENDIENTE|CITA DUDOSA)$/.test(est(c)) && fe(c) >= hoy);
+  const hechas = cs.filter(c => est(c) === 'REALIZADA').length;
+  if (futura) return { etapa: hechas ? 'ACTIVO' : 'PACIENTE NUEVO', futura };
+  if (!hechas) { const ult = cs.filter(c => fe(c) <= hoy && /^(NO ASISTIÓ|NO ASISTIO|AUSENTE)$/.test(est(c))).length; return { etapa: ult ? 'NO ACUDIÓ' : 'SIN PRÓXIMA CITA', futura }; }
+  let s = null; try { s = await require('./_push').saldo.saldoPaciente(pid); } catch (e) {}
+  if (s && s.activo && s.saldo > 0) return { etapa: 'PACK INCOMPLETO', futura };
+  if (s && s.activo && s.pack) return { etapa: 'FIN PACK', futura };
+  return { etapa: 'SIN PRÓXIMA CITA', futura };
+}
+// Recalcula y guarda. evento: 'cita' (le dan cita: quita las de a mano), 'realizada', 'noasistio', 'repaso',
+// o una etapa de a mano ('ALTA', 'SEGUIMIENTO', 'ABANDONO', 'NO ACUDIÓ')
 async function ponerEtapa(pid, evento) {
   if (!/^rec[A-Za-z0-9]{14}$/.test(pid || '')) return null;
-  const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
-  const citasDe = async (cond, n) => ((await at(`tblTPlcuiSjQngkaD?filterByFormula=${encodeURIComponent(`AND(${cond},FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=${n}&fields[]=FECHA`)).records || []);
-  const hechas = n => citasDe("TRIM({ESTADO})='REALIZADA'", n);
-  const futura = () => citasDe("OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),IS_AFTER({FECHA},DATEADD(TODAY(),-1,'days'))", 1);
-  const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
-  let nueva = null, unica = null; // unica: true = poner «Sesión única», false = quitarla
-  if (evento === 'cita') { nueva = (await hechas(1)).length ? 'ACTIVO' : 'PACIENTE NUEVO'; unica = false; }      // se le da cita
-  else if (evento === 'realizada') { if ((await futura()).length) { nueva = 'ACTIVO'; unica = false; }           // hace la sesión y ya tiene otra → Activo
-    else if ((await hechas(2)).length <= 1) { unica = true; if (act.includes(E['PACIENTE NUEVO'])) nueva = 'ACTIVO'; } } // 1ª sesión y no reagenda → Sesión única
-  else if (evento === 'noasistio') nueva = (await futura()).length ? null : 'NO ACUDIÓ';                       // falta y no tiene otra cita
-  else if (evento === 'SEGUIMIENTO' && act.includes(E['NO ACUDIÓ'])) nueva = null;                             // si no acudió, se queda «No acudió»
-  else if (ETAPAS_PAC.includes(evento)) nueva = evento;                                                         // Alta, Seguimiento, Abandono…
-  if ((!nueva || !E[nueva]) && unica === null) return null;
-  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), U = E['SESIÓN ÚNICA'];
-  let nuevo = nueva && E[nueva] ? [...act.filter(id => !vida.includes(id)), E[nueva]] : act.slice();
-  if (U && unica === true && !nuevo.includes(U)) nuevo.push(U); if (U && unica === false) nuevo = nuevo.filter(id => id !== U);
+  const { E, V } = await estadosMapa();
+  const pac = await at(`${PACIENTES}/${pid}`); if (pac.error) return null; const act = (pac.fields && pac.fields['ESTADO']) || [];
+  const auto = ETAPAS_AUTO.map(n => E[n]).filter(Boolean), mano = ETAPAS_MANO.map(n => E[n]).filter(Boolean);
+  const limpio = act.filter(id => !auto.includes(id) && !mano.includes(id) && !V.includes(id));
+  let nueva = null;
+  if (ETAPAS_MANO.includes(evento) || evento === 'NO ACUDIÓ') {
+    if (evento === 'SEGUIMIENTO' && act.includes(E['NO ACUDIÓ'])) nueva = 'NO ACUDIÓ'; else nueva = evento;
+  } else {
+    const t = await etapaQueToca(pid);
+    const manoAct = ETAPAS_MANO.find(n => act.includes(E[n]));
+    if (manoAct && !(evento === 'cita' || (t.futura && evento !== 'repaso'))) nueva = manoAct; // la de a mano manda hasta que reserve
+    else {
+      nueva = t.etapa;
+      const Q = (await ajuste('etapa-quitada', {}).catch(() => ({}))) || {};
+      if (Q[pid] && Q[pid] === nueva) nueva = null; // la quitaron a mano: no se vuelve a poner mientras siga igual
+      else if (Q[pid]) { delete Q[pid]; await guardarAjuste('etapa-quitada', Q, 'auto').catch(() => {}); }
+    }
+  }
+  const nuevo = nueva && E[nueva] ? [...limpio, E[nueva]] : limpio;
   if (nuevo.slice().sort().join() !== act.slice().sort().join()) await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
-  return { etapa: nueva, estados: nuevo };
+  return { etapa: nueva, estados: nuevo, cambio: nuevo.slice().sort().join() !== act.slice().sort().join() };
+}
+// Repaso: solo los que seguramente están mal (etapas antiguas o varias a la vez, Activo/Nuevo sin cita,
+// sin cita pero con una cita dada, o con cita estos días). Para a los ~40 s para no pasarse del tiempo de Vercel.
+async function repasoEtapas(segundos) {
+  const t0 = Date.now(), lim = (segundos || 40) * 1000;
+  const todo = async (t, query) => { let recs = [], off = ''; do { const d = await at(`${t}?${query}&pageSize=100${off ? '&offset=' + off : ''}`); if (d.error) throw new Error(d.error.message || 'Airtable'); recs = recs.concat(d.records || []); off = d.offset || ''; } while (off); return recs; };
+  const { E, V } = await estadosMapa();
+  const nombres = ['ACTIVO', 'NUEVO', 'PENDIENTE', 'VALORACI', 'MANTENIMIENTO', 'SESIÓN ÚNICA', 'PACK INCOMPLETO', 'FIN PACK', 'SIN PRÓXIMA', 'NO ACUDI'];
+  const [pacs, fut, rec] = await Promise.all([
+    todo(PACIENTES, `filterByFormula=${encodeURIComponent(`OR(${nombres.map(n => `FIND('${n}',ARRAYJOIN({ESTADO}))`).join(',')})`)}&fields[]=ESTADO`),
+    todo('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(OR(TRIM({ESTADO})='PENDIENTE',TRIM({ESTADO})='CITA DUDOSA'),IS_AFTER({FECHA},DATEADD(TODAY(),-1,'days')))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`),
+    todo('tblTPlcuiSjQngkaD', `filterByFormula=${encodeURIComponent(`AND(IS_AFTER({FECHA},DATEADD(TODAY(),-3,'days')),IS_BEFORE({FECHA},DATEADD(TODAY(),1,'days')))`)}&fields[]=${encodeURIComponent('RELACIÓN - CITA')}`)
+  ]);
+  const conCita = new Set(fut.flatMap(r => r.fields['RELACIÓN - CITA'] || []));
+  const auto = ETAPAS_AUTO.map(n => E[n]).filter(Boolean), conCitaOk = [E['ACTIVO'], E['PACIENTE NUEVO']].filter(Boolean);
+  const mal = pacs.filter(p => { const e = p.fields['ESTADO'] || [], et = e.filter(id => auto.includes(id) || V.includes(id));
+    if (e.some(id => V.includes(id)) || et.length > 1) return true;
+    if (!et.length) return false;
+    return conCita.has(p.id) ? !conCitaOk.includes(et[0]) : conCitaOk.includes(et[0]); }).map(p => p.id);
+  const ids = [...new Set([...mal, ...rec.flatMap(r => r.fields['RELACIÓN - CITA'] || [])])];
+  let cambiados = 0, hechos = 0;
+  for (let i = 0; i < ids.length && Date.now() - t0 < lim; i += 5) { await Promise.all(ids.slice(i, i + 5).map(async id => { const r = await ponerEtapa(id, 'repaso').catch(() => null); if (r && r.cambio) cambiados++; })); hechos = Math.min(ids.length, i + 5); }
+  return { revisados: hechos, quedan: ids.length - hechos, cambiados };
 }
 const holdedPost = async (path, body) => { const r = await fetch(HOLDED_URL + path, { method: 'POST', headers: { Authorization: 'Bearer ' + HOLDED_KEY, accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); if (!r.ok) throw await holdedErr(r, path); return r.json().catch(() => ({})); };
 const pagina = (ok, titulo, texto) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ef;font-family:Poppins,sans-serif;color:#1a1a1a;padding:16px;box-sizing:border-box}.c{background:#fff;border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center}.i{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;background:${ok ? '#16a34a' : '#c2552e'}}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b5f57;line-height:1.5}</style></head><body><div class="c"><div class="i">${ok ? '✓' : '!'}</div><h1>${titulo}</h1><p>${texto}</p><p style="margin-top:16px;font-size:13px">Ya puedes cerrar esta pestaña.</p></div></body></html>`;
@@ -3310,7 +3348,7 @@ async function salirDeSeguimiento(pid, quienTxt, fecha, hora, origen) {
           const abiertas = (await todosT(SEG, `filterByFormula=${encodeURIComponent(`AND(NOT({HECHO}),FIND('${pid}',ARRAYJOIN({PacRec})))`)}`).catch(() => [])).filter(r => (r.fields['PACIENTE'] || []).includes(pid));
           const est = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`); const E = {}; (est.records || []).forEach(x => { E[String(x.fields['ESTADO'] || '').trim().toUpperCase()] = x.id; });
           const pac = await at(`${PACIENTES}/${pid}`); const act = (pac.fields && pac.fields['ESTADO']) || [];
-          const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
+          const QUITAR = ['SEGUIMIENTO', 'ABANDONO', 'PENDIENTE DE CONTINUAR', 'SIN PRÓXIMA CITA', 'PACK INCOMPLETO', 'FIN PACK', 'NO ACUDIÓ', 'ALTA'].map(n => E[n]).filter(Boolean);
           const enSeg = abiertas.length || act.some(id => QUITAR.includes(id));
           if (!enSeg) return null;
           const kq = String(quienTxt || '').trim().split(' ')[0].toLowerCase();
@@ -3322,12 +3360,10 @@ async function salirDeSeguimiento(pid, quienTxt, fecha, hora, origen) {
             await at(LLA, { method: 'POST', body: JSON.stringify({ records: [{ fields: ll }], typecast: true }) });
             await at(`${SEG}/${r.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { HECHO: true } }) });
           }
-          const nuevo = [...new Set([...act.filter(id => !QUITAR.includes(id)), ...(E['ACTIVO'] ? [E['ACTIVO']] : [])])];
           await porQueAlHist(pid, '', '', '');
-          const f = { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' };
-          if (nuevo.join() !== act.join()) f.ESTADO = nuevo;
-          await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: f }) });
-          return { quitado: abiertas.length, estados: nuevo };
+          await at(`${PACIENTES}/${pid}`, { method: 'PATCH', body: JSON.stringify({ fields: { 'POR QUÉ NO REAGENDA': '', 'POR QUÉ FECHA': null, 'POR QUÉ FISIO': '' } }) });
+          const et = await ponerEtapa(pid, 'cita').catch(() => null); // le han dado cita: Activo o Paciente nuevo
+          return { quitado: abiertas.length, estados: et ? et.estados : act };
 }
 async function porQueAlHist(pid, nuevo, fisio, hoy) {
   try {
@@ -6802,7 +6838,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           }
           if (Object.keys(f).length) await patch(q.id, f);
           if (q.liberar || f.ESTADO || f['TIPO DE CITA']) await ajustarBombaDia(String(cur.fields.FECHA || '').slice(0, 10)).catch(() => 0);
-          { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && /^(REALIZADA|NO ASISTIÓ)$/.test(q.estado || '')) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : 'noasistio').catch(() => null); }
+          { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0]; if (pidE && q.estado) await ponerEtapa(pidE, q.estado === 'REALIZADA' ? 'realizada' : q.estado === 'NO ASISTIÓ' ? 'noasistio' : 'cambio').catch(() => null); } // también al cancelar: puede quedarse sin próxima cita
           // Sin pack: si no vino o canceló con menos de 24 h, su próxima cita se paga por adelantado
           let debePagar = '';
           { const pidE = (cur.fields['RELACIÓN - CITA'] || [])[0], cF = String(cur.fields.FECHA || '').slice(0, 10), cH = hh(cur.fields.HORA);
@@ -7645,6 +7681,13 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
           cur[q.pacienteId] = { motivo, por: String(q.quien || '').slice(0, 40), fecha: hoyF, nombre: String(q.nombre || '').slice(0, 80) }; }
         await guardarAjuste('sin_ejercicios', cur, String(q.quien || '')); return res.status(200).json({ ok: true });
       }
+      if (action === 'seg-etapas-repaso') { // repasa las etapas automáticas (lo lanza el panel de dirección; el cron también cada mañana)
+        const ult = Number(await ajuste('etapas-repaso', 0)) || 0;
+        if (!q.forzar && Date.now() - ult < 20 * 60000) return res.status(200).json({ ok: true, saltado: 1 });
+        await guardarAjuste('etapas-repaso', Date.now(), 'panel');
+        const r = await repasoEtapas(45); if (r.quedan) await guardarAjuste('etapas-repaso', 0, 'panel'); // si quedan, la siguiente vez sigue
+        return res.status(200).json({ ok: true, ...r });
+      }
       if (action === 'seg-etapa') { // cerrar un caso desde el Daily report: alta, dejó el tratamiento o no llegó a venir (no hace falta llamarlo)
         const et = { alta: 'ALTA', abandono: 'ABANDONO', noacudio: 'NO ACUDIÓ' }[q.etapa];
         if (!et || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
@@ -8001,10 +8044,16 @@ Devuelve solo el texto del mensaje, sin comillas.`;
     if (!process.env.FISIO_PASSWORD || String(q.pwd || '').trim() !== process.env.FISIO_PASSWORD.trim()) return res.status(401).json({ ok: false, error: 'No autorizado' });
     if (action === 'estados') {
       const d = await at(`tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100`);
-      return res.status(200).json({ ok: true, estados: (d.records || []).map(r => ({ id: r.id, nombre: String(r.fields['ESTADO'] || '').trim() })).filter(e => e.nombre).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) });
+      estadosMapa().catch(() => null); // crea las que falten (Fin pack, Sin próxima cita…)
+      return res.status(200).json({ ok: true, estados: (d.records || []).map(r => { const nombre = String(r.fields['ESTADO'] || '').trim(), N = nombre.toUpperCase(); return { id: r.id, nombre, auto: ETAPAS_AUTO.includes(N) ? 1 : 0, mano: ETAPAS_MANO.includes(N) ? 1 : 0 }; }).filter(e => e.nombre && !ETAPAS_VIEJAS.test(e.nombre.toUpperCase())).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) });
     }
     if (req.method !== 'POST' || !/^rec[A-Za-z0-9]{14}$/.test(q.pacienteId || '')) return res.status(400).json({ ok: false });
     const ids = (Array.isArray(q.estados) ? q.estados : []).filter(x => /^rec[A-Za-z0-9]{14}$/.test(x));
+    try { // si quitan a mano la etapa automática, que no vuelva sola mientras siga igual
+      const { E } = await estadosMapa(), antes = ((await at(`${PACIENTES}/${q.pacienteId}`)).fields || {})['ESTADO'] || [];
+      const quitada = ETAPAS_AUTO.find(n => E[n] && antes.includes(E[n]) && !ids.includes(E[n]));
+      if (quitada) { const Q = (await ajuste('etapa-quitada', {})) || {}; Q[q.pacienteId] = quitada; await guardarAjuste('etapa-quitada', Q, String(q.quien || 'panel')); }
+    } catch (e) {}
     const d = await at(`${PACIENTES}/${q.pacienteId}`, { method: 'PATCH', body: JSON.stringify({ fields: { ESTADO: ids } }) });
     return res.status(200).json({ ok: !d.error, error: d.error && d.error.message });
   }
@@ -9094,6 +9143,7 @@ module.exports.valesDelDia = valesDelDia;
 module.exports.avisosReservarDelDia = avisosReservarDelDia;
 module.exports.emailsResumen = emailsResumen;
 module.exports.repasoEtapas = repasoEtapas;
+module.exports.ponerEtapa = ponerEtapa;
 module.exports.importeDoc = d => importeDoc(d);
 module.exports.ajuste = (...a) => ajuste(...a);
 module.exports.guardarAjuste = (...a) => guardarAjuste(...a);

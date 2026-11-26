@@ -188,7 +188,7 @@ async function saldoPaciente(pacId) {
     gastadas -= citas.filter(c => cubre.has(c.id)).length;
     compartido = shares.map(x => pcResumen(x, pacId));
   }
-  return { activo: true, inicio, desde, pagadas: pag + uPrev + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + uPrev + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido };
+  return { activo: true, inicio, desde, pagadas: pag + uPrev + shares.reduce((t, x) => t + x.n, 0), gastadas: gastadas + uPrev + shares.reduce((t, x) => t + (x.usadas || 0), 0), saldo: pag - gastadas + extra, compartido, pack: nPrev > 1 || shares.length > 0 || facs.some(r => sesionesDe(r.fields) > 1) };
 }
 
 // Todos los pacientes con saldo negativo (sesiones hechas sin facturar)

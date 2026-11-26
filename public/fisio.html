@@ -365,6 +365,7 @@ ul.tc li.fl b::after{content:' →';color:#c2552e}
 .est{display:inline-flex;align-items:center;gap:4px;font-family:var(--font);font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:#f1ede9;color:#5f554e;border:1.5px solid transparent;white-space:nowrap}
 .est.ok{background:#e8f5ec;color:#16803c}.est.mal{background:#fdecea;color:#b42318}.est.pen{background:#fff4e5;color:#b45309}
 .est-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.est-au{width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:.65;flex:none}.est-nota{flex-basis:100%;margin:6px 0 0;font-size:11.5px;color:#8a7f77;display:flex;gap:6px;align-items:center;line-height:1.4}.est-nota .est-au{width:11px;height:11px}
 .est-sel{display:flex;flex-wrap:wrap;gap:6px}.est-sel button{cursor:pointer;font-size:12.5px;padding:6px 12px;opacity:.55}.est-sel button.on{opacity:1;border-color:currentColor}
 .est-fil{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}.est-fil span{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}.est-fil button{cursor:pointer;font-size:12px;padding:5px 11px;opacity:.75}.est-fil button b{font-size:10.5px;opacity:.7}.est-fil button.on{opacity:1;border-color:currentColor}
 .est-ok{font-size:12px;color:#16803c;margin-top:8px;min-height:16px}
@@ -2672,6 +2673,7 @@ async function doLogin(silencioso){
  window.scrollTo({top:0,behavior:'instant'});
  await Promise.all([loadPacientes(),loadFisios(),loadBiblio(),loadProgreso(),loadEstados(),loadConf(),loadClinica()]);
  checkMensajesBadge();
+ agPost('seg-etapas-repaso',{}).then(r=>{if(r&&r.cambiados)loadPacientes();}).catch(()=>{}); // etapas automáticas al día (el servidor lo hace como mucho cada 20 min)
  setInterval(()=>{if(!document.hidden)checkMensajesBadge();}, 120000); // cada 2 min, solo con el panel a la vista (ahorra llamadas al servidor)
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){try{checkMensajesBadge();}catch(e){}}});
  const tickPagos=()=>fetch('/api/schedule?action=pagos-tick').catch(()=>{});tickPagos();setInterval(tickPagos,5*60e3); // citas de quien no pagó a tiempo
@@ -10887,14 +10889,17 @@ async function renderCaptacion(wrap){
 let ESTADOS=[];
 async function loadEstados(){try{const d=await (await fetch(`/api/schedule?action=estados&pwd=${encodeURIComponent(apiPwd)}`)).json();ESTADOS=d.estados||[];}catch(e){}}
 const estNom=id=>(ESTADOS.find(e=>e.id===id)||{}).nombre||'';
-function estClase(n){n=String(n).toUpperCase();if(/ALTA|FAVORABLE|ACTIVO|MANTENIMIENTO|NUEVO/.test(n))return 'ok';if(/ABANDONO|NO ACUDI|SIN EVOLUCI|INCOMPLETO/.test(n))return 'mal';if(/PENDIENTE|SEGUIMIENTO|INCIERTA|VALORACI/.test(n))return 'pen';return '';}
-function estadoChips(ids){return (ids||[]).map(estNom).filter(Boolean).map(n=>`<span class="est ${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}</span>`).join('');}
+function estClase(n){n=String(n).toUpperCase();if(/ALTA|FAVORABLE|ACTIVO|NUEVO/.test(n))return 'ok';if(/ABANDONO|NO ACUDI|SIN EVOLUCI/.test(n))return 'mal';if(/SEGUIMIENTO|INCIERTA|INCOMPLETO|FIN PACK|SIN PR/.test(n))return 'pen';return '';}
+// Las etapas automáticas (Activo, Fin pack, Sin próxima cita…) llevan un circulito: se ponen solas
+const EST_AU='<svg class="est-au" viewBox="0 0 24 24" aria-label="Se pone sola"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg>';
+const estAuto=id=>!!(ESTADOS.find(e=>e.id===id)||{}).auto;
+function estadoChips(ids){return (ids||[]).filter(id=>estNom(id)).map(id=>{const n=estNom(id);return `<span class="est ${estClase(n)}">${escH(n.charAt(0)+n.slice(1).toLowerCase())}${estAuto(id)?EST_AU:''}</span>`;}).join('');}
 const pacEstados=id=>((pacs||[]).find(p=>p.id===id)||{}).estados||[];
 // Selector de estados (varios). Devuelve el elemento; get() da los ids marcados
 function selectorEstados(actuales){
  let sel=new Set(actuales||[]);
  const el=ce('div','est-sel');
- el.innerHTML=ESTADOS.map(e=>`<button type="button" data-id="${e.id}" class="est ${estClase(e.nombre)}">${escH(e.nombre.charAt(0)+e.nombre.slice(1).toLowerCase())}</button>`).join('');
+ el.innerHTML=ESTADOS.map(e=>`<button type="button" data-id="${e.id}" class="est ${estClase(e.nombre)}">${escH(e.nombre.charAt(0)+e.nombre.slice(1).toLowerCase())}${e.auto?EST_AU:''}</button>`).join('')+'<p class="est-nota">'+EST_AU+' Se pone sola según sus citas y su pack. Alta, Seguimiento y Abandono se marcan a mano y mandan hasta que vuelva a reservar.</p>';
  const pinta=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',sel.has(b.dataset.id)));pinta();
  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel.has(b.dataset.id)?sel.delete(b.dataset.id):sel.add(b.dataset.id);pinta();el.dispatchEvent(new Event('change'));});
  el.get=()=>[...sel];return el;
@@ -14595,6 +14600,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-26',aviso:1,t:'Los estados del paciente se ponen solos: Paciente nuevo, Activo, Pack incompleto, Fin pack, Sin próxima cita y No acudió (llevan un circulito). Alta, Seguimiento y Abandono se siguen marcando a mano y se quitan solos cuando vuelve a reservar.',ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-estb',txt:'Aquí, debajo del nombre.',click:['#pacResultados .pt-r']}]}},
 {f:'2026-11-26',t:'Mensajes a pacientes: al lado del nombre sale su teléfono (tócalo para llamar).'},
 {f:'2026-11-26',t:'Huecos con y sin bomba más claros: en la agenda, en la app del paciente y en el enlace de huecos cada hora lleva su rayo: «bomba disponible» o tachado si a esa hora la bomba no está disponible. En la app, filtro «Solo con bomba disponible».'},
 {f:'2026-11-25',dir:1,t:'Panel de control › Ingresos: debajo sale cuánto es de cobros de otros días (borradores aprobados ese día); en el desglose, cada uno con «cobrado el …».'},
@@ -15603,13 +15609,13 @@ function renderFormacion(wrap, ruta){
  },
  {t:'Estados del paciente',sub:'Saber en qué punto está cada paciente',
  cards:[
- {ti:'Por qué importa',icon:'',body:`El estado del paciente en su ficha indica en qué momento del tratamiento se encuentra. Recepción lo usa para saber qué gestionar y qué comunicar.<br><br>Un estado desactualizado genera confusión — siempre actualízalo cuando cambie la situación.`},
- {ti:'Los estados principales',icon:'',body:`• <strong>ACTIVO</strong> — paciente en tratamiento<br>• <strong>FIN PACK</strong> — ha terminado sus sesiones pagadas<br>• <strong>ALTA</strong> — tratamiento completado, sin continuidad prevista<br>• <strong>SESIÓN PUNTUAL</strong> — vino una sola vez, sin tratamiento continuado<br>• <strong>EN ESPERA</strong> — pendiente de confirmar continuidad`},
- {ti:'Ejemplos reales',icon:'',body:`• Paciente termina pack de 10 → estado: <strong>FIN PACK</strong><br>• Fisio da el alta → estado: <strong>ALTA</strong><br>• Paciente vino una vez por un dolor puntual → estado: <strong>SESIÓN PUNTUAL</strong><br>• Paciente continúa con sesiones → estado: <strong>ACTIVO</strong><br><br>El fisio comunica el estado al acompañar al paciente a recepción — recepción lo actualiza.`}
+ {ti:'Por qué importa',icon:'',body:`La etiqueta de la ficha dice en qué punto está cada paciente. Casi todas se ponen <b>solas</b> según sus citas y su pack (llevan un circulito), así siempre están al día.`},
+ {ti:'Las que se ponen solas',icon:'',body:`• <strong>Paciente nuevo</strong> — tiene agendada su primera visita<br>• <strong>Activo</strong> — tiene otra cita agendada<br>• <strong>Pack incompleto</strong> — le quedan sesiones del pack y no tiene cita<br>• <strong>Fin pack</strong> — acabó el pack y no tiene cita<br>• <strong>Sin próxima cita</strong> — no tiene cita ni pack pendiente<br>• <strong>No acudió</strong> — no vino a su primera visita y no ha reagendado<br><br>Lleva una sola a la vez.`},
+ {ti:'Las que se marcan a mano',icon:'',body:`• <strong>Alta</strong>, <strong>Seguimiento</strong> y <strong>Abandono</strong>: mandan hasta que vuelva a reservar; entonces pasa sola a Activo.<br>• Las clínicas (<strong>Evolución favorable</strong>, <strong>Sin evolución</strong>…) son criterio del fisio y no se tocan solas.`}
  ],
  qs:[
- {q:'Un paciente termina su pack de 5 sesiones. ¿Qué estado le pones?',opts:['ALTA','FIN PACK','ACTIVO'],ok:1,fb:['ALTA es cuando el fisio da por terminado el tratamiento.','¡Correcto! FIN PACK indica que terminó las sesiones pagadas — puede que continúe o no.','ACTIVO es mientras está en tratamiento.']},
- {q:'¿Quién comunica el estado del paciente al terminar la sesión?',opts:['El paciente lo dice él mismo','El fisio al acompañar al paciente a recepción','Se actualiza automáticamente'],ok:1,fb:['El paciente no tiene por qué saberlo.','¡Correcto! El fisio da el contexto a recepción y recepción actualiza.','No es automático — requiere la indicación del fisio.']}
+ {q:'Un paciente termina su pack de 5 sesiones y no tiene más citas. ¿Qué etiqueta lleva?',opts:['Alta','Fin pack','Activo'],ok:1,fb:['El alta la marca el fisio.','¡Correcto! Y se pone sola.','Activo es cuando tiene otra cita.']},
+ {q:'Un paciente con «Seguimiento» reserva desde la app. ¿Qué pasa?',opts:['Sigue en Seguimiento','Pasa solo a Activo','Hay que cambiarlo a mano'],ok:1,fb:['Al reservar, la de a mano se quita.','¡Correcto!','No hace falta.']}
  ]
  },
  {t:'Notas en Airtable',sub:'Información que no puede perderse',
@@ -16943,6 +16949,7 @@ function renderFormacion(wrap, ruta){
  {t:'La ficha: botones y resumen',sub:'Todo lo del paciente en un sitio',
  cards:[
  {ti:'Lo de arriba: hablar con él',shot:'/img/school/panel-a-10-ficha.jpg',body:`Debajo del nombre están sus <b>estados</b> (toca para cambiarlos).<br><br>Y los botones: <b>Llamar</b>, <b>WhatsApp</b>, <b>Enviar app</b>, <b>Seguimiento</b> y <b>Cobrar y facturar</b>.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-acts',txt:'Los botones de la ficha.',click:['#pacResultados .pt-r']}]}},
+ {ti:'Sus estados se ponen solos',body:`<b>Paciente nuevo</b>, <b>Activo</b>, <b>Pack incompleto</b>, <b>Fin pack</b>, <b>Sin próxima cita</b> y <b>No acudió</b> se ponen solos según sus citas y su pack (llevan un circulito). Solo uno a la vez.<br><br><b>Alta</b>, <b>Seguimiento</b> y <b>Abandono</b> los marcas tú y mandan hasta que vuelva a reservar.`,ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-estb',txt:'Aquí, debajo del nombre.',click:['#pacResultados .pt-r']}]}},
  {ti:'Qué lesión tiene',body:`Debajo del nombre, <b>+ Lesión</b>: marcas una o varias etiquetas (postparto, IUE, hombro, rodilla…) para tenerlo a la vista.<br><br>Salen también al abrir su cita en la agenda, y en <b>Pacientes › Por lesión</b> ves a todos los que tienen cada una.<br><br>La lista es corta y fija: si falta alguna, pídesela a dirección.`},
  {ti:'Le escribes por WhatsApp',body:`<b>Qué haces:</b> botón <b>WhatsApp</b>. Te prepara un mensaje con su última sesión y su próxima cita; lo puedes cambiar.<br><br>Al volver te pregunta si lo has enviado y si hay que revisarlo más adelante: así queda en sus llamadas.`},
  {ti:'No tiene la app',body:`<b>Enviar app</b> le manda por WhatsApp el enlace, su usuario y su PIN.<br><br>Si ya la tiene, el botón pone <b>App ✓</b>; tocándolo se la reenvías.<br><br>Y en la pestaña <b>Citas</b> (o abriendo una de sus citas en la agenda › <b>Enviarle sus citas</b>), <b>Enviárselas</b> le manda por WhatsApp todas sus próximas citas con el enlace de la app, para que las tenga ahí.`},
@@ -17099,7 +17106,7 @@ function renderFormacion(wrap, ruta){
 
  {t:'Call-in y Captación',sub:'Hay tiempo libre: a quién llamar',
  cards:[
- {ti:'Tienes un hueco: Call-in',shot:'/img/school/panel-c-callin.jpg',body:`<b>Cuándo:</b> te ha quedado una hora libre o dirección te pide una tanda de llamadas.<br><br><b>Qué haces:</b> en <b>Call-in</b> elige uno o varios <b>estados</b> (por ejemplo «pendiente de continuar») y el <b>fisio de la última sesión</b>. Sale la lista para llamar.`,ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Elige los estados…'},{el:'.ci-ddf',txt:'…y el fisio de la última sesión.'}]}},
+ {ti:'Tienes un hueco: Call-in',shot:'/img/school/panel-c-callin.jpg',body:`<b>Cuándo:</b> te ha quedado una hora libre o dirección te pide una tanda de llamadas.<br><br><b>Qué haces:</b> en <b>Call-in</b> elige uno o varios <b>estados</b> (por ejemplo «sin próxima cita» o «pack incompleto») y el <b>fisio de la última sesión</b>. Sale la lista para llamar.`,ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Elige los estados…'},{el:'.ci-ddf',txt:'…y el fisio de la última sesión.'}]}},
  {ti:'En cada paciente de la lista',body:`Llamar, <b>WhatsApp</b>, cambiarle el estado, añadirle a seguimiento o apuntar el resultado.<br><br>Si eliges varios estados, salen solo los que los tienen todos.`},
  {ti:'Alguien preguntó y no se citó',body:`En <b>Captación › No citados</b> está la gente que apuntasteis con el + de la Agenda (Alguien pregunta): por dónde preguntó y <b>por qué no se citó</b>.<br><br>Desde ahí: WhatsApp, Editar, Archivar o <b>Se citó</b> si al final viene.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'En espera, No citados y Negocios.'}]}},
  {ti:'Clubs deportivos de la zona',body:`En <b>Captación › Clubs</b> están los clubs y centros deportivos cerca de la clínica, con teléfono, email y web, para proponerles colaborar (condiciones para jugadores, charlas de prevención, readaptación…).<br><br>Llama o escribe con los botones (el WhatsApp y el email ya salen escritos). Al acabar, toca <b>Contactado</b>: cómo, con quién, qué se dijo, <b>en qué se ha quedado</b> y cuándo volver a contactar. Así cualquiera del equipo sabe por dónde va cada club.<br><br>Arriba filtras por <b>Por contactar</b>, <b>En marcha</b>, <b>Colaborando</b> o <b>Toca hoy</b>. ¿Falta uno? <b>+ Club</b>.`,ver:{sec:'cap',pasos:[{el:'.cap-tabs button[data-t="clubs"]',txt:'Aquí están los clubs.'}]}},
@@ -17108,7 +17115,7 @@ function renderFormacion(wrap, ruta){
  {ti:'Negocios del barrio',body:`En <b>Captación › Negocios</b> están los negocios con los que colaboramos: cuándo toca visitarlos, si tienen flyers y cuántos pacientes nos han mandado. Arriba tienes un <b>buscador</b> y filtros: sin visitar, toca volver, visitados y por tipo de negocio.<br><br>Al ir, toca <b>Visitado</b>: se apunta la visita y cuándo volver.`}
  ],
  qs:[
- {q:'Te queda una hora libre y quieres llamar a los pacientes de Sara que están en «pendiente de continuar». ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','En la agenda','En el chat'],ok:0,fb:['¡Eso es!','Ahí están las citas, no las listas.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}},
+ {q:'Te queda una hora libre y quieres llamar a los pacientes de Sara que están en «sin próxima cita». ¿Dónde?',opts:['Call-in: estado y fisio de la última sesión','En la agenda','En el chat'],ok:0,fb:['¡Eso es!','Ahí están las citas, no las listas.','No.'],ver:{sec:'call',pasos:[{el:'.ci-dde',txt:'Aquí eliges el estado.'}]}},
  {q:'Una persona que preguntó la semana pasada y no se citó, hoy viene a su primera sesión. ¿Qué haces en No citados?',opts:['Nada','La marco como «Se citó»','La borro'],ok:1,fb:['Seguiría saliendo como no citada.','¡Bien! Así se cuenta bien.','Mejor marcarla: así sabemos que funcionó.']},
  {q:'Vuelves de dejar flyers en la farmacia de al lado. ¿Qué haces?',opts:['Captación › Negocios › Visitado','Nada','Se lo digo a alguien'],ok:0,fb:['¡Eso es! Queda la visita y cuándo volver.','Así nadie sabe que fuiste.','Mejor apuntarlo en el panel.'],ver:{sec:'cap',pasos:[{el:'.cap-tabs',txt:'Negocios está aquí.'}]}},
  {q:'Un jugador del club con «Mi equipo» empieza el tratamiento. ¿Qué ve su entrenador?',opts:['Su historia clínica entera','Nada hasta que el jugador lo acepte en su app; después, solo el parte del club','Todo lo que apuntamos en la ficha'],ok:1,fb:['No: la historia clínica no se comparte nunca.','¡Eso es! Y el jugador lo puede retirar cuando quiera.','No: solo el parte que escribís para el club.']},
@@ -17242,14 +17249,14 @@ function renderFormacion(wrap, ruta){
  {ti:'Lo que hay que arreglar',shot:'/img/school/panel-c-rdia2.jpg',body:`Debajo: <b>atrasado por fisio</b> (tareas y llamadas sin hacer), <b>sesiones sin facturar</b> (con <b>Cobrar</b>), <b>citas sin marcar</b> (márcalas ahí mismo), tickets hechos fuera del panel o en borrador y canceladas.<br><br>Con ‹ › ves otros días; también en PDF.`,ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Lo que queda por arreglar.'}]}},
  {ti:'Me he equivocado: Últimos cambios',body:`En <b>Más › Últimos cambios</b> ves lo que se ha tocado en las últimas 48 horas: qué cita, de qué estado a cuál y a qué hora.<br><br>Si algo se hizo por error, <b>Deshacer</b> lo deja como estaba. Lo que se creó se borra; lo borrado no se puede recuperar desde aquí.`,ver:{sec:'camb',pasos:[{el:'.cb-l',txt:'Aquí, con Deshacer en cada cambio.'}]}},
  {ti:'Las cifras del centro',body:`En <b>Estadísticas</b>, por semana, mes, trimestre, semestre o año: sesiones, ocupación, pacientes nuevos, conversión, ingresos, primeras visitas por fisio y cómo nos conocen.<br><br>Con <b>Desde … hasta …</b> eliges los meses que quieres ver (por ejemplo, de enero a junio); <b>Quitar</b> vuelve a todo.<br><br>Arriba eliges <b>Todo el centro</b> o un fisio: con un fisio ves sus sesiones, ocupación, pacientes atendidos, conversión y faltas, con su evolución.`,ver:{sec:'stats',pasos:[{el:'.st-vis || #mainWrap .card',txt:'Elige el periodo.'}]}},
- {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay sesiones sin facturar.<br><br>Además, los pacientes activos que llevan 3 semanas sin cita pasan solos a «pendiente de continuar».`},
+ {ti:'El email de cada mañana',body:`A primera hora llega el resumen del día anterior. El asunto avisa si falta algún check-list o hay sesiones sin facturar.<br><br>Además, cada mañana se repasan las etapas de los pacientes (Activo, Fin pack, Sin próxima cita…), que se ponen solas.`},
  {ti:'Quién ha hecho los cursos',body:`En <b>School</b> ves quién ha terminado cada curso obligatorio y cuándo. Y en Comunicaciones, el seguimiento del módulo de cada día.`}
  ],
  qs:[
  {q:'¿Dónde ves rápido si a un fisio se le quedaron citas sin marcar ayer?',opts:['En el Daily report','En Valoraciones','En el chat'],ok:0,fb:['¡Eso es! Y las marcas ahí mismo.','No.','No.'],ver:{sec:'rdia',pasos:[{el:'.rd-sec',txt:'Aquí.'}]}},
  {q:'Juan no envió ayer su check-list. ¿Qué haces?',opts:['Avisar a Juan desde el Daily report','Nada','Lo envío yo'],ok:0,fb:['¡Bien!','Mejor avisarle.','Lo tiene que revisar él.']},
  {q:'Quieres comparar cuántos pacientes nuevos hubo este trimestre y el anterior. ¿Dónde?',opts:['Estadísticas › Trimestre','En la agenda','En Rendimiento'],ok:0,fb:['¡Eso es!','No.','Rendimiento es por fisio y sesiones.']},
- {q:'Un paciente activo lleva 3 semanas sin cita. ¿Qué pasa?',opts:['Nada','Pasa solo a «pendiente de continuar»','Se le da de alta'],ok:1,fb:['Sí pasa algo.','¡Correcto!','No.']}
+ {q:'A un paciente activo se le cancela su única cita y le quedan 2 sesiones del pack. ¿Qué pasa?',opts:['Nada','Pasa solo a «Pack incompleto»','Se le da de alta'],ok:1,fb:['Sí pasa algo.','¡Correcto!','El alta se marca a mano.']}
  ]},
  {t:'Dirección: Facturación',sub:'Solo lo ve dirección',dir:1,
  cards:[
