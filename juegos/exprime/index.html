@@ -13,7 +13,7 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
 html,body{height:100%}
-body{font-family:'DM Sans',sans-serif;color:#16120F;background:#F7F1E8;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+body{font-family:'DM Sans',sans-serif;color:#16120F;background:#F7F1E8;overflow-x:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .disp{font-family:Syne,sans-serif;font-weight:800;letter-spacing:-.04em;line-height:.95}
 .ser{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400}
@@ -81,6 +81,16 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .row .bar{height:6px!important;border:1.5px solid #16120F!important}
 .hold.on{transform:scale(.98)!important}
 .blink{font-weight:600!important;letter-spacing:.12em!important;opacity:.55}
+
+/* ===== cómo funciona (texto debajo del juego) ===== */
+.info{max-width:520px;margin:0 auto;padding:44px 20px 64px;border-top:1px solid #16120F24;user-select:text;-webkit-user-select:text}
+.info h2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-.03em;line-height:1.1;margin-top:18px}
+.info p{font-size:16px;line-height:1.65;margin-top:14px;opacity:.85}
+.info ul{list-style:none;padding:0;margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.info li{border:1.5px solid #16120F;border-radius:18px;padding:14px 16px;background:#FFFDF8;font-size:15px;line-height:1.5}
+.info li b{display:block;font-size:16px}
+.info a{color:#16120F;font-weight:700;text-underline-offset:3px}
+.info .ver{display:inline-flex;margin-top:22px;border:1.5px solid #16120F;border-radius:999px;padding:12px 20px;background:#F26A1B;text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
@@ -88,7 +98,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 
 <section class="scr on" id="s-set">
   <span class="chip" style="align-self:flex-start"><i class="d"></i>La exprimidora</span>
-  <p class="disp" style="font-size:36px;margin-top:20px">Pon tus números<br>y <span class="ser or" style="font-size:44px">exprime.</span></p>
+  <h1 class="disp" style="font-size:36px;margin-top:20px">Pon tus números<br>y <span class="ser or" style="font-size:44px">exprime.</span></h1>
   <p style="font-size:15px;margin-top:8px;opacity:.75">Toca + y − para ajustar tu negocio.</p>
   <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px;flex:1;justify-content:center" id="dials"></div>
   <button class="gb big or" id="toS" style="margin-top:18px">Exprimir</button>
@@ -121,6 +131,20 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 
 <button class="snd" id="snd" aria-label="Sonido"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16120F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="sw" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg></button>
 </div>
+
+<section class="info" id="como-funciona">
+  <span class="chip"><i class="d"></i>Cómo funciona</span>
+  <h2>¿Cuánto tiempo y dinero se te escapa <span class="ser or">cada año</span>?</h2>
+  <p>La exprimidora es una calculadora rápida para dueños de pequeños negocios: clínicas, centros de estética, academias, talleres o cualquier negocio que trabaje con citas. Pones cuatro números de tu día a día y te dice cuánto podrías ahorrar al año si parte de ese trabajo se hiciera solo.</p>
+  <ul>
+    <li><b>Citas que no se pierden</b>Los recordatorios automáticos por WhatsApp o email evitan más o menos la mitad de las citas que la gente olvida.</li>
+    <li><b>Horas al teléfono que recuperas</b>Con reservas online, tus clientes eligen hueco solos y te quitas buena parte de las llamadas y mensajes para dar citas.</li>
+    <li><b>Facturas que se hacen solas</b>Un programa de gestión prepara las facturas por ti, y lo que antes eran tardes enteras se queda en un rato.</li>
+  </ul>
+  <p>Es una estimación orientativa, hecha con cálculos sencillos y prudentes, para que te hagas una idea de lo que pierdes sin darte cuenta. Si el número te sorprende, escríbeme y miramos juntas qué se puede automatizar en tu negocio con una <a href="/apps-para-negocios/">app</a> o un <a href="/programas-de-gestion/">programa de gestión</a> a tu medida.</p>
+  <p>¿Te ha gustado? Tienes más juegos cortos en <a href="/juegos/">Juega con Mandarina</a>, y los precios, claros y sin sorpresas, en <a href="/precios/">precios</a>.</p>
+  <a class="ver" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false">Volver a exprimir</a>
+</section>
 <script>
 var $=function(q){return document.querySelector(q)};
 var D=[['citas','Citas que se olvidan a la semana',4,0,30,1,''],['precio','Precio medio de cada cita',40,5,200,5,' €'],['tel','Horas al día al teléfono o WhatsApp dando citas',1.5,0,8,.5,' h'],['fac','Horas al mes haciendo facturas',6,0,40,1,' h']];
