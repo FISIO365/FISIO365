@@ -597,11 +597,12 @@ async function alertasSalud() {
     const lista = await consTodos(), m = {}, porPac = {}, sal = {};
     lista.forEach(c => c.pac.forEach(id => { (porPac[id] = porPac[id] || []).push(c); }));
     Object.entries(porPac).forEach(([id, cs]) => { const r = resumenPaciente(cs); if (r && r.rojo.length) m[id] = r.rojo; if (r && r.salud.length) sal[id] = r.salud.map(x => x.t); });
-    const cs = lista.filter(c => !c.pac.length && c.rojo.length);
+    const cs = lista.filter(c => !c.pac.length && !c.ignorar && c.rojo.length);
     const conds = []; cs.forEach(c => { if (c.email) conds.push(`LOWER(TRIM({EMAIL}))='${cEsc(c.email)}'`); if (c.dni.length >= 6) conds.push(`SUBSTITUTE(LOWER(TRIM({DNI})),' ','')='${cEsc(c.dni)}'`); c.tels.forEach(t => conds.push(`RIGHT(REGEX_REPLACE({TELF}&'','[^0-9]',''),9)='${t}'`, `RIGHT(REGEX_REPLACE({WHATSAPP}&'','[^0-9]',''),9)='${t}'`)); });
     const pacs = []; for (let i = 0; i < conds.length; i += 40) pacs.push(...await todos(PACIENTES, `filterByFormula=${encodeURIComponent('OR(' + conds.slice(i, i + 40).join(',') + ')')}&fields[]=EMAIL&fields[]=DNI&fields[]=TELF&fields[]=WHATSAPP`));
     pacs.forEach(p => { if (porPac[p.id]) return; const F = p.fields, e = cTxt(F['EMAIL']), d = cTxt(F['DNI']).replace(/\s/g, ''), ts = [cDig(F['TELF']), cDig(F['WHATSAPP'])].filter(t => t.length === 9);
-      cs.forEach(c => { if ((e && c.email === e) || (d.length >= 6 && c.dni === d) || c.tels.some(t => ts.includes(t))) { m[p.id] = [...new Set([...(m[p.id] || []), ...c.rojo])]; sal[p.id] = [...new Set([...(sal[p.id] || []), ...(c.salud || []).map(x => x.t)])]; } }); });
+      cs.forEach(c => { if ((c.noDe || []).includes(p.id)) return; // «No es de este paciente»: no le pasa sus alertas
+      if ((e && c.email === e) || (d.length >= 6 && c.dni === d) || c.tels.some(t => ts.includes(t))) { m[p.id] = [...new Set([...(m[p.id] || []), ...c.rojo])]; sal[p.id] = [...new Set([...(sal[p.id] || []), ...(c.salud || []).map(x => x.t)])]; } }); });
     _saludTodo = sal; _alertas = { t: Date.now(), m, p: null }; return m;
   })().catch(e => { _alertas.p = null; return _alertas.m || {}; });
   return _alertas.p;
