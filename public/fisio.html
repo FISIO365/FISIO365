@@ -19585,7 +19585,7 @@ function cerrarLightbox(){
   fondo.innerHTML=`<div class="nv-caja ${cls||''}">${html}</div>`;document.body.appendChild(fondo);abierto=fondo;
   fondo.addEventListener('pointerdown',e=>{if(e.target===fondo)cerrar();});document.addEventListener('keydown',tecla,true);
   const c=fondo.querySelector('.nv-caja');
-  if(!esMovil()){const r=el.getBoundingClientRect(),w=Math.max(r.width,cls==='nv-cal'?280:200);c.style.width=Math.min(w,window.innerWidth-24)+'px';
+  if(!esMovil()){const r=el.getBoundingClientRect(),w=cls==='nv-cal'?300:Math.max(r.width,200); // el calendario siempre del mismo tamaño (en campos anchos salía enorme)c.style.width=Math.min(w,window.innerWidth-24)+'px';
    let x=Math.min(r.left,window.innerWidth-c.offsetWidth-12);x=Math.max(12,x);let y=r.bottom+6;const h=c.offsetHeight;
    if(y+h>window.innerHeight-12)y=Math.max(12,r.top-6-h);c.style.left=x+'px';c.style.top=y+'px';}
   return c;}
