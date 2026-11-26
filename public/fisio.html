@@ -2395,6 +2395,9 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <div class="sb-item" id="sb-msg" onclick="showSection('msg')">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="sb-txt">Chat</span><span id="sb-msg-badge" style="display:none;background:#ee2155;color:white;font-size:9px;font-weight:700;border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:middle"></span>
  </div>
+ <div class="sb-item" id="sb-docs" onclick="showSection('docs')">
+ <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span><span class="sb-txt">Mi carpeta</span>
+ </div>
  <div class="sb-item" id="sb-mas" onclick="abrirMas()">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span><span class="sb-txt">Más</span><i id="sb-mas-badge" style="display:none"></i>
  </div>
@@ -2425,9 +2428,6 @@ body.sin-bomba [data-a="LIBRE - SIN BOMBA"],body.sin-bomba [data-v="LIBRE - SIN 
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="sb-txt">Valoraciones</span><i id="sb-val-badge" style="display:none"></i>
  </div>
  <div class="sb-grp" id="sb-g-mio"><span>Lo mío</span></div>
- <div class="sb-item" id="sb-docs" onclick="showSection('docs')">
- <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span><span class="sb-txt">Mi carpeta</span>
- </div>
  <div class="sb-item" id="sb-mis" onclick="showSection('mis')" style="display:none">
  <span class="sb-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg></span><span class="sb-txt">Mis estadísticas</span>
  </div>
@@ -14792,8 +14792,8 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
-{f:'2026-11-26',t:'Menú de la izquierda (ordenador) más corto: Equipo, Clínica, Lo mío y Gestión se pliegan y despliegan tocando su título. Si un bloque plegado tiene algo nuevo, sale un punto.'},
-{f:'2026-11-26',aviso:1,t:'Nuevo: Mi carpeta (en el menú, Lo mío › Mi carpeta). Sube guías, guiones de talleres o PDFs, escribe documentos y compártelos con el equipo si quieres. Y un bloc de notas privado que se guarda solo.',ver:{sec:'docs',pasos:[{el:'.dc-bar',txt:'Aquí subes o escribes tus documentos.'}]}},
+{f:'2026-11-26',t:'Menú de la izquierda (ordenador) más corto: Mi carpeta va arriba, con Chat y Mi día; Equipo, Clínica, Lo mío y Gestión se pliegan y despliegan tocando su título. Si un bloque plegado tiene algo nuevo, sale un punto.'},
+{f:'2026-11-26',aviso:1,t:'Nuevo: Mi carpeta (en el menú, debajo de Chat; en el móvil, tocando tu foto). Sube guías, guiones de talleres o PDFs, escribe documentos y compártelos con el equipo si quieres. Y un bloc de notas privado que se guarda solo.',ver:{sec:'docs',pasos:[{el:'.dc-bar',txt:'Aquí subes o escribes tus documentos.'}]}},
 {f:'2026-11-26',aviso:1,t:'Recepción y dirección ya tienen su check-list diaria, como la de los fisios: en Mi día › Check-list. Se marca y se envía cada día.',ver:{sec:'rep',pasos:[{el:'.rp-c',txt:'Aquí está tu check-list.'}]}},
 {f:'2026-11-26',aviso:1,t:'Los estados del paciente se ponen solos: Paciente nuevo, Activo, Pack incompleto, Fin pack, Sin próxima cita y No acudió (llevan un circulito). Alta, Seguimiento y Abandono se siguen marcando a mano y se quitan solos cuando vuelve a reservar.',ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-estb',txt:'Aquí, debajo del nombre.',click:['#pacResultados .pt-r']}]}},
 {f:'2026-11-26',t:'Mensajes a pacientes: al lado del nombre sale su teléfono (tócalo para llamar).'},
@@ -17336,7 +17336,7 @@ function renderFormacion(wrap, ruta){
  {t:'Fin del día: el check-list',sub:'Antes de irte: qué revisar',
  cards:[
  {ti:'Antes de irte',shot:'/img/school/panel-c-check.jpg',body:`<b>Cuándo:</b> cada día, antes de irte.<br><br><b>Qué haces:</b> en <b>Mi día › Check-list</b> repasa cada punto (cobros, estado de las citas, ejercicios, consentimientos, anamnesis, app, llamadas, chat, tareas, historias, agenda de mañana y cabina) y márcalo.<br><br><b>Para qué:</b> que no se quede nada a medias.`,ver:{sec:'rep',pasos:[{el:'.rp-it',txt:'Marca cada punto.'},{el:'.rp-env',txt:'Y envía antes de irte.'}]}},
- {ti:'Mi carpeta: documentos y bloc de notas',body:`<b>Dónde:</b> en el menú, <b>Lo mío › Mi carpeta</b>.<br><br><b>Documentos:</b> sube PDFs, Word o fotos, escribe tus propios documentos (un guion de taller, una guía) o guarda enlaces, en carpetas. Con <b>⋯ › Compartir con el equipo</b> lo ven todos en <b>Del equipo</b>; si compartes una carpeta, se comparte lo de dentro.<br><br><b>Bloc de notas:</b> notas rápidas que se guardan solas. Solo las ves tú.`,ver:{sec:'docs',pasos:[{el:'.dc-bar',txt:'Aquí subes o escribes, y cambias entre lo tuyo y lo del equipo.'}]}},
+ {ti:'Mi carpeta: documentos y bloc de notas',body:`<b>Dónde:</b> en el menú, <b>Mi carpeta</b> (en el móvil, tocando tu foto).<br><br><b>Documentos:</b> sube PDFs, Word o fotos, escribe tus propios documentos (un guion de taller, una guía) o guarda enlaces, en carpetas. Con <b>⋯ › Compartir con el equipo</b> lo ven todos en <b>Del equipo</b>; si compartes una carpeta, se comparte lo de dentro.<br><br><b>Bloc de notas:</b> notas rápidas que se guardan solas. Solo las ves tú.`,ver:{sec:'docs',pasos:[{el:'.dc-bar',txt:'Aquí subes o escribes, y cambias entre lo tuyo y lo del equipo.'}]}},
  {ti:'Recepción y dirección también tienen su check-list',body:`<b>Dónde:</b> <b>Mi día › Check-list</b>. Recepción ve la suya (apertura, baño, citas de ayer, cobros, recordatorios, mensajes, llamadas, cierre…) y dirección la suya (resumen, ingresos, facturación, comunicaciones, reseñas, agenda…).<br><br>Se marca y se envía igual que la de los fisios. Dirección ve si recepción la ha enviado y puede cambiar los puntos de las dos con <b>Editar</b>.`,ver:{sec:'rep',pasos:[{el:'.rp-c',txt:'Aquí está tu check-list.'}]}},
  {ti:'«Tengo 1 pendiente»',body:`Algunos puntos los comprueba el panel solo. Si ves <b>Tengo N pendientes</b>, salen los nombres: tócalos para abrir su ficha y arreglarlo.<br><br>Por ejemplo, un cobro sin registrar o alguien que no ha reagendado.`},
  {ti:'Enviar',body:`Marca, añade una nota si quieres y <b>Enviar check-list</b>. Si falta algo por marcar, te pide confirmarlo.<br><br>Lo que vas marcando se guarda en ese móvil u ordenador hasta que lo envías.`,ver:{sec:'rep',pasos:[{el:'.rp-env',txt:'Enviar check-list.'}]}},
