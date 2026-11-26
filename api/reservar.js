@@ -12,8 +12,19 @@ const DIAS_VISTA = 35;          // cuántos días hacia delante se enseñan
 const TIPO_APP = 'recvCLCoYJ82LcPh9';  // «RESERVADA POR LA APP» en la tabla de tipos de cita
 const MARGEN_MIN = 0;           // se puede reservar hasta la hora de empezar, mientras el hueco esté libre
 
-// Al reservar desde la app: misma etapa automática que en el panel (Paciente nuevo o Activo)
-async function ponerEtapaCita(pid) { await require('./schedule').ponerEtapa(pid, 'cita'); }
+// Al reservar desde la app: misma etapa automática que en el panel (Paciente nuevo o Activo), quitando las demás etapas
+// (es Edge: no puede usar schedule.js, por eso va aquí repetido; la lista es la de ETAPAS_AUTO/ETAPAS_MANO de schedule.js)
+const ETAPAS_PAC = ['NO ACUDIÓ', 'PACIENTE NUEVO', 'ACTIVO', 'PACK INCOMPLETO', 'FIN PACK', 'SIN PRÓXIMA CITA', 'ALTA', 'SEGUIMIENTO', 'ABANDONO'];
+const ETAPAS_VIEJAS = /^(PENDIENTE|VALORACI|MANTENIMIENTO|SESIÓN ÚNICA|SESION UNICA)/;
+async function ponerEtapaCita(pid) {
+  const g = async path => (await fetch(`https://api.airtable.com/v0/${BASE_ID}/${path}`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+  const est = await g('tbldOsLe8iw78Wun7?fields[]=ESTADO&pageSize=100'); const E = {}, V = []; (est.records || []).forEach(x => { const n = String(x.fields['ESTADO'] || '').trim().toUpperCase(); E[n] = x.id; if (ETAPAS_VIEJAS.test(n)) V.push(x.id); });
+  const h = await g(`${CITAS}?filterByFormula=${encodeURIComponent(`AND(TRIM({ESTADO})='REALIZADA',FIND('${pid}',ARRAYJOIN({PacienteRec})))`)}&maxRecords=1&fields[]=FECHA`);
+  const nueva = E[(h.records || []).length ? 'ACTIVO' : 'PACIENTE NUEVO']; if (!nueva) return;
+  const p = await g(`${PACIENTES}/${pid}`); const act = (p.fields && p.fields['ESTADO']) || [];
+  const vida = ETAPAS_PAC.map(n => E[n]).filter(Boolean), nuevo = [...act.filter(id => !vida.includes(id) && !V.includes(id)), nueva];
+  if (nuevo.slice().sort().join() !== act.slice().sort().join()) await fetch(`https://api.airtable.com/v0/${BASE_ID}/${PACIENTES}/${pid}`, { method: 'PATCH', headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { ESTADO: nuevo } }) });
+}
 
 const H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: H });
