@@ -7459,6 +7459,9 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
         return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: await checklistItems(), dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
       }
+      if (action === 'seg-docs') { // Mis documentos y bloc de notas (api/_docs.js)
+        try { return res.status(200).json(await require('./_docs').hacer(q)); } catch (e) { return res.status(200).json({ ok: false, error: 'No se ha podido: ' + e.message }); }
+      }
       if (action === 'seg-chkrol') { // check-list del día de recepción o de dirección
         const rol = CHKROL_DEF[q.rol] ? q.rol : null; if (!rol) return res.status(400).json({ ok: false });
         const env = (await ajuste('chkrol-env', {})) || {}, dia = env[hoyF] || {};
