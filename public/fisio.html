@@ -10573,7 +10573,7 @@ async function renderReporte(wrap,ultimo){
   avs.innerHTML=L.slice(0,4).map(h=>`<button type="button" class="rp-av2" data-id="${escH(h.id)}"><span class="rp-av2i">!</span><span><b>${escH(h.de)} te pide: ${escH(h.asunto)}</b><small>${escH(comLimpia(h.extracto))}</small></span><em>Ver</em></button>`).join('');
   avs.querySelectorAll('.rp-av2').forEach(b=>b.onclick=()=>{COM.hilo=b.dataset.id;try{comGuarda();}catch(e){}showSection('com');});}).catch(()=>{});
  const box=ce('div','rp');wrap.appendChild(box);
- const yo=(fisioActual&&fisioActual.nombre)||'';const esFisio=(fisios||[]).some(f=>String(f.nombre).split(' ')[0].toLowerCase()===yo.split(' ')[0].toLowerCase());
+ const yo=(fisioActual&&fisioActual.nombre)||'';const esFisio=!(fisioActual&&fisioActual.role==='admin')&&(fisios||[]).some(f=>String(f.nombre).split(' ')[0].toLowerCase()===yo.split(' ')[0].toLowerCase()); // administración no hace la de fisio
  box.innerHTML='<div class="rp-c" style="color:var(--muted);font-size:13px">Cargando…</div>';
  let d;try{d=await (await fetch(`/api/schedule?action=seg-cierre&pwd=${encodeURIComponent(apiPwd)}&fisio=${encodeURIComponent(yo)}${esDireccion()?'&todos=1':''}${ultimo?'&ultimo=1':''}`)).json();}catch(e){d={ok:false};}
  if(!d.ok){box.innerHTML='<div class="rp-c">No se ha podido cargar. Vuelve a intentarlo.</div>';return;}
@@ -10626,7 +10626,7 @@ async function renderReporte(wrap,ultimo){
  pinta();
  // Recepción y dirección: cada check-list en su pestaña, arriba, para que no se mezclen
  const roles=chkRoles();if(!roles.length)return;
- const panes=[];if(esFisio||d.resumen)panes.push({k:'fisio',t:esFisio?'La mía de fisio':'Fisios',el:box});
+ const panes=[];if(esFisio||d.resumen)panes.push({k:'fisio',t:esFisio?'Fisio':'Equipo',el:box});
  roles.forEach(rol=>{const c=ce('div','rp');wrap.appendChild(c);renderChkRol(c,rol);panes.unshift({k:rol,t:rol==='recepcion'?'Recepción':'Dirección',el:c});});
  panes.sort((a,b)=>['recepcion','direccion','fisio'].indexOf(a.k)-['recepcion','direccion','fisio'].indexOf(b.k));
  if(panes.length<2)return;
