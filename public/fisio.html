@@ -643,6 +643,12 @@ button.fp-mas{background:none;border:none;font-family:var(--font);cursor:pointer
 @media(min-width:769px){#pmCap,#pmEjer{display:none!important}}
 @media(min-width:769px){.sidebar .sb-item{padding:7px 12px!important;font-size:13.5px!important;border-radius:11px!important}.sidebar .sb-ico svg{width:18px;height:18px}.sb-logo{padding:18px 22px 10px!important}.sb-grp{height:1px;background:rgba(26,26,26,.08);margin:6px 12px}#sidebar #sb-school,.sidebar #sb-school{margin-top:0!important;border-top:none!important;padding-top:7px!important;border-radius:11px!important}.sb-footer{padding-top:8px!important;padding-bottom:8px!important}}
 @media(max-width:768px){.sb-grp{display:none!important}}
+@media(min-width:769px){.sidebar .sb-grp{height:auto!important;width:auto!important;background:none!important;margin:8px 0 2px!important;padding:0!important}
+.sidebar .sb-grp>span{display:flex!important;align-items:center;gap:6px;cursor:pointer;user-select:none;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a0928a;padding:6px 14px!important;border-radius:9px}
+.sidebar .sb-grp>span:hover{color:#c2552e;background:#f7f1ec}.sidebar .sb-grp>span::after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin:-3px 0 0 auto;transition:transform .2s}
+.sidebar .sb-grp.cerrado>span::after{transform:rotate(-45deg);margin-top:0}.sidebar .sb-grp.aviso>span::before{content:'';order:2;width:6px;height:6px;border-radius:50%;background:#ee2155}
+.sidebar .sb-item.sb-plegado{display:none!important}.sidebar .sb-grp.vacio{display:none!important}}
+
 @media(min-width:769px){.sidebar .sb-grp{height:1.5px;width:22px;background:#e9b39c;border-radius:2px;margin:9px 0 9px 16px}.sidebar .sb-grp>span{display:none}} /* separador: una rayita naranja fina, sin títulos (así el menú cabe en la pantalla) */
 .jd-tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.jd-tipo button{font-family:var(--font);text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:11px 12px;cursor:pointer}.jd-tipo button b{display:block;font-size:13.5px;color:#1e2a38}.jd-tipo button span{font-size:11.5px;color:#7d6a60;line-height:1.35}.jd-tipo button.on{border-color:#c2552e;background:#fdf1e8}
 .jd-l{max-height:42vh;overflow-y:auto;border:1px solid var(--border);border-radius:14px}.jd-s{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;font-family:var(--font);text-align:left;background:none;border:none;border-top:1px solid #f1ede9;padding:10px 12px;cursor:pointer}.jd-s:first-child{border-top:none}.jd-s i{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #d9cfc7;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}.jd-s.on i{background:#c2552e;border-color:#c2552e}.jd-s b{font-size:13.5px;color:#1e2a38;font-weight:600}.jd-s span{font-size:12px;color:#7d6a60;margin-left:auto;text-align:right}
@@ -2823,6 +2829,17 @@ function pintarPerfil(){if(!fisioActual)return;try{setTimeout(novPunto,0);}catch
 function abrirPerfilMenu(modo){pintarPerfil();const m=$('perfilMenu');m.classList.toggle('mas',modo==='mas');m.classList.toggle('yo',modo!=='mas');
  // Un bloque sin nada que mostrar no sale
  m.querySelectorAll('.pm-gr').forEach(g=>{g.style.display=[...g.querySelectorAll('.pm-it')].some(b=>b.style.display!=='none')?'':'none';});m.classList.add('on');}
+// ── Menú lateral (ordenador): cada bloque (Equipo, Clínica, Lo mío, Gestión) se pliega y se despliega. Se recuerda;
+// el bloque de la pantalla abierta se abre solo, y si un bloque plegado tiene algo nuevo, su título lleva un punto
+function sbGrupos(){const nav=document.querySelector('.sb-nav');if(!nav)return [];const G=[];let g=null;
+ [...nav.children].forEach(el=>{if(el.classList.contains('sb-grp')){g={h:el,k:(el.textContent||'').trim(),its:[]};G.push(g);}else if(g&&el.classList.contains('sb-item'))g.its.push(el);});return G;}
+function sbPlegados(){try{return JSON.parse(localStorage.getItem('f365_sb_pleg')||'null');}catch(e){return null;}}
+function sbPinta(){const P=sbPlegados()||{Clínica:1,Gestión:1};sbGrupos().forEach(g=>{const cer=!!P[g.k];g.h.classList.toggle('cerrado',cer);
+  const vis=g.its.filter(i=>i.style.display!=='none');g.h.classList.toggle('vacio',!vis.length);
+  g.its.forEach(i=>i.classList.toggle('sb-plegado',cer&&!i.classList.contains('active')));
+  g.h.classList.toggle('aviso',cer&&vis.some(i=>i.classList.contains('nov-dot')||[...i.querySelectorAll('i,span[id$="badge"]')].some(b=>b.style.display!=='none'&&b.textContent.trim())));});}
+function sbAbreDe(sec){const it=document.getElementById('sb-'+sec);if(!it)return;const g=sbGrupos().find(x=>x.its.includes(it));if(!g)return;const P=sbPlegados()||{Clínica:1,Gestión:1};if(P[g.k]){delete P[g.k];try{localStorage.setItem('f365_sb_pleg',JSON.stringify(P));}catch(e){}}sbPinta();}
+setTimeout(()=>{sbGrupos().forEach(g=>{const sp=g.h.querySelector('span');if(sp)sp.onclick=()=>{const P=sbPlegados()||{Clínica:1,Gestión:1};P[g.k]?delete P[g.k]:P[g.k]=1;try{localStorage.setItem('f365_sb_pleg',JSON.stringify(P));}catch(e){}sbPinta();};});sbPinta();setInterval(sbPinta,4000);},0);
 function abrirMas(){abrirPerfilMenu('mas');}
 // El número de «Más»: lo nuevo que hay dentro (comunicaciones, sugerencias, valoraciones, daily report)
 function masBadge(){try{const n=['pmComN','pmSugN','pmValN','rdiaBadge'].reduce((a,i)=>{const e=$(i);return a+((e&&e.style.display!=='none'&&e.textContent.trim())?(parseInt(e.textContent)||1):0);},0);
@@ -2876,6 +2893,7 @@ function showSection(sec){try{resFlot();if(apiPwd)lesCarga();}catch(e){}
  if(sec!=='anam')anamVolver=null;
  if(sec==='anam'&&anamVolver){const v=anamVolver;$('topbar-s').innerHTML=`<button type="button" class="tb-volver">‹ Volver a la ficha de ${escH(capTit(String(v.nombre||'').split(' ').slice(0,2).join(' '))||'paciente')}</button>`;$('topbar-s').querySelector('.tb-volver').onclick=()=>{anamVolver=null;showSection(sessionStorage.getItem('f365_panel_prev')||'pac');abrirFichaPaciente(v.id,v.nombre);};}
  requestAnimationFrame(ajustaTopbar);
+ try{sbAbreDe(sec==='dia'||enDia?'dia':sec);}catch(e){}
  const wrap=$('mainWrap');
  wrap.innerHTML='';wrap.dataset.sec=sec;
  try{cursoAviso(sec);}catch(e){}
@@ -14774,6 +14792,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-26',t:'Menú de la izquierda (ordenador) más corto: Equipo, Clínica, Lo mío y Gestión se pliegan y despliegan tocando su título. Si un bloque plegado tiene algo nuevo, sale un punto.'},
 {f:'2026-11-26',aviso:1,t:'Nuevo: Mi carpeta (en el menú, Lo mío › Mi carpeta). Sube guías, guiones de talleres o PDFs, escribe documentos y compártelos con el equipo si quieres. Y un bloc de notas privado que se guarda solo.',ver:{sec:'docs',pasos:[{el:'.dc-bar',txt:'Aquí subes o escribes tus documentos.'}]}},
 {f:'2026-11-26',aviso:1,t:'Recepción y dirección ya tienen su check-list diaria, como la de los fisios: en Mi día › Check-list. Se marca y se envía cada día.',ver:{sec:'rep',pasos:[{el:'.rp-c',txt:'Aquí está tu check-list.'}]}},
 {f:'2026-11-26',aviso:1,t:'Los estados del paciente se ponen solos: Paciente nuevo, Activo, Pack incompleto, Fin pack, Sin próxima cita y No acudió (llevan un circulito). Alta, Seguimiento y Abandono se siguen marcando a mano y se quitan solos cuando vuelve a reservar.',ver:{sec:'pac',pasos:[{el:'.pv.fp:not(.rec-m) .fp-estb',txt:'Aquí, debajo del nombre.',click:['#pacResultados .pt-r']}]}},
