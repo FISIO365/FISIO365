@@ -1006,6 +1006,38 @@ ${tarjetas}
 </body></html>`;
 }
 
+// ── CHECK-LIST DIARIA DE RECEPCIÓN Y DE DIRECCIÓN (como la de los fisios, por puesto) ──
+// La lista se edita desde el propio check-list (dirección). Lo enviado se guarda en el ajuste «chkrol-env» (45 días).
+const CHKROL_DEF = {
+  recepcion: [
+    { k: 'abrir', t: '**Apertura**: iPad, móvil y TPV cargados, música puesta y buena temperatura' },
+    { k: 'espacio', t: 'Vasos en la fuente, **flyers** en buen estado y **cristales de la puerta** limpios' },
+    { k: 'bano', t: '**Baño**: papel higiénico y de manos, jabón y limpio (espejo, WC y suelo)' },
+    { k: 'ayer', t: 'Las citas de ayer tienen su **estado**, el **tipo de sesión** y el **importe** correctos' },
+    { k: 'cobros', t: '**Todos los cobros** del día registrados en el panel, con su ticket o factura' },
+    { k: 'consent', t: 'Las primeras visitas han firmado el **consentimiento**' },
+    { k: 'recordatorios', t: '**Recordatorios** de las citas de mañana enviados' },
+    { k: 'mensajes', t: '**WhatsApp, email y chat** contestados' },
+    { k: 'llamar', t: '**Por llamar**: llamadas de hoy hechas y resultado apuntado' },
+    { k: 'espera', t: '**Lista de espera** y huecos libres revisados' },
+    { k: 'regalo', t: '**Tarjetas regalo** del día gestionadas' },
+    { k: 'cierre', t: '**Cierre**: recepción, cuartito, Box 1 y Speediance recogidos; robot con agua limpia y la sucia vaciada' }
+  ],
+  direccion: [
+    { k: 'resumen', t: 'Leer el **email del resumen** de ayer' },
+    { k: 'equipo', t: '**Check-lists** de los fisios y de recepción enviadas; citas sin marcar resueltas' },
+    { k: 'ingresos', t: '**Ingresos** de ayer cuadran con la caja y el TPV (Panel de control)' },
+    { k: 'facturar', t: '**Sesiones sin facturar** y cobros pendientes revisados' },
+    { k: 'com', t: '**Comunicaciones**: vacaciones, incidencias y solicitudes contestadas' },
+    { k: 'sugerencias', t: '**Sugerencias** del equipo contestadas' },
+    { k: 'resenas', t: '**Reseñas** nuevas de Google contestadas y objetivo del mes en marcha' },
+    { k: 'agenda', t: '**Agenda** de los próximos días: huecos libres y ocupación de cada fisio' },
+    { k: 'pacientes', t: '**Por llamar** y pacientes sin próxima cita al día' }
+  ]
+};
+const CHKROL_TIT = { recepcion: 'recepción', direccion: 'dirección' };
+async function chkrolItems(rol) { const g = (await ajuste('chkrol-items', null)) || {}; const L = Array.isArray(g[rol]) && g[rol].length ? g[rol] : CHKROL_DEF[rol] || []; return L.filter(x => x && x.k && x.t).map(x => ({ k: String(x.k), t: String(x.t) })); }
+
 // ── CIERRE DEL DÍA: checklist de cada fisio (lo imprescindible antes de irse) ──
 const CIERRES_T = 'tblmJMoILPnxXzD8w';
 // Puntos del reporte diario (los que tienen «auto» los comprueba también el panel)
@@ -7427,6 +7459,11 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const resumen = q.todos ? { fisios: Object.entries(todos).map(([f, x]) => ({ fisio: f, citas: x.citas, pendientes: x.pendientes })), enviados: await cierresEnviados(fecha) } : null;
         return res.status(200).json({ ok: true, fecha, fisio: k || q.fisio || '', items: await checklistItems(), dia: todos[k] || { citas: 0, hechas: 0, checks: [], pendientes: 0 }, enviado: env, resumen });
       }
+      if (action === 'seg-chkrol') { // check-list del día de recepción o de dirección
+        const rol = CHKROL_DEF[q.rol] ? q.rol : null; if (!rol) return res.status(400).json({ ok: false });
+        const env = (await ajuste('chkrol-env', {})) || {}, dia = env[hoyF] || {};
+        return res.status(200).json({ ok: true, fecha: hoyF, rol, items: await chkrolItems(rol), enviado: dia[rol] || null, otros: Object.fromEntries(Object.keys(CHKROL_DEF).filter(r => r !== rol).map(r => [r, dia[r] ? { quien: dia[r].quien, t: dia[r].t, faltan: dia[r].faltan } : null])) });
+      }
       if (action === 'seg-tareas') {
         const PT = 'tblxPpPSvj15NWqNT';
         const rs = await todosT(PT, `filterByFormula=${encodeURIComponent('NOT({HECHO})')}&sort[0][field]=FECHA&sort[0][direction]=asc`);
@@ -7459,6 +7496,21 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         if (d.error) return res.status(200).json({ ok: false, error: 'No se ha podido guardar' });
         const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'app.fisioterapia365.com');
         return res.status(200).json({ ok: true, url: `https://${/fisioterapia365\.com|vercel\.app/.test(host) ? host : 'app.fisioterapia365.com'}/doc/${tk}`, n: sesiones.length });
+      }
+      if (action === 'seg-chkrol-enviar' || action === 'seg-chkrol-items') {
+        const rol = CHKROL_DEF[q.rol] ? q.rol : null; if (!rol) return res.status(400).json({ ok: false });
+        if (action === 'seg-chkrol-items') { // dirección cambia la lista (vacía = la de siempre)
+          const L = (Array.isArray(q.items) ? q.items : []).map(t => String(t || '').trim().slice(0, 240)).filter(Boolean).slice(0, 30);
+          const prev = await chkrolItems(rol), g = (await ajuste('chkrol-items', null)) || {};
+          g[rol] = L.length ? L.map((t, i) => { const y = prev.find(x => x.t === t); return { k: y ? y.k : 'p' + Date.now().toString(36) + i, t }; }) : null;
+          await guardarAjuste('chkrol-items', g, String(q.quien || '')); return res.status(200).json({ ok: true, items: await chkrolItems(rol) });
+        }
+        const items = await chkrolItems(rol), marc = (Array.isArray(q.marcados) ? q.marcados : []).filter(k => items.some(x => x.k === k));
+        const env = (await ajuste('chkrol-env', {})) || {}, lim = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10);
+        Object.keys(env).forEach(f => { if (f < lim) delete env[f]; });
+        (env[hoyF] = env[hoyF] || {})[rol] = { quien: String(q.quien || '').slice(0, 60), t: new Date().toISOString(), marcados: marc, faltan: items.length - marc.length, nota: String(q.nota || '').slice(0, 1000) };
+        await guardarAjuste('chkrol-env', env, String(q.quien || ''));
+        return res.status(200).json({ ok: true });
       }
       if (action === 'seg-cierre-enviar') {
         const fecha = /^\d{4}-\d{2}-\d{2}$/.test(q.fecha || '') ? q.fecha : hoyF;
