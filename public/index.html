@@ -1292,13 +1292,13 @@ async function loadEjercicios(){
     if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';
      {const kN='f365_nota_'+patient.id,hN=String(mensajeFisio.length)+':'+mensajeFisio.slice(0,40);let vis='';try{vis=localStorage.getItem(kN)||'';}catch(e){}
       if(vis!==hN&&document.getElementById('mensajeFisioCard').style.display!=='block'){toggleNotaFisio();try{localStorage.setItem(kN,hN);}catch(e){}}}if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}
-    if(data.ultimaSession===TODAY){mostrarCompletado();return;}
+    if(data.ultimaSession===TODAY){const L=localStorage.getItem(`hechos_${patient.id}_${TODAY}`);hechos=new Set(L?JSON.parse(L):ejercicios.map((e,i)=>ejKey(e,i)));renderEjercicios();mostrarCompletado();return;} // terminada: el «Buen trabajo» arriba y los ejercicios siguen a la vista, marcados
     lastFechaAsignacion=(data.ejercicios?.length||0)+'_'+(data.mensajeFisio||'');startPolling();
     const localKey=`hechos_${patient.id}_${TODAY}`;const local=localStorage.getItem(localKey);hechos=new Set(local?JSON.parse(local):[]);renderEjercicios();
   }catch(e){document.getElementById('ejList').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error de conexión</div></div>';}
 }
 
-function mostrarCompletado(){document.getElementById('vistaEjercicios').style.display='none';document.getElementById('vistaCompletado').style.display='block';}
+function mostrarCompletado(){window.sesionHoyHecha=1;const c=document.getElementById('vistaCompletado'),v=document.getElementById('vistaEjercicios');if(c&&v&&c.nextElementSibling!==v)v.parentNode.insertBefore(c,v);c.style.display='block';v.style.display='block';const d=document.getElementById('diarioSection');if(d)d.style.display='none';if(ejercicios.length&&!ejHechos()){hechos=new Set(ejercicios.map((e,i)=>ejKey(e,i)));renderEjercicios();}}
 
 
 // TEMPORIZADOR para ejercicios por tiempo (cuenta atrás con series, sonido y vibración)
@@ -1328,7 +1328,7 @@ function renderEjercicios(){
   const lista=document.getElementById('ejList');
   if(!ejercicios.length&&diaDescanso){lista.innerHTML=diasHTML()+`<div class="ej-vacio"><b>Hoy toca descansar</b>Tu fisio ha pensado tu entreno para otros días de la semana. Descansar también es parte de la recuperación.</div>`;const sub=document.getElementById('hoyHeroSub');if(sub)sub.textContent='Hoy toca descansar';return;}
   if(!ejercicios.length){lista.innerHTML=`<div class="ej-vacio"><b>Aún no tienes ejercicios</b>Tu fisio te los asignará después de tu sesión.</div>`;return;}
-  document.getElementById('diarioSection').style.display='block';
+  document.getElementById('diarioSection').style.display=window.sesionHoyHecha?'none':'block';
   const n=ejercicios.length,h=ejHechos();
   const sub=document.getElementById('hoyHeroSub');
   if(sub)sub.textContent=`${n} ${n===1?'ejercicio':'ejercicios'} · ${h===n?'¡todo hecho!':h?`${h} de ${n} hechos`:'pensados para ti'}`;
@@ -1716,7 +1716,7 @@ function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64S
 
 // POLLING
 let lastFechaAsignacion=null,pollingInterval=null;
-function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejTodos=data.ejercicios||[];aplicaDia();mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}if(data.ultimaSession!==TODAY){hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
+function startPolling(){if(pollingInterval)clearInterval(pollingInterval);pollingInterval=setInterval(async()=>{if(!patient)return;try{const res=await fetch(`/api/schedule?patientId=${patient.id}`);const data=await res.json();const newFecha=data.ejercicios?.length+'_'+(data.mensajeFisio||'');if(lastFechaAsignacion&&lastFechaAsignacion!==newFecha){ejTodos=data.ejercicios||[];aplicaDia();mensajeFisio=data.mensajeFisio||'';if(mensajeFisio){document.getElementById('mensajeFisioTexto').textContent=mensajeFisio;document.getElementById('notaFisioBtn').style.display='block';if(data.fisio)document.getElementById('mensajeFisioLabel').textContent='Nota de '+data.fisio.nombre.split(' ')[0];}if(data.ultimaSession!==TODAY){window.sesionHoyHecha=0;hechos=new Set();localStorage.removeItem(`hechos_${patient.id}_${TODAY}`);document.getElementById('vistaCompletado').style.display='none';document.getElementById('vistaEjercicios').style.display='block';renderEjercicios();toast('Tu programa ha sido actualizado',true);}}lastFechaAsignacion=newFecha;}catch(e){}},5*60*1000);}
 
 // MENÚ
 function toggleMenu(){const menu=document.getElementById('navMenu');const overlay=document.getElementById('navOverlay');menu.classList.contains('open')?cerrarMenu():(menu.classList.add('open'),overlay.classList.add('open'));}
