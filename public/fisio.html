@@ -12331,6 +12331,7 @@ function abrirNuevoPaciente(texto){
   <label class="fp-in"><span>Teléfono *</span><input type="tel" inputmode="tel" class="np-t" placeholder="612345678" value="${esTel?escH(texto):''}"></label>
   <label class="fp-in"><span>Email</span><input type="email" class="np-e" autocomplete="off" value="${esMail?escH(texto):''}"></label>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="fp-in"><span>DNI</span><input type="text" class="np-d" autocomplete="off"></label><label class="fp-in"><span>Fecha de nacimiento</span><input type="date" class="np-c"></label></div>
+  <label class="fp-in"><span>Motivo de la visita</span><input type="text" class="np-mo" autocomplete="off" placeholder="Ej.: dolor lumbar desde hace 2 semanas, postparto…"></label>
   <div class="hz-lab">Estado</div><div class="np-est"></div>
   <div class="np-accw"><button type="button" class="exp-seg np-acc on"><i></i><span>Darle acceso a la app</span></button>${infoI('Se le crea un PIN de 4 números para entrar en la app con su email. Lo verás al crear el paciente y en su ficha (Más › Acceso a la app).')}</div>
   <div class="hz-bts"><button type="button" class="hz-ok">Crear paciente</button></div>`);
@@ -12339,7 +12340,7 @@ function abrirNuevoPaciente(texto){
  let acc=true;const ba=m.querySelector('.np-acc');ba.onclick=()=>{acc=!acc;ba.classList.toggle('on',acc);};
  setTimeout(()=>{const f=m.querySelector(esTel||esMail||!texto?'.np-n':'.np-t');if(window.innerWidth>=700)f.focus();},50);
  const enviar=async(forzar,b)=>{
-  const datos={nombre:m.querySelector('.np-n').value.trim(),tel:m.querySelector('.np-t').value.trim(),email:m.querySelector('.np-e').value.trim(),dni:m.querySelector('.np-d').value.trim(),cumple:m.querySelector('.np-c').value,estados:sel.get(),acceso:acc};
+  const datos={nombre:m.querySelector('.np-n').value.trim(),tel:m.querySelector('.np-t').value.trim(),email:m.querySelector('.np-e').value.trim(),dni:m.querySelector('.np-d').value.trim(),cumple:m.querySelector('.np-c').value,motivo:m.querySelector('.np-mo').value.trim(),estados:sel.get(),acceso:acc};
   if(datos.nombre.length<3){toast('Escribe nombre y apellidos',false);return;}
   if(datos.tel.replace(/\D/g,'').length<9){toast('Escribe un teléfono válido',false);return;}
   if(acc&&!datos.email){toast('Para darle acceso a la app hace falta su email',false);return;}
@@ -14800,6 +14801,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-27',t:'Al crear un paciente nuevo ya puedes apuntar el motivo de la visita (sale luego en su ficha).'},
 {f:'2026-11-27',t:'App del paciente: al terminar la sesión del día, los ejercicios ya no desaparecen. Sale «Buen trabajo» arriba y debajo siguen sus ejercicios, marcados como hechos.'},
 {f:'2026-11-26',dir:1,t:'La Lista de la compra ya no va dentro del Daily report: tiene su propio sitio en Gestión.',ver:{sec:'comp'}},
 {f:'2026-11-26',dir:1,t:'Nuevo bloque «Ajustes» en el menú: ahí están Configuración (antes «Dirección»: equipo, accesos, listas, check-list…) y Últimos cambios.'},

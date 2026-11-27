@@ -7667,6 +7667,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const f = { 'FULL NAME': nombre, TELF: tel, WHATSAPP: tel, PIN: nuevoPin() };
         if (email) f.EMAIL = email;
         if (q.dni) f.DNI = String(q.dni).trim().toUpperCase();
+        if (String(q.motivo || '').trim()) f['MOTIVO DE VISITA'] = String(q.motivo).trim().slice(0, 300);
         if (/^\d{4}-\d{2}-\d{2}$/.test(q.cumple || '')) f.CUMPLE = q.cumple;
         if (q.notas) f.NOTAS = String(q.notas);
         if (q.motivo) f['MOTIVO DE VISITA'] = String(q.motivo).trim().slice(0, 2000);
