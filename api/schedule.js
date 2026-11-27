@@ -3372,6 +3372,7 @@ async function listarFacturas(ids, conBorradores) {
     const docs = await holdedTodos('/' + docTipo(tipoDoc) + '?limit=100&contact_id=' + encodeURIComponent(cid), 5).catch(e => { if (tipoDoc === 'salesreceipt') throw e; return []; });
     docs.forEach(d => {
       if (d.contact_id !== cid || (!d.document_number && !conBorradores)) return; // solo suyos y ya aprobados (el panel ve también los borradores)
+      if (!d.document_number) console.log('[borrador-holded]', d.id, JSON.stringify({ status: d.status, draft: d.draft, cancelled: d.cancelled, voided: d.voided, approved: d.approved_at, estado: d.state, anulado: d.annulled, keys: Object.keys(d).join(',') }));
       facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
     });
   }
