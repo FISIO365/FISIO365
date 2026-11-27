@@ -8615,6 +8615,15 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, ...out }); }
       // ── Para la gestoría: resumen del trimestre (IVA, retenciones y libros) en datos o en PDF ──
       if (action === 'fac-anual') return res.status(200).json({ ok: true, ...(await require('./_gestoria').anual(q.desde && q.hasta ? { desde: q.desde, hasta: q.hasta } : (q.anio || FACX.isoMad().slice(0, 4)))) });
+      if (action === 'fac-resumen-pdf') { // resumen de las facturas elegidas, para reclamar el pago
+        const ids = (Array.isArray(q.ids) ? q.ids : String(q.ids || '').split(',')).map(String).filter(x => /^fac[0-9a-f]{16}$/.test(x)).slice(0, 300);
+        if (!ids.length) return res.status(400).json({ ok: false, error: 'Elige alguna factura' });
+        const D = await FACX.db(), Cf = await FACX.config();
+        const L = (await D.query(`select id, codigo, fecha::text fecha, total::float total, cliente, pagos from fac_facturas where id = any($1) order by fecha, numero`, [ids])).rows.map(x => { const pg = x.pagos || {}, est = pg.estado;
+          return { codigo: x.codigo, fecha: x.fecha, total: x.total, cliente: x.cliente || {}, falta: est === 'pendiente' ? x.total : est === 'parcial' ? Math.max(0, x.total - (+pg.cobrado || 0)) : 0 }; });
+        const hoyR = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+        return enviaPdf(await require('./_resumen_pdf').pdfResumen(L, Cf.emisor || {}, hoyR), 'Resumen_facturas_' + hoyR);
+      }
       if (action === 'fac-gestoria' || action === 'fac-gestoria-pdf') { const GS = require('./_gestoria'), act = String(q.actividad || '');
         const X = await GS.datos({ desde: q.desde, hasta: q.hasta, actividad: act });
         if (action === 'fac-gestoria') return res.status(200).json({ ok: true, conf: await gesConf(), ...X, gastos: X.gastos.map(g => Object.assign(g, { falta: !g.archivo && !require('./_gastos').SIN_DOC.has(g.categoria) })) });

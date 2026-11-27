@@ -18090,30 +18090,11 @@ function fxSeleccion(c,L,repinta){
   bar.querySelector('.fxsel-zip').onclick=e=>fxSelZip(S,e.currentTarget);};
  c.querySelectorAll('.fx-f[data-id]').forEach(d=>{if(!d.querySelector('.fxsel-ck'))d.insertAdjacentHTML('afterbegin','<i class="fxsel-ck"></i>');d.onclick=e=>{e.preventDefault();e.stopPropagation();const id=d.dataset.id;FXSEL.ids.has(id)?FXSEL.ids.delete(id):FXSEL.ids.add(id);pinta();};});
  pinta();}
-// Resumen para reclamar: hoja con las facturas elegidas, lo que falta de cada una y el total. Sale en PDF de verdad (se descarga).
-function fxResHtml(S,E){const hoy=fxHoy(),clis=[...new Set(S.map(x=>(x.cliente||{}).nombre||''))],uno=clis.length===1?S[0].cliente||{}:null;
- const eur=n=>(Math.round((+n||0)*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €',fd=f=>String(f||'').slice(0,10).split('-').reverse().join('/');
- const dias=f=>Math.max(0,Math.round((Date.parse(hoy)-Date.parse(String(f).slice(0,10)))/864e5));
- const L=S.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))),tot=L.reduce((t,x)=>t+(+x.total||0),0),pend=L.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
- return {uno,html:`<div class="rsm"><style>.rsm{font-family:Poppins,sans-serif;color:#2b2420;background:#fff;width:720px;padding:34px 38px;box-sizing:border-box}.rsm *{box-sizing:border-box}
-.rsm .top{display:flex;justify-content:space-between;gap:20px;border-bottom:1.5px solid #E6DDD3;padding-bottom:18px;margin-bottom:22px}.rsm .top b{display:block;font-size:14.5px}.rsm .top small{display:block;color:#8a7d74;font-size:12px;line-height:1.5}
-.rsm h1{font-size:21px;margin:0 0 4px}.rsm .sub{color:#8a7d74;font-size:12.5px;margin-bottom:20px}
-.rsm table{width:100%;border-collapse:collapse;font-size:12.5px}.rsm th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#8a7d74;font-weight:600;padding:8px 6px;border-bottom:1.5px solid #E6DDD3}.rsm td{padding:9px 6px;border-bottom:1px solid #f0ebe5}.rsm .n{text-align:right;white-space:nowrap}.rsm tr{page-break-inside:avoid}
-.rsm .tot{display:flex;justify-content:flex-end;gap:28px;margin-top:18px}.rsm .tot div{text-align:right}.rsm .tot small{display:block;color:#8a7d74;font-size:11.5px}.rsm .tot b{font-size:19px}.rsm .tot .p b{color:#c2552e}
-.rsm .pie{margin-top:24px;font-size:12px;color:#8a7d74;line-height:1.6}</style>
-<div class="top"><div><b>${escH(E.razon||'Fourth Dynamic, S.L.')}</b><small>${escH([E.nif&&'NIF '+E.nif,E.direccion,[E.cp,E.ciudad].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</small><small>${escH([E.email,E.tel].filter(Boolean).join(' · '))}</small></div>
-${uno?`<div style="text-align:right"><small>Para</small><b>${escH(uno.nombre||'')}</b><small>${escH([uno.nif&&'NIF '+uno.nif,uno.direccion].filter(Boolean).join(' · '))}</small></div>`:''}</div>
-<h1>Resumen de facturas${L.some(x=>x.falta!=null)?' pendientes de pago':''}</h1><div class="sub">A fecha de ${fd(hoy)} · ${L.length} factura${L.length===1?'':'s'}</div>
-<table><thead><tr><th>Nº</th><th>Fecha</th>${uno?'':'<th>Cliente</th>'}<th class="n">Días</th><th class="n">Importe</th><th class="n">Pendiente</th></tr></thead><tbody>
-${L.map(x=>`<tr><td><b>${escH(x.codigo)}</b></td><td>${fd(x.fecha)}</td>${uno?'':`<td>${escH((x.cliente||{}).nombre||'')}</td>`}<td class="n">${dias(x.fecha)}</td><td class="n">${eur(x.total)}</td><td class="n"><b>${eur(x.falta!=null?x.falta:x.total)}</b></td></tr>`).join('')}
-</tbody></table>
-<div class="tot"><div><small>Total facturado</small><b>${eur(tot)}</b></div><div class="p"><small>Total pendiente</small><b>${eur(pend)}</b></div></div>
-<div class="pie">Os agradeceríamos que nos hicierais el pago del importe pendiente${E.iban?` a la cuenta <b>${escH(E.iban)}</b>`:''}, indicando el número de las facturas. Si alguna ya está pagada, decídnoslo y lo revisamos. Gracias.</div></div>`};}
-async function fxResPdf(S){let I={};try{I=await fxInicio();}catch(e){}const E=(I.config||{}).emisor||{};
- if(!window.html2pdf)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});
- const {uno,html}=fxResHtml(S,E),hold=ce('div');hold.style.cssText='position:fixed;left:-10000px;top:0;z-index:-1';hold.innerHTML=html;document.body.appendChild(hold);
- try{await (document.fonts&&document.fonts.ready);const blob=await html2pdf().set({margin:[8,6,10,6],image:{type:'jpeg',quality:.96},html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'},pagebreak:{mode:['css','legacy']}}).from(hold.firstChild).outputPdf('blob');
-  return {blob,nombre:`Resumen facturas${uno&&uno.nombre?' '+uno.nombre:''} ${fxHoy()}`.replace(/[\\/:*?"<>|]+/g,'-')+'.pdf'};}finally{hold.remove();}}
+// Resumen para reclamar: PDF hecho en el servidor (api/_resumen_pdf.js) con las facturas elegidas y el total pendiente
+async function fxResPdf(S){const clis=[...new Set(S.map(x=>(x.cliente||{}).nombre||''))];
+ const r=await fetch('/api/schedule?action=fac-resumen-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:apiPwd,ids:S.map(x=>x.id)})});
+ if(!r.ok||!/pdf/.test(r.headers.get('Content-Type')||''))throw new Error('No se ha podido hacer el resumen');
+ return {blob:await r.blob(),nombre:`Resumen facturas${clis.length===1&&clis[0]?' '+capTit(clis[0]):''} ${fxHoy()}`.replace(/[\\/:*?"<>|]+/g,'-')+'.pdf'};}
 async function fxSelResumen(S,b){const t0=b&&b.textContent;if(b){b.disabled=true;b.textContent='Preparando…';}
  try{const r=await fxResPdf(S);fxBajar(r.blob,r.nombre);}catch(e){toast('No se ha podido hacer el PDF. Revisa la conexión.',false);}
  if(b){b.disabled=false;b.textContent=t0;}}
