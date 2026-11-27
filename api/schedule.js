@@ -3491,7 +3491,12 @@ async function programaApp(patientId) {
       }
     }
   } catch(e) { fisio = null; }
-  return { ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession: plan['UltimaSession'] || '' };
+  // ¿Ya hizo hoy su sesión? Lo dice su registro de días hechos (TAREAS), que es lo que ve en «Mi progreso»
+  let ultimaSession = plan['UltimaSession'] || '';
+  try { const hoyM = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());
+    if (/^rec[A-Za-z0-9]{14}$/.test(String(patientId)) && String(ultimaSession).slice(0, 10) !== hoyM) { const t = await (await fetch(`https://api.airtable.com/v0/${BASE_ID}/tblIXYE5ToRNY7MN4?filterByFormula=${encodeURIComponent(`AND({PacienteId}='${patientId}',DATETIME_FORMAT({Fecha},'YYYY-MM-DD')='${hoyM}')`)}&maxRecords=1`, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })).json();
+      if ((t.records || []).length) ultimaSession = hoyM; } } catch (e) {}
+  return { ejercicios, fisio, mensajeFisio: plan['MensajeFisio'] || '', ultimaSession };
 }
 
 module.exports = async function handler(req, res) {
