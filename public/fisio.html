@@ -1507,6 +1507,13 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fxb-prev{display:flex;flex-direction:column;gap:6px}.fxb-prev div{display:flex;gap:10px;font-size:12.5px;align-items:baseline}.fxb-prev span:first-child{color:#9a8d84;flex:none;width:40px}.fxb-prev span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:600px){.fxg-iv,.fxg-ivh{grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr) 30px}.fxb-cr{grid-template-columns:1fr 30px}.fxb-cr input:nth-child(2),.fxb-cr select{grid-column:1}}
 .fx-est{font-style:normal;font-weight:600}.fx-est.pend{color:#b7791f}.fx-est.ok{color:#1d7a3e}.fx-est.no{color:#b42318}.fx-est.fac{color:#7d6a60}
+.fxsel-bt{font:600 12.5px var(--font);border:1.5px solid #e6ddd5;background:#fff;color:#7d6a60;border-radius:99px;padding:8px 14px;cursor:pointer;margin-left:auto}
+.fxsel-on .fx-f{cursor:pointer}.fxsel-on .fxp-bts{display:none!important}.fxsel-ck{width:20px;height:20px;border-radius:7px;border:1.5px solid #d9cfc6;flex:none;margin-right:10px;align-self:center;display:grid;place-items:center;background:#fff}
+.fx-f.sel{background:#fdf6f1}.fx-f.sel .fxsel-ck{background:#c2552e;border-color:#c2552e}.fx-f.sel .fxsel-ck::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.fxsel-bar{position:sticky;bottom:calc(14px + env(safe-area-inset-bottom));z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#1e1b19;color:#fff;border-radius:20px;padding:10px 12px 10px 18px;margin-top:12px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.fxsel-n{display:flex;flex-direction:column;margin-right:auto}.fxsel-n b{font-size:14px}.fxsel-n small{font-size:12px;color:#d8cdc4}
+.fxsel-bar button{font:600 13px var(--font);border:1.5px solid rgba(255,255,255,.25);background:none;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}.fxsel-bar .fxsel-res{background:#c2552e;border-color:#c2552e}.fxsel-bar button:disabled{opacity:.4;cursor:default}
+@media(max-width:768px){.fxsel-bar{bottom:calc(96px + env(safe-area-inset-bottom))}}
 .fx-emp{display:flex;flex-direction:column;margin:0 0 8px}.fx-emp b{font-size:15px;color:#1e2a38}.fx-emp span{font-size:12px;color:#8a7f77}
 .fx-tagact{font-style:normal;font-size:10.5px;font-weight:600;color:#c2552e;background:#fdf1eb;border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:2px;white-space:nowrap}
 .fx-elact{display:flex;flex-direction:column;gap:8px;margin-top:6px}.fx-elact button{display:flex;align-items:center;gap:12px;font:600 15px var(--font);text-align:left;background:#fff;border:1.5px solid #eee5dd;border-radius:16px;padding:14px 16px;cursor:pointer}.fx-elact button:hover{border-color:#c2552e}.fx-elact img{width:28px;height:28px;object-fit:contain;border-radius:8px}
@@ -14811,6 +14818,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-27',dir:1,adm:1,t:'Facturación: en Facturas, Tickets y Por cobrar ya puedes «Seleccionar» varias y sacar un resumen para reclamar (con el total pendiente) o descargar sus PDF en un ZIP.',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,adm:1,aviso:1,t:'Facturación más clara: al entrar tienes un Inicio con lo de cada día (nueva factura o ticket, subir un gasto, por cobrar y lo de la gestoría) y arriba eliges ver Todo Fourth Dynamic junto, o solo FISIO365 o CerraPoint.',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación más ordenada: Ventas (facturas, tickets, presupuestos, por cobrar y clientes), Gastos (gastos y proveedores), Banco, Gestoría (lo que se manda a la gestoría y los resultados del año) y Ajustes (con VeriFactu).',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación › Gestoría: el «Excel para la gestoría» ya lo lleva todo en un archivo: resumen del IVA y retenciones, facturas emitidas, gastos y movimientos del banco del periodo.',ver:{sec:'fx'}},
@@ -17957,12 +17965,12 @@ async function renderFacturacion(wrap){
   // Arriba los 4 apartados (siempre a la vista); debajo, un desplegable corto con las partes del apartado
   const GR=soloAdm?[['Inicio',[['ini','Inicio']]],['Gastos',[['gas','Gastos']]],['Por cobrar',[['pend','Por cobrar']]]]:[['Inicio',[['ini','Inicio']]],['Ventas',[['lista','Facturas'],['tick','Tickets'],['pres','Presupuestos'],['rec','Facturas recurrentes'],['pend','Por cobrar'],['cli','Clientes']]],['Gastos',[['gas','Gastos'],['prov','Proveedores']]],['Banco',[['banco','Banco']]],['Gestoría',[['gest','Para la gestoría'],['res','Resultados del año']]],['Ajustes',[['aj','Ajustes'],['vf','VeriFactu (Hacienda)'],prin?['comp','Comparar con Holded']:null].filter(Boolean)]];
   const tabs=GR.flatMap(g=>g[1]);if(!tabs.some(t=>t[0]===FX.tab))FX.tab=tabs[0][0];const G=GR.find(g=>g[1].some(t=>t[0]===FX.tab));
-  m.innerHTML=`${A.length>1?`<div class="fx-emp"><b>${escH((I&&I.config&&I.config.empresa&&I.config.empresa.nombre)||'Fourth Dynamic, S.L.')}</b><span>Una empresa, dos actividades: míralo todo junto o solo una</span></div><div class="fx-acts"><button type="button" data-a="todo" class="${FX.ver==='todo'?'on':''}"><span>Todo</span></button>${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.ver===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
+  m.innerHTML=`${A.length>1?`<div class="fx-emp"><b>${escH((I&&I.config&&I.config.emisor&&I.config.emisor.razon)||'Fourth Dynamic, S.L.')}</b><span>Una empresa, dos actividades: míralo todo junto o solo una</span></div><div class="fx-acts"><button type="button" data-a="todo" class="${FX.ver==='todo'?'on':''}"><span>Todo</span></button>${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.ver===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
   <div class="fx-tabs fx-tabs1">${GR.map(g=>`<button type="button" data-t="${g[1][0][0]}" class="${g===G?'on':''}">${g[0]}</button>`).join('')}</div>
   <div class="fx-top">${G[1].length>1?fxSel('fx-nav',G[1],FX.tab,'Parte'):''}<button type="button" class="fx-nueva">＋ Nueva factura</button></div>
   ${prin&&FX.tab==='lista'&&!soloAdm?((I&&I.modo||{}).propio?`<div class="fx-aviso fx-aviso-ok"><span>Facturando con el panel desde el ${new Date(I.modo.desde).toLocaleDateString('es-ES')}: cada cobro hace su factura aquí y se manda a Hacienda.</span><button type="button" class="fxb-si fx-cambio">Ajustes del cambio</button></div>`:'<div class="fx-aviso"><span><b>En pruebas.</b> Cada cobro hace aquí su copia con el número de Holded; Holded sigue siendo la que vale.</span><button type="button" class="fxb-si fx-cambio">Preparar el cambio</button></div>'):''}<div class="fx-c"></div>`;
   m.querySelectorAll('.fx-acts button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;FX.ver=a;if(a!=='todo')FX.act=a;FX.serie='';try{sessionStorage.setItem('f365_fx_act',FX.act);sessionStorage.setItem('f365_fx_ver',FX.ver);}catch(e){}pinta();});
-  FX.ir=t=>{if(t==='gas'&&FX.gfil==='prov'){FX.gfil='';FX.gprov='';}FX.tab=t;try{sessionStorage.setItem('f365_fx_tab',t);}catch(e){}pinta();window.scrollTo(0,0);};
+  FX.ir=t=>{FXSEL.on=false;FXSEL.ids.clear();if(t==='gas'&&FX.gfil==='prov'){FX.gfil='';FX.gprov='';}FX.tab=t;try{sessionStorage.setItem('f365_fx_tab',t);}catch(e){}pinta();window.scrollTo(0,0);};
   {const nv=m.querySelector('.fx-nav');if(nv)nv.onchange=()=>FX.ir(nv.value);m.querySelectorAll('.fx-tabs1 button').forEach(b=>b.onclick=()=>FX.ir(b.dataset.t));}
   {const bc=m.querySelector('.fx-cambio');if(bc)bc.onclick=()=>fxCambio(async()=>{I=await fxInicio(true).catch(()=>I);pinta();});}
   const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{modo:'pres'}));}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxConAct(()=>fxCliente(null,()=>pinta()));}else if(FX.tab==='gas'){bn.textContent='＋ Nuevo gasto';bn.onclick=()=>fxGasto(null,()=>pinta());}else if(FX.tab==='banco'){bn.textContent='＋ Subir extracto';bn.onclick=()=>fxImportar(()=>pinta());}else if(FX.tab==='tick'){bn.textContent='＋ Nuevo ticket';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{tipo:'simplificada'}));}else if(FX.tab==='rec'){bn.textContent='＋ Nueva recurrente';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{modo:'rec'}));}else if(FX.tab==='lista'){bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{tipo:'completa'}));}else bn.hidden=true;
@@ -18029,6 +18037,7 @@ async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='ticket
    <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}${FX.ver==='todo'&&(FX._acts||[]).length>1?`<i class="fx-tagact">${escH(fxActNom((FX._acts||[]).find(a=>a.id===(x.actividad||'principal'))||{id:x.actividad||'principal'}))}</i>`:''}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}${x.fecha_cobro&&x.fecha_cobro!==x.fecha?` · <em class="fx-otro">cobrado el ${+x.fecha_cobro.slice(8)}/${+x.fecha_cobro.slice(5,7)}</em>`:''}${x.rectificada?' · rectificada':(x.pagos||{}).estado==='pendiente'?' · <em class="fx-pend">Pendiente de pago</em>':''}${x.sustituida_por?' · sustituida por '+escH(x.sustituida_por):''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">No hay facturas en este periodo'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
  c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>fxLista(c,clase)));
  c.querySelector('.fx-perw').replaceWith(fxPeriodo(()=>fxLista(c,clase)));
+ fxSeleccion(c,L,()=>fxLista(c,clase));
  {const se=c.querySelector('.fx-ser');if(se)se.onchange=e=>{FX.serie=e.target.value;fxLista(c,clase);};}
  const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c,clase).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
 // ── Facturación › Inicio: lo de cada día a mano (nueva factura, gasto, por cobrar, gestoría) y lo último ──
@@ -18062,6 +18071,56 @@ async function fxPortada(c,repinta){
   box.innerHTML=F.length?F.map(x=>`<button type="button" class="fx-f" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}</small></span><span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}${FX.ver==='todo'&&(FX._acts||[]).length>1?`<i class="fx-tagact">${escH(fxActNom((FX._acts||[]).find(a=>a.id===(x.actividad||'principal'))||{id:x.actividad||'principal'}))}</i>`:''}</b><small>${x.prueba?'copia de Holded':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">Nada en los últimos 30 días.</div>';
   box.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>repinta()));});
 }
+// ── Seleccionar facturas (Facturas, Tickets y Por cobrar) y sacar un resumen para reclamar, o sus PDF en un ZIP ──
+const FXSEL={on:false,ids:new Set()};
+function fxSeleccion(c,L,repinta){
+ const fil=c.querySelector('.fx-fil');if(!fil||!L.length)return;
+ const bt=ce('button','fxsel-bt');bt.type='button';bt.textContent=FXSEL.on?'Dejar de seleccionar':'Seleccionar';fil.appendChild(bt);
+ bt.onclick=()=>{FXSEL.on=!FXSEL.on;FXSEL.ids.clear();repinta();};
+ if(!FXSEL.on)return;
+ const M={};L.forEach(x=>M[x.id]=x);[...FXSEL.ids].forEach(id=>{if(!M[id])FXSEL.ids.delete(id);});
+ c.classList.add('fxsel-on');
+ const bar=ce('div','fxsel-bar');c.appendChild(bar);
+ const pinta=()=>{const S=L.filter(x=>FXSEL.ids.has(x.id)),tot=S.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
+  c.querySelectorAll('.fx-f[data-id]').forEach(d=>d.classList.toggle('sel',FXSEL.ids.has(d.dataset.id)));
+  bar.innerHTML=`<div class="fxsel-n"><b>${S.length} seleccionada${S.length===1?'':'s'}</b><small>${fxEur(tot)}</small></div><button type="button" class="fxsel-all">${S.length===L.length?'Ninguna':'Todas'}</button><button type="button" class="fxsel-res"${S.length?'':' disabled'}>Resumen</button><button type="button" class="fxsel-zip"${S.length?'':' disabled'}>Facturas (ZIP)</button>`;
+  bar.querySelector('.fxsel-all').onclick=()=>{if(S.length===L.length)FXSEL.ids.clear();else L.forEach(x=>FXSEL.ids.add(x.id));pinta();};
+  bar.querySelector('.fxsel-res').onclick=()=>fxSelResumen(S);
+  bar.querySelector('.fxsel-zip').onclick=e=>fxSelZip(S,e.currentTarget);};
+ c.querySelectorAll('.fx-f[data-id]').forEach(d=>{if(!d.querySelector('.fxsel-ck'))d.insertAdjacentHTML('afterbegin','<i class="fxsel-ck"></i>');d.onclick=e=>{e.preventDefault();e.stopPropagation();const id=d.dataset.id;FXSEL.ids.has(id)?FXSEL.ids.delete(id):FXSEL.ids.add(id);pinta();};});
+ pinta();}
+// Resumen para reclamar: una hoja con las facturas elegidas, lo que falta de cada una y el total (se imprime o se guarda en PDF)
+async function fxSelResumen(S){let I={};try{I=await fxInicio();}catch(e){}const E=(I.config||{}).emisor||{};
+ const clis=[...new Set(S.map(x=>(x.cliente||{}).nombre||''))],uno=clis.length===1?S[0].cliente||{}:null,hoy=fxHoy();
+ const eur=n=>(Math.round((+n||0)*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €',fd=f=>String(f||'').slice(0,10).split('-').reverse().join('/');
+ const dias=f=>Math.max(0,Math.round((Date.parse(hoy)-Date.parse(String(f).slice(0,10)))/864e5));
+ const L=S.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+ const tot=L.reduce((t,x)=>t+(+x.total||0),0),pend=L.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
+ const w=window.open('','_blank');if(!w){toast('El navegador ha bloqueado la ventana: permite las ventanas emergentes',false);return;}
+ w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Resumen de facturas${uno?' · '+escH(uno.nombre||''):''}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#2b2420;background:#F5F2EE;margin:0;padding:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hoja{max-width:760px;margin:0 auto;background:#fff;border-radius:22px;padding:34px 38px;border:1px solid #E6DDD3}
+.top{display:flex;justify-content:space-between;gap:20px;border-bottom:1.5px solid #E6DDD3;padding-bottom:18px;margin-bottom:22px}.top b{display:block;font-size:14.5px}.top small{display:block;color:#8a7d74;font-size:12px;line-height:1.5}
+h1{font-size:21px;margin:0 0 4px}.sub{color:#8a7d74;font-size:12.5px;margin-bottom:20px}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a7d74;font-weight:600;padding:8px 6px;border-bottom:1.5px solid #E6DDD3}td{padding:10px 6px;border-bottom:1px solid #f0ebe5}td.n,th.n{text-align:right;white-space:nowrap}
+.tot{display:flex;justify-content:flex-end;gap:28px;margin-top:18px}.tot div{text-align:right}.tot small{display:block;color:#8a7d74;font-size:11.5px}.tot b{font-size:20px}.tot .p b{color:#c2552e}
+.pie{margin-top:26px;font-size:12px;color:#8a7d74;line-height:1.6}.imp{display:block;margin:18px auto 0;font:600 14px Poppins;background:#c2552e;color:#fff;border:none;border-radius:99px;padding:11px 26px;cursor:pointer}@media print{body{background:#fff;padding:0}.hoja{border:none;padding:0}.imp{display:none}}</style></head><body><div class="hoja">
+<div class="top"><div><b>${escH(E.razon||'Fourth Dynamic, S.L.')}</b><small>${escH([E.nif&&'NIF '+E.nif,E.direccion,[E.cp,E.ciudad].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</small><small>${escH([E.email,E.tel].filter(Boolean).join(' · '))}</small></div>
+${uno?`<div style="text-align:right"><small>Para</small><b>${escH(uno.nombre||'')}</b><small>${escH([uno.nif&&'NIF '+uno.nif,uno.direccion].filter(Boolean).join(' · '))}</small></div>`:''}</div>
+<h1>Resumen de facturas${pend<tot-0.004||L.some(x=>x.falta!=null)?' pendientes de pago':''}</h1><div class="sub">A fecha de ${fd(hoy)} · ${L.length} factura${L.length===1?'':'s'}</div>
+<table><thead><tr><th>Nº</th><th>Fecha</th>${uno?'':'<th>Cliente</th>'}<th class="n">Días</th><th class="n">Importe</th><th class="n">Pendiente</th></tr></thead><tbody>
+${L.map(x=>`<tr><td><b>${escH(x.codigo)}</b></td><td>${fd(x.fecha)}</td>${uno?'':`<td>${escH((x.cliente||{}).nombre||'')}</td>`}<td class="n">${dias(x.fecha)}</td><td class="n">${eur(x.total)}</td><td class="n"><b>${eur(x.falta!=null?x.falta:x.total)}</b></td></tr>`).join('')}
+</tbody></table>
+<div class="tot"><div><small>Total facturado</small><b>${eur(tot)}</b></div><div class="p"><small>Total pendiente</small><b>${eur(pend)}</b></div></div>
+<div class="pie">Os agradeceríamos que nos hicierais el pago del importe pendiente${E.iban?` a la cuenta <b>${escH(E.iban)}</b>`:''}, indicando el número de las facturas. Si alguna ya está pagada, decídnoslo y lo revisamos. Gracias.</div>
+<button class="imp" onclick="print()">Imprimir o guardar en PDF</button></div></body></html>`);w.document.close();}
+// Las facturas elegidas, cada una en su PDF, dentro de un ZIP
+async function fxSelZip(S,b){const t0=b.textContent;b.disabled=true;
+ try{if(!window.JSZip)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});}catch(_){toast('No se ha podido preparar el ZIP. Revisa la conexión.',false);b.disabled=false;return;}
+ const z=new JSZip();let k=0,mal=0;
+ for(const x of S){b.textContent=`${++k} de ${S.length}…`;try{const r=await fetch(fxUrl(x.id,x.k));if(!r.ok)throw 0;z.file(`${x.codigo} ${(x.cliente||{}).nombre||''}`.replace(/[\\/:*?"<>|]+/g,'-').trim().slice(0,90)+'.pdf',await r.blob());}catch(_){mal++;}}
+ const out=await z.generateAsync({type:'blob'});fxBajar(out,`Facturas_${fxHoy()}.zip`);b.textContent=t0;b.disabled=false;if(mal)toast(`${mal} factura${mal>1?'s':''} no se ha${mal>1?'n':''} podido añadir`,false);}
 // Comparar con Holded: primero el resumen del periodo (un día por fila, si cuadra o no) y, al tocar un día, su detalle
 async function fxComparar(c,dia){if(!dia&&!FX.cmpDia)return fxCompararRango(c);if(dia)FX.cmpDia=dia;return fxCompararDia(c,FX.cmpDia);}
 async function fxCompararRango(c){FX.cmpDia='';const [desde,hasta]=fxPerIni();c.innerHTML='<div class="fx-fil"><span class="fx-perw"></span></div><div class="card"><div class="fac-vacio">Cargando…</div></div>';
@@ -18799,7 +18858,8 @@ async function fxPendientes(c){c.innerHTML='<div class="card"><div class="fac-va
  c.querySelectorAll('.fxp-f').forEach(d=>{const id=d.dataset.id;d.onclick=()=>fxDetalle(id,()=>fxPendientes(c));
   d.querySelector('.fxp-rec').onclick=e=>{e.stopPropagation();fxEnviar(id,e.currentTarget,()=>fxPendientes(c),{recordar:1});};
   d.querySelector('.fxp-ok').onclick=e=>{e.stopPropagation();const m=hzModal(`<p class="pq-t">¿Cómo la han pagado?</p><div class="fx-chips fxp-modo">${['Transferencia','Tarjeta','Bizum','Efectivo'].map(t=>`<button type="button">${t}</button>`).join('')}</div><div class="hz-bts"><button type="button" class="hz-re">Cancelar</button></div>`);
-   m.querySelector('.hz-re').onclick=()=>m.remove();m.querySelectorAll('.fxp-modo button').forEach(b=>b.onclick=async()=>{const x=await agPost('fac-pago',{id,estado:'pagada',modo:b.textContent}).catch(()=>({}));if(!x.ok){toast(x.error||'No se ha podido',false);return;}m.remove();toast('Marcada como cobrada',true);fxPendientes(c);});};});}
+   m.querySelector('.hz-re').onclick=()=>m.remove();m.querySelectorAll('.fxp-modo button').forEach(b=>b.onclick=async()=>{const x=await agPost('fac-pago',{id,estado:'pagada',modo:b.textContent}).catch(()=>({}));if(!x.ok){toast(x.error||'No se ha podido',false);return;}m.remove();toast('Marcada como cobrada',true);fxPendientes(c);});};});
+ fxSeleccion(c,L,()=>fxPendientes(c));}
 // ── Presupuestos ──
 const FX_EST={pendiente:['Pendiente','pend'],aceptado:['Aceptado','ok'],rechazado:['Rechazado','no'],facturado:['Facturado','fac']};
 const fxPresUrl=(id,k)=>`/api/schedule?action=fac-pres-ver&id=${id}&k=${encodeURIComponent(k)}&pdf=1`;
