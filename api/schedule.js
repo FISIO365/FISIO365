@@ -3347,6 +3347,8 @@ async function marcarRectificadas(facturas, ids, pac) {
   const porId = new Map(facturas.map(f => [String(f.id), f])), libres = () => facturas.filter(f => !f.borrador && !f.rectificada && f.tipo !== 'propia');
   const pon = (f, d) => { f.rectificada = d.document_number || 'sí'; };
   const sinEnlace = [];
+  // El listado no trae de qué ticket sale: se abre cada rectificativa (son pocas) para leer su enlace
+  await Promise.all(rects.map(async (d, i) => { if (d.from && (d.from.id || d.from._id)) return; for (const t of ['receipt-notes', 'credit-notes']) { const x = await holded('/' + t + '/' + d.id).catch(() => null); if (x && x.id) { rects[i] = Object.assign({}, d, x); if (!global._rectLog) { global._rectLog = 1; console.log('[rectificadas] detalle', JSON.stringify(x).slice(0, 1500)); } break; } } }));
   for (const d of rects) { const de = d.from && (d.from.id || d.from._id) ? String(d.from.id || d.from._id) : '';
     if (de && porId.has(de)) { pon(porId.get(de), d); continue; }
     const txt = [d.description, d.desc, d.notes, ...(d.lines || []).map(l => (l.name || '') + ' ' + (l.desc || l.description || ''))].join(' ');
