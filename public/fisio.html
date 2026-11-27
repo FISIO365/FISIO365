@@ -1512,7 +1512,7 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fx-f.sel{background:#fdf6f1}.fx-f.sel .fxsel-ck{background:#c2552e;border-color:#c2552e}.fx-f.sel .fxsel-ck::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .fxsel-bar{position:sticky;bottom:calc(14px + env(safe-area-inset-bottom));z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#1e1b19;color:#fff;border-radius:20px;padding:10px 12px 10px 18px;margin-top:12px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .fxsel-n{display:flex;flex-direction:column;margin-right:auto}.fxsel-n b{font-size:14px}.fxsel-n small{font-size:12px;color:#d8cdc4}
-.fxsel-bar button{font:600 13px var(--font);border:1.5px solid rgba(255,255,255,.25);background:none;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}.fxsel-bar .fxsel-res{background:#c2552e;border-color:#c2552e}.fxsel-bar button:disabled{opacity:.4;cursor:default}
+.fxsel-bar button{font:600 13px var(--font);border:1.5px solid rgba(255,255,255,.25);background:none;color:#fff;border-radius:99px;padding:8px 14px;cursor:pointer}.fxsel-bar .fxsel-todo{background:#c2552e;border-color:#c2552e}.fxsel-bar button:disabled{opacity:.4;cursor:default}
 @media(max-width:768px){.fxsel-bar{bottom:calc(96px + env(safe-area-inset-bottom))}}
 .fx-emp{display:flex;flex-direction:column;margin:0 0 8px}.fx-emp b{font-size:15px;color:#1e2a38}.fx-emp span{font-size:12px;color:#8a7f77}
 .fx-tagact{font-style:normal;font-size:10.5px;font-weight:600;color:#c2552e;background:#fdf1eb;border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:2px;white-space:nowrap}
@@ -14818,7 +14818,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
-{f:'2026-11-27',dir:1,adm:1,t:'Facturación: en Facturas, Tickets y Por cobrar ya puedes «Seleccionar» varias y sacar un resumen para reclamar (con el total pendiente) o descargar sus PDF en un ZIP.',ver:{sec:'fx'}},
+{f:'2026-11-27',dir:1,adm:1,t:'Facturación: en Facturas, Tickets y Por cobrar ya puedes «Seleccionar» varias y descargar «Resumen + facturas» (el resumen para reclamar en PDF y cada factura, en un ZIP), solo el resumen o solo las facturas.',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,adm:1,aviso:1,t:'Facturación más clara: al entrar tienes un Inicio con lo de cada día (nueva factura o ticket, subir un gasto, por cobrar y lo de la gestoría) y arriba eliges ver Todo Fourth Dynamic junto, o solo FISIO365 o CerraPoint.',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación más ordenada: Ventas (facturas, tickets, presupuestos, por cobrar y clientes), Gastos (gastos y proveedores), Banco, Gestoría (lo que se manda a la gestoría y los resultados del año) y Ajustes (con VeriFactu).',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación › Gestoría: el «Excel para la gestoría» ya lo lleva todo en un archivo: resumen del IVA y retenciones, facturas emitidas, gastos y movimientos del banco del periodo.',ver:{sec:'fx'}},
@@ -18083,44 +18083,47 @@ function fxSeleccion(c,L,repinta){
  const bar=ce('div','fxsel-bar');c.appendChild(bar);
  const pinta=()=>{const S=L.filter(x=>FXSEL.ids.has(x.id)),tot=S.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
   c.querySelectorAll('.fx-f[data-id]').forEach(d=>d.classList.toggle('sel',FXSEL.ids.has(d.dataset.id)));
-  bar.innerHTML=`<div class="fxsel-n"><b>${S.length} seleccionada${S.length===1?'':'s'}</b><small>${fxEur(tot)}</small></div><button type="button" class="fxsel-all">${S.length===L.length?'Ninguna':'Todas'}</button><button type="button" class="fxsel-res"${S.length?'':' disabled'}>Resumen</button><button type="button" class="fxsel-zip"${S.length?'':' disabled'}>Facturas (ZIP)</button>`;
+  bar.innerHTML=`<div class="fxsel-n"><b>${S.length} seleccionada${S.length===1?'':'s'}</b><small>${fxEur(tot)}</small></div><button type="button" class="fxsel-all">${S.length===L.length?'Ninguna':'Todas'}</button><button type="button" class="fxsel-todo"${S.length?'':' disabled'}>Resumen + facturas</button><button type="button" class="fxsel-res"${S.length?'':' disabled'}>Solo resumen</button><button type="button" class="fxsel-zip"${S.length?'':' disabled'}>Solo facturas</button>`;
   bar.querySelector('.fxsel-all').onclick=()=>{if(S.length===L.length)FXSEL.ids.clear();else L.forEach(x=>FXSEL.ids.add(x.id));pinta();};
-  bar.querySelector('.fxsel-res').onclick=()=>fxSelResumen(S);
+  bar.querySelector('.fxsel-todo').onclick=e=>fxSelZip(S,e.currentTarget,true);
+  bar.querySelector('.fxsel-res').onclick=e=>fxSelResumen(S,e.currentTarget);
   bar.querySelector('.fxsel-zip').onclick=e=>fxSelZip(S,e.currentTarget);};
  c.querySelectorAll('.fx-f[data-id]').forEach(d=>{if(!d.querySelector('.fxsel-ck'))d.insertAdjacentHTML('afterbegin','<i class="fxsel-ck"></i>');d.onclick=e=>{e.preventDefault();e.stopPropagation();const id=d.dataset.id;FXSEL.ids.has(id)?FXSEL.ids.delete(id):FXSEL.ids.add(id);pinta();};});
  pinta();}
-// Resumen para reclamar: una hoja con las facturas elegidas, lo que falta de cada una y el total (se imprime o se guarda en PDF)
-async function fxSelResumen(S){let I={};try{I=await fxInicio();}catch(e){}const E=(I.config||{}).emisor||{};
- const clis=[...new Set(S.map(x=>(x.cliente||{}).nombre||''))],uno=clis.length===1?S[0].cliente||{}:null,hoy=fxHoy();
+// Resumen para reclamar: hoja con las facturas elegidas, lo que falta de cada una y el total. Sale en PDF de verdad (se descarga).
+function fxResHtml(S,E){const hoy=fxHoy(),clis=[...new Set(S.map(x=>(x.cliente||{}).nombre||''))],uno=clis.length===1?S[0].cliente||{}:null;
  const eur=n=>(Math.round((+n||0)*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €',fd=f=>String(f||'').slice(0,10).split('-').reverse().join('/');
  const dias=f=>Math.max(0,Math.round((Date.parse(hoy)-Date.parse(String(f).slice(0,10)))/864e5));
- const L=S.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
- const tot=L.reduce((t,x)=>t+(+x.total||0),0),pend=L.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
- const w=window.open('','_blank');if(!w){toast('El navegador ha bloqueado la ventana: permite las ventanas emergentes',false);return;}
- w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Resumen de facturas${uno?' · '+escH(uno.nombre||''):''}</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#2b2420;background:#F5F2EE;margin:0;padding:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.hoja{max-width:760px;margin:0 auto;background:#fff;border-radius:22px;padding:34px 38px;border:1px solid #E6DDD3}
-.top{display:flex;justify-content:space-between;gap:20px;border-bottom:1.5px solid #E6DDD3;padding-bottom:18px;margin-bottom:22px}.top b{display:block;font-size:14.5px}.top small{display:block;color:#8a7d74;font-size:12px;line-height:1.5}
-h1{font-size:21px;margin:0 0 4px}.sub{color:#8a7d74;font-size:12.5px;margin-bottom:20px}
-table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a7d74;font-weight:600;padding:8px 6px;border-bottom:1.5px solid #E6DDD3}td{padding:10px 6px;border-bottom:1px solid #f0ebe5}td.n,th.n{text-align:right;white-space:nowrap}
-.tot{display:flex;justify-content:flex-end;gap:28px;margin-top:18px}.tot div{text-align:right}.tot small{display:block;color:#8a7d74;font-size:11.5px}.tot b{font-size:20px}.tot .p b{color:#c2552e}
-.pie{margin-top:26px;font-size:12px;color:#8a7d74;line-height:1.6}.imp{display:block;margin:18px auto 0;font:600 14px Poppins;background:#c2552e;color:#fff;border:none;border-radius:99px;padding:11px 26px;cursor:pointer}@media print{body{background:#fff;padding:0}.hoja{border:none;padding:0}.imp{display:none}}</style></head><body><div class="hoja">
+ const L=S.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))),tot=L.reduce((t,x)=>t+(+x.total||0),0),pend=L.reduce((t,x)=>t+(x.falta!=null?+x.falta:+x.total||0),0);
+ return {uno,html:`<div class="rsm"><style>.rsm{font-family:Poppins,sans-serif;color:#2b2420;background:#fff;width:720px;padding:34px 38px;box-sizing:border-box}.rsm *{box-sizing:border-box}
+.rsm .top{display:flex;justify-content:space-between;gap:20px;border-bottom:1.5px solid #E6DDD3;padding-bottom:18px;margin-bottom:22px}.rsm .top b{display:block;font-size:14.5px}.rsm .top small{display:block;color:#8a7d74;font-size:12px;line-height:1.5}
+.rsm h1{font-size:21px;margin:0 0 4px}.rsm .sub{color:#8a7d74;font-size:12.5px;margin-bottom:20px}
+.rsm table{width:100%;border-collapse:collapse;font-size:12.5px}.rsm th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#8a7d74;font-weight:600;padding:8px 6px;border-bottom:1.5px solid #E6DDD3}.rsm td{padding:9px 6px;border-bottom:1px solid #f0ebe5}.rsm .n{text-align:right;white-space:nowrap}.rsm tr{page-break-inside:avoid}
+.rsm .tot{display:flex;justify-content:flex-end;gap:28px;margin-top:18px}.rsm .tot div{text-align:right}.rsm .tot small{display:block;color:#8a7d74;font-size:11.5px}.rsm .tot b{font-size:19px}.rsm .tot .p b{color:#c2552e}
+.rsm .pie{margin-top:24px;font-size:12px;color:#8a7d74;line-height:1.6}</style>
 <div class="top"><div><b>${escH(E.razon||'Fourth Dynamic, S.L.')}</b><small>${escH([E.nif&&'NIF '+E.nif,E.direccion,[E.cp,E.ciudad].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</small><small>${escH([E.email,E.tel].filter(Boolean).join(' · '))}</small></div>
 ${uno?`<div style="text-align:right"><small>Para</small><b>${escH(uno.nombre||'')}</b><small>${escH([uno.nif&&'NIF '+uno.nif,uno.direccion].filter(Boolean).join(' · '))}</small></div>`:''}</div>
-<h1>Resumen de facturas${pend<tot-0.004||L.some(x=>x.falta!=null)?' pendientes de pago':''}</h1><div class="sub">A fecha de ${fd(hoy)} · ${L.length} factura${L.length===1?'':'s'}</div>
+<h1>Resumen de facturas${L.some(x=>x.falta!=null)?' pendientes de pago':''}</h1><div class="sub">A fecha de ${fd(hoy)} · ${L.length} factura${L.length===1?'':'s'}</div>
 <table><thead><tr><th>Nº</th><th>Fecha</th>${uno?'':'<th>Cliente</th>'}<th class="n">Días</th><th class="n">Importe</th><th class="n">Pendiente</th></tr></thead><tbody>
 ${L.map(x=>`<tr><td><b>${escH(x.codigo)}</b></td><td>${fd(x.fecha)}</td>${uno?'':`<td>${escH((x.cliente||{}).nombre||'')}</td>`}<td class="n">${dias(x.fecha)}</td><td class="n">${eur(x.total)}</td><td class="n"><b>${eur(x.falta!=null?x.falta:x.total)}</b></td></tr>`).join('')}
 </tbody></table>
 <div class="tot"><div><small>Total facturado</small><b>${eur(tot)}</b></div><div class="p"><small>Total pendiente</small><b>${eur(pend)}</b></div></div>
-<div class="pie">Os agradeceríamos que nos hicierais el pago del importe pendiente${E.iban?` a la cuenta <b>${escH(E.iban)}</b>`:''}, indicando el número de las facturas. Si alguna ya está pagada, decídnoslo y lo revisamos. Gracias.</div>
-<button class="imp" onclick="print()">Imprimir o guardar en PDF</button></div></body></html>`);w.document.close();}
-// Las facturas elegidas, cada una en su PDF, dentro de un ZIP
-async function fxSelZip(S,b){const t0=b.textContent;b.disabled=true;
+<div class="pie">Os agradeceríamos que nos hicierais el pago del importe pendiente${E.iban?` a la cuenta <b>${escH(E.iban)}</b>`:''}, indicando el número de las facturas. Si alguna ya está pagada, decídnoslo y lo revisamos. Gracias.</div></div>`};}
+async function fxResPdf(S){let I={};try{I=await fxInicio();}catch(e){}const E=(I.config||{}).emisor||{};
+ if(!window.html2pdf)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});
+ const {uno,html}=fxResHtml(S,E),hold=ce('div');hold.style.cssText='position:fixed;left:-10000px;top:0;z-index:-1';hold.innerHTML=html;document.body.appendChild(hold);
+ try{await (document.fonts&&document.fonts.ready);const blob=await html2pdf().set({margin:[8,6,10,6],image:{type:'jpeg',quality:.96},html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'},pagebreak:{mode:['css','legacy']}}).from(hold.firstChild).outputPdf('blob');
+  return {blob,nombre:`Resumen facturas${uno&&uno.nombre?' '+uno.nombre:''} ${fxHoy()}`.replace(/[\\/:*?"<>|]+/g,'-')+'.pdf'};}finally{hold.remove();}}
+async function fxSelResumen(S,b){const t0=b&&b.textContent;if(b){b.disabled=true;b.textContent='Preparando…';}
+ try{const r=await fxResPdf(S);fxBajar(r.blob,r.nombre);}catch(e){toast('No se ha podido hacer el PDF. Revisa la conexión.',false);}
+ if(b){b.disabled=false;b.textContent=t0;}}
+// Todo junto para reclamar: el resumen en PDF y el PDF de cada factura, en un ZIP
+async function fxSelZip(S,b,conRes){const t0=b.textContent;b.disabled=true;
  try{if(!window.JSZip)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);});}catch(_){toast('No se ha podido preparar el ZIP. Revisa la conexión.',false);b.disabled=false;return;}
- const z=new JSZip();let k=0,mal=0;
+ const z=new JSZip();let k=0,mal=0,nom='Facturas';
+ if(conRes){b.textContent='Resumen…';try{const r=await fxResPdf(S);z.file('00 '+r.nombre,r.blob);nom=r.nombre.replace(/\.pdf$/,'').replace(/^Resumen facturas/,'Facturas');}catch(_){mal++;}}
  for(const x of S){b.textContent=`${++k} de ${S.length}…`;try{const r=await fetch(fxUrl(x.id,x.k));if(!r.ok)throw 0;z.file(`${x.codigo} ${(x.cliente||{}).nombre||''}`.replace(/[\\/:*?"<>|]+/g,'-').trim().slice(0,90)+'.pdf',await r.blob());}catch(_){mal++;}}
- const out=await z.generateAsync({type:'blob'});fxBajar(out,`Facturas_${fxHoy()}.zip`);b.textContent=t0;b.disabled=false;if(mal)toast(`${mal} factura${mal>1?'s':''} no se ha${mal>1?'n':''} podido añadir`,false);}
+ const out=await z.generateAsync({type:'blob'});fxBajar(out,nom+'.zip');b.textContent=t0;b.disabled=false;if(mal)toast(`${mal} archivo${mal>1?'s':''} no se ha${mal>1?'n':''} podido añadir`,false);}
 // Comparar con Holded: primero el resumen del periodo (un día por fila, si cuadra o no) y, al tocar un día, su detalle
 async function fxComparar(c,dia){if(!dia&&!FX.cmpDia)return fxCompararRango(c);if(dia)FX.cmpDia=dia;return fxCompararDia(c,FX.cmpDia);}
 async function fxCompararRango(c){FX.cmpDia='';const [desde,hasta]=fxPerIni();c.innerHTML='<div class="fx-fil"><span class="fx-perw"></span></div><div class="card"><div class="fac-vacio">Cargando…</div></div>';
