@@ -246,7 +246,7 @@ async function lista(f) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(f.desde || '')) { p.push(f.desde); w.push(`fecha>=$${p.length}`); }
   if (/^\d{4}-\d{2}-\d{2}$/.test(f.hasta || '')) { p.push(f.hasta); w.push(`fecha<=$${p.length}`); }
   if (f.serie) { p.push(f.serie); w.push(`serie=$${p.length}`); }
-  if (f.actividad) { p.push(f.actividad); w.push(`actividad=$${p.length}`); }
+  if (f.actividad && f.actividad !== 'todo') { p.push(f.actividad); w.push(`actividad=$${p.length}`); }
   if (f.paciente) { p.push(f.paciente); w.push(`paciente=$${p.length}`); }
   // Como en Holded: «facturas» = completas y sus rectificativas; «tickets» = simplificadas y sus rectificativas
   const rTipo = `(select o.tipo from fac_facturas o where o.id=fac_facturas.rectifica)`;
@@ -362,7 +362,7 @@ async function buscarClientes(actividad, q) { const D = await db(), t = '%' + St
   const vistos = new Set(a.map(x => (x.nif || '').toUpperCase() || x.nombre.toLowerCase()));
   b.forEach(c => { const k = (c.nif || '').toUpperCase() || String(c.nombre).toLowerCase(); if (!vistos.has(k)) { vistos.add(k); a.push(c); } });
   return a.slice(0, 12); }
-async function listaClientes(actividad) { const D = await db(); return (await D.query(`select * from fac_clientes where actividad=$1 order by lower(nombre) limit 2000`, [actividad])).rows; }
+async function listaClientes(actividad) { const D = await db(); return (await D.query(`select * from fac_clientes where ($1='todo' or actividad=$1) order by lower(nombre) limit 2000`, [actividad])).rows; }
 async function borrarCliente(id) { const D = await db(); await D.query(`delete from fac_clientes where id=$1`, [id]); }
 
 // ── Presupuestos: como una factura pero sin valor fiscal; se pueden cambiar mientras estén pendientes y se convierten en factura ──
@@ -382,7 +382,7 @@ async function guardarPresupuesto(o) {
     await q.query(`insert into fac_presupuestos(id,actividad,anio,numero,codigo,fecha,validez,cliente,lineas,impuestos,base,cuota,total,nota,por) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [id, act, anio, n, codigo, fecha, validez, cli, JSON.stringify(c.lineas), JSON.stringify(c.impuestos), c.base, c.cuota, c.total, String(o.nota || '').slice(0, 2000) || null, String(o.por || '').slice(0, 60) || null]); return { id, codigo }; });
   await guardarCliente(act, cli).catch(() => {}); return r; }
-async function presupuestos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ['actividad=$1'];
+async function presupuestos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ["($1='todo' or actividad=$1)"];
   if (f.estado) { p.push(f.estado); w.push(`estado=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(codigo) like $${p.length} or lower(cliente->>'nombre') like $${p.length})`); }
   return (await D.query(`select id, codigo, fecha::text fecha, validez::text validez, cliente, total::float total, estado, factura, nota from fac_presupuestos where ${w.join(' and ')} order by fecha desc, creado desc limit 500`, p)).rows; }

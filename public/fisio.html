@@ -1507,6 +1507,16 @@ textarea.fx-in{resize:vertical;line-height:1.5}.fx-bus{flex:1;min-width:200px;ma
 .fxb-prev{display:flex;flex-direction:column;gap:6px}.fxb-prev div{display:flex;gap:10px;font-size:12.5px;align-items:baseline}.fxb-prev span:first-child{color:#9a8d84;flex:none;width:40px}.fxb-prev span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:600px){.fxg-iv,.fxg-ivh{grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr) 30px}.fxb-cr{grid-template-columns:1fr 30px}.fxb-cr input:nth-child(2),.fxb-cr select{grid-column:1}}
 .fx-est{font-style:normal;font-weight:600}.fx-est.pend{color:#b7791f}.fx-est.ok{color:#1d7a3e}.fx-est.no{color:#b42318}.fx-est.fac{color:#7d6a60}
+.fx-emp{display:flex;flex-direction:column;margin:0 0 8px}.fx-emp b{font-size:15px;color:#1e2a38}.fx-emp span{font-size:12px;color:#8a7f77}
+.fx-tagact{font-style:normal;font-size:10.5px;font-weight:600;color:#c2552e;background:#fdf1eb;border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:2px;white-space:nowrap}
+.fx-elact{display:flex;flex-direction:column;gap:8px;margin-top:6px}.fx-elact button{display:flex;align-items:center;gap:12px;font:600 15px var(--font);text-align:left;background:#fff;border:1.5px solid #eee5dd;border-radius:16px;padding:14px 16px;cursor:pointer}.fx-elact button:hover{border-color:#c2552e}.fx-elact img{width:28px;height:28px;object-fit:contain;border-radius:8px}
+.fxp-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.fxp-c{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;font-family:var(--font);background:#fff;border:1px solid rgba(26,26,26,.08);box-shadow:0 1px 3px rgba(26,26,26,.05);border-radius:20px;padding:18px;cursor:pointer;min-height:150px;box-sizing:border-box}
+div.fxp-c{cursor:default}.fxp-c:hover{border-color:#e9c3ae}.fxp-c b{font-size:15px;color:#1e2a38;margin-top:6px}.fxp-c small{font-size:12.5px;color:#8a7f77;line-height:1.45}.fxp-c em{font-style:normal;font-weight:700;color:#c2552e}
+.fxp-ic{width:38px;height:38px;border-radius:12px;background:#fdf1eb;display:grid;place-items:center}.fxp-ic svg{width:20px;height:20px;fill:none;stroke:#c2552e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.fxp-bts{display:flex;gap:8px;margin-top:auto;padding-top:10px;width:100%}.fxp-bts button{flex:1;font:600 13px var(--font);border:1.5px solid #c2552e;background:#fff;color:#c2552e;border-radius:99px;padding:8px 10px;cursor:pointer}.fxp-bts button:first-child{background:#c2552e;color:#fff}
+.fxp-av{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}.fxp-av:empty{display:none}.fxp-a{font:500 13.5px var(--font);text-align:left;background:#fffaf3;border:1px solid #f0e0c8;color:#7a5a2c;border-radius:14px;padding:11px 14px;cursor:pointer}.fxp-a b{color:#c2552e}
+.fxp-ult{padding:14px 16px}.fxp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.fxp-h b{font-size:14.5px}.fxp-todas{font:600 12.5px var(--font);background:none;border:none;color:#c2552e;cursor:pointer}
 .fx-acts{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.fx-acts button{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--font);border:1.5px solid #ece6e0;background:#fff;color:#5f554e;border-radius:14px;padding:9px 16px;cursor:pointer}.fx-acts button.on{border-color:#c2552e;color:#c2552e;background:#fdf6f2}.fx-acts img{height:18px;max-width:80px;object-fit:contain}
 .fx-logo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.fx-lprev{display:flex;align-items:center;justify-content:center;min-width:140px;height:56px;border:1.5px dashed #e8dfd7;border-radius:12px;padding:6px 12px;background:#fff}.fx-lprev img{max-height:40px;max-width:180px;object-fit:contain}.fx-lprev em{font-style:normal;font-size:12.5px;color:#9a8d84}.fx-logo label{cursor:pointer}.fx-pend{font-style:normal;color:#c2552e;font-weight:600}
 .fx-pagst{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 14px;margin-bottom:10px;font-size:13.5px;font-weight:600}.fx-pagst.ok{background:#ecf7ef;color:#1d7a3e}.fx-pagst.pend{background:#fbeee7;color:#c2552e}
@@ -14801,6 +14811,7 @@ async function cursoEquipoUno(box,CID){const R=WIKI_RUTAS.find(x=>x.id===CID);if
 // ── School: «Enséñamelo» (lleva a la pantalla real y señala dónde tocar) y Novedades ──
 // NOVEDADES: cada cambio de la app que note el equipo se apunta aquí (lo más nuevo arriba). Ver CLAUDE.md del proyecto.
 const NOVEDADES=[
+{f:'2026-11-27',dir:1,adm:1,aviso:1,t:'Facturación más clara: al entrar tienes un Inicio con lo de cada día (nueva factura o ticket, subir un gasto, por cobrar y lo de la gestoría) y arriba eliges ver Todo Fourth Dynamic junto, o solo FISIO365 o CerraPoint.',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación más ordenada: Ventas (facturas, tickets, presupuestos, por cobrar y clientes), Gastos (gastos y proveedores), Banco, Gestoría (lo que se manda a la gestoría y los resultados del año) y Ajustes (con VeriFactu).',ver:{sec:'fx'}},
 {f:'2026-11-27',dir:1,t:'Facturación › Gestoría: el «Excel para la gestoría» ya lo lleva todo en un archivo: resumen del IVA y retenciones, facturas emitidas, gastos y movimientos del banco del periodo.',ver:{sec:'fx'}},
 {f:'2026-11-27',t:'Al crear un paciente nuevo ya puedes apuntar el motivo de la visita (sale luego en su ficha).'},
@@ -17472,7 +17483,7 @@ function renderFormacion(wrap, ruta){
  ]},
  {t:'Dirección: Facturación',sub:'Solo lo ve dirección',dir:1,
  cards:[
- {ti:'Cómo está ordenada',body:`En <b>Facturación</b> (menú de tu perfil) arriba eliges la <b>actividad</b> (la clínica o CerraPoint) y uno de los 5 apartados: <b>Ventas</b> (facturas, tickets, presupuestos, por cobrar y clientes), <b>Gastos</b> (y proveedores), <b>Banco</b>, <b>Gestoría</b> (lo que se les manda y los resultados del año) y <b>Ajustes</b> (con VeriFactu). Debajo, un desplegable con sus partes.<br><br>El <b>periodo</b> se elige con la pastilla de fechas (hoy, este mes, el trimestre, este año o entre dos fechas) y con las flechas vas al de antes o al de después. Vale para todo.`,ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'Los 5 apartados.'},{el:'.fx-top',txt:'Y aquí sus partes.'}]}},
+ {ti:'Cómo está ordenada',body:`En <b>Facturación</b> arriba eliges qué ver: <b>Todo</b> (toda Fourth Dynamic junta: es una sola empresa) o solo <b>FISIO365</b> o <b>CerraPoint</b>. Al entrar sale <b>Inicio</b>, con lo de cada día: nueva factura o ticket, subir un gasto, por cobrar y lo de la gestoría. Luego están los 5 apartados: <b>Ventas</b> (facturas, tickets, presupuestos, por cobrar y clientes), <b>Gastos</b> (y proveedores), <b>Banco</b>, <b>Gestoría</b> (lo que se les manda y los resultados del año) y <b>Ajustes</b> (con VeriFactu). Debajo, un desplegable con sus partes.<br><br>El <b>periodo</b> se elige con la pastilla de fechas (hoy, este mes, el trimestre, este año o entre dos fechas) y con las flechas vas al de antes o al de después. Vale para todo.`,ver:{sec:'fx',pasos:[{el:'.fx-tabs1',txt:'Los 5 apartados.'},{el:'.fx-top',txt:'Y aquí sus partes.'}]}},
  {ti:'Ventas: facturas y tickets',body:`<b>Facturas</b> son las completas (con NIF y dirección) y <b>Tickets</b> las simplificadas; cada lista lleva también sus rectificativas.<br><br>Al tocar una ves sus líneas y tienes <b>Ver</b>, <b>Descargar</b>, <b>Enviar</b> (email con el PDF o WhatsApp con un enlace), <b>Rectificar</b> y <b>Duplicar</b>. Una factura hecha no se borra: si está mal, se rectifica.`,ver:{sec:'fx',pasos:[{el:'.fx-c',txt:'Toca una para ver sus botones.'}]}},
  {ti:'Cobrar lo pendiente',body:`En <b>Ventas › Por cobrar</b> está lo que nos deben y desde cuándo. <b>Recordar</b> manda el email o el WhatsApp, y puedes dejar puestos los recordatorios automáticos.<br><br>Las pendientes llevan un botón <b>Pagar con tarjeta</b>: cuando el cliente paga, la factura queda pagada sola y te llega un aviso. Administración también ve esta parte.`},
  {ti:'Gastos y banco',body:`En <b>Gastos</b> subes la foto o el PDF de la factura del proveedor y se rellena sola (revísala antes de guardar). Recepción también puede subirlos. Y si las reenviáis a la dirección de <b>Gastos por email</b> (Ajustes), aparecen en <b>Llegadas por email</b> ya leídas.<br><br>En <b>Banco</b> están los movimientos del BBVA (llegan solos desde Holded cada día o con <b>Traer de Holded</b>). Cada movimiento se une a su factura o a su gasto; lo que se repite, el panel lo recuerda.`},
@@ -17919,7 +17930,13 @@ const rdEur=n=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maxi
 // Punto en el menú cuando hay un día nuevo sin ver (el de ayer)
 function rdiaBadge(){try{const b=$('rdiaBadge'),pm=$('pmRdiaN');if(!b)return;let d='none';if(RD_DIR){const ay=rdMas(rdHoy(),-1),v=localStorage.getItem('f365_rdia_visto')||'';d=v<ay?'':'none';}b.style.display=d;if(pm)pm.style.display=d;}catch(e){}}
 // ── Facturación propia (dirección): facturas del panel en paralelo con Holded, series, diseños e IVA ──
-let FX={tab:'lista',mes:null,serie:'',q:'',ini:null,act:'principal'};
+let FX={tab:'ini',mes:null,serie:'',q:'',ini:null,act:'principal',ver:'todo'};
+// Lo que se ve: toda la empresa ('todo') o una actividad. FX.act es con la que se crea (factura, gasto, cliente…)
+const fxVer=()=>FX.ver==='todo'?'todo':FX.act;
+// Con «Todo» elegido, al crear algo se pregunta de qué actividad es
+function fxConAct(fn){const A=(FX._acts||[]);if(FX.ver!=='todo'||A.length<2){fn();return;}
+ const m=hzModal(`<div class="hz-top"><div><small>Fourth Dynamic, S.L.</small><b>¿De qué actividad?</b></div><button type="button" class="hz-x" aria-label="Cerrar">✕</button></div><div class="fx-elact">${A.map(a=>`<button type="button" data-a="${a.id}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`);
+ m.querySelector('.hz-x').onclick=()=>m.remove();m.querySelectorAll('.fx-elact button').forEach(b=>b.onclick=()=>{m.remove();FX.act=b.dataset.a;fn();});}
 const fxActNom=a=>a.id==='principal'?(a.nombre||(window.CLINICA&&CLINICA.marca)||'Clínica'):(a.nombre||a.id);
 const fxSeries=I=>I.series.filter(s=>(s.actividad||'principal')===FX.act);
 const fxEur=n=>(Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
@@ -17932,24 +17949,24 @@ async function renderFacturacion(wrap){
  const soloAdm=!esDireccion()&&!!(fisioActual&&fisioActual.role==='admin');
  if(!esDireccion()&&!soloAdm){wrap.innerHTML='<div class="card"><div class="fac-vacio">Esta sección es solo para dirección y administración.</div></div>';return;}
  if(!FX.mes)FX.mes=fxHoy().slice(0,7);
- try{FX.act=sessionStorage.getItem('f365_fx_act')||FX.act;FX.tab=sessionStorage.getItem('f365_fx_tab')||FX.tab;}catch(e){}
+ try{FX.act=sessionStorage.getItem('f365_fx_act')||FX.act;FX.ver=sessionStorage.getItem('f365_fx_ver')||FX.ver;FX.tab=sessionStorage.getItem('f365_fx_tab')||FX.tab;}catch(e){}
  const m=ce('div','fx');wrap.appendChild(m);
  let I=null;try{I=await fxInicio();}catch(e){}
- const pinta=()=>{const A=(I&&I.config.actividades)||[{id:'principal'}];if(!A.some(a=>a.id===FX.act))FX.act='principal';const prin=FX.act==='principal';
+ const pinta=()=>{const A=(I&&I.config.actividades)||[{id:'principal'}];FX._acts=A;if(!A.some(a=>a.id===FX.act))FX.act='principal';if(A.length<2)FX.ver=FX.act;else if(FX.ver!=='todo'&&!A.some(a=>a.id===FX.ver))FX.ver='todo';const prin=FX.act==='principal';
   // Pestañas en dos niveles: arriba los apartados y, si un apartado tiene varias cosas, debajo sus partes
   // Arriba los 4 apartados (siempre a la vista); debajo, un desplegable corto con las partes del apartado
-  const GR=soloAdm?[['Gastos',[['gas','Gastos']]],['Por cobrar',[['pend','Por cobrar']]]]:[['Ventas',[['lista','Facturas'],['tick','Tickets'],['pres','Presupuestos'],['rec','Facturas recurrentes'],['pend','Por cobrar'],['cli','Clientes']]],['Gastos',[['gas','Gastos'],['prov','Proveedores']]],['Banco',[['banco','Banco']]],['Gestoría',[['gest','Para la gestoría'],['res','Resultados del año']]],['Ajustes',[['aj','Ajustes'],['vf','VeriFactu (Hacienda)'],prin?['comp','Comparar con Holded']:null].filter(Boolean)]];
+  const GR=soloAdm?[['Inicio',[['ini','Inicio']]],['Gastos',[['gas','Gastos']]],['Por cobrar',[['pend','Por cobrar']]]]:[['Inicio',[['ini','Inicio']]],['Ventas',[['lista','Facturas'],['tick','Tickets'],['pres','Presupuestos'],['rec','Facturas recurrentes'],['pend','Por cobrar'],['cli','Clientes']]],['Gastos',[['gas','Gastos'],['prov','Proveedores']]],['Banco',[['banco','Banco']]],['Gestoría',[['gest','Para la gestoría'],['res','Resultados del año']]],['Ajustes',[['aj','Ajustes'],['vf','VeriFactu (Hacienda)'],prin?['comp','Comparar con Holded']:null].filter(Boolean)]];
   const tabs=GR.flatMap(g=>g[1]);if(!tabs.some(t=>t[0]===FX.tab))FX.tab=tabs[0][0];const G=GR.find(g=>g[1].some(t=>t[0]===FX.tab));
-  m.innerHTML=`${A.length>1?`<div class="fx-acts">${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.act===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
+  m.innerHTML=`${A.length>1?`<div class="fx-emp"><b>${escH((I&&I.config&&I.config.empresa&&I.config.empresa.nombre)||'Fourth Dynamic, S.L.')}</b><span>Una empresa, dos actividades: míralo todo junto o solo una</span></div><div class="fx-acts"><button type="button" data-a="todo" class="${FX.ver==='todo'?'on':''}"><span>Todo</span></button>${A.map(a=>`<button type="button" data-a="${a.id}" class="${FX.ver===a.id?'on':''}">${a.logo?`<img src="${a.logo}" alt="">`:''}<span>${escH(fxActNom(a))}</span></button>`).join('')}</div>`:''}
   <div class="fx-tabs fx-tabs1">${GR.map(g=>`<button type="button" data-t="${g[1][0][0]}" class="${g===G?'on':''}">${g[0]}</button>`).join('')}</div>
   <div class="fx-top">${G[1].length>1?fxSel('fx-nav',G[1],FX.tab,'Parte'):''}<button type="button" class="fx-nueva">＋ Nueva factura</button></div>
   ${prin&&FX.tab==='lista'&&!soloAdm?((I&&I.modo||{}).propio?`<div class="fx-aviso fx-aviso-ok"><span>Facturando con el panel desde el ${new Date(I.modo.desde).toLocaleDateString('es-ES')}: cada cobro hace su factura aquí y se manda a Hacienda.</span><button type="button" class="fxb-si fx-cambio">Ajustes del cambio</button></div>`:'<div class="fx-aviso"><span><b>En pruebas.</b> Cada cobro hace aquí su copia con el número de Holded; Holded sigue siendo la que vale.</span><button type="button" class="fxb-si fx-cambio">Preparar el cambio</button></div>'):''}<div class="fx-c"></div>`;
-  m.querySelectorAll('.fx-acts button').forEach(b=>b.onclick=()=>{FX.act=b.dataset.a;FX.serie='';try{sessionStorage.setItem('f365_fx_act',FX.act);}catch(e){}pinta();});
+  m.querySelectorAll('.fx-acts button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;FX.ver=a;if(a!=='todo')FX.act=a;FX.serie='';try{sessionStorage.setItem('f365_fx_act',FX.act);sessionStorage.setItem('f365_fx_ver',FX.ver);}catch(e){}pinta();});
   FX.ir=t=>{if(t==='gas'&&FX.gfil==='prov'){FX.gfil='';FX.gprov='';}FX.tab=t;try{sessionStorage.setItem('f365_fx_tab',t);}catch(e){}pinta();window.scrollTo(0,0);};
   {const nv=m.querySelector('.fx-nav');if(nv)nv.onchange=()=>FX.ir(nv.value);m.querySelectorAll('.fx-tabs1 button').forEach(b=>b.onclick=()=>FX.ir(b.dataset.t));}
   {const bc=m.querySelector('.fx-cambio');if(bc)bc.onclick=()=>fxCambio(async()=>{I=await fxInicio(true).catch(()=>I);pinta();});}
-  const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxNueva(()=>pinta(),{modo:'pres'});}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxCliente(null,()=>pinta());}else if(FX.tab==='gas'){bn.textContent='＋ Nuevo gasto';bn.onclick=()=>fxGasto(null,()=>pinta());}else if(FX.tab==='banco'){bn.textContent='＋ Subir extracto';bn.onclick=()=>fxImportar(()=>pinta());}else if(FX.tab==='tick'){bn.textContent='＋ Nuevo ticket';bn.onclick=()=>fxNueva(()=>pinta(),{tipo:'simplificada'});}else if(FX.tab==='rec'){bn.textContent='＋ Nueva recurrente';bn.onclick=()=>fxNueva(()=>pinta(),{modo:'rec'});}else if(FX.tab==='lista'){bn.onclick=()=>fxNueva(()=>pinta(),{tipo:'completa'});}else bn.hidden=true;
-  const c=m.querySelector('.fx-c');({tick:c=>fxLista(c,'tickets'),prov:c=>{FX.gfil='prov';FX.gprov='';fxProveedores(c);},lista:fxLista,pend:fxPendientes,rec:fxRecurrentes,pres:fxPres,cli:fxClientes,gas:fxGastos,banco:fxBanco,gest:fxGestoria,res:fxResultados,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();}).then(()=>{if(prin&&c.isConnected){c.prepend(fxHoldedCard((I&&I.config.actividades)||[{id:'principal'}]));fxBuzonAjustes().then(x=>c.insertBefore(x,c.children[1]||null));}})})[FX.tab](c);};
+  const bn=m.querySelector('.fx-nueva');if(FX.tab==='pres'){bn.textContent='＋ Nuevo presupuesto';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{modo:'pres'}));}else if(FX.tab==='cli'){bn.textContent='＋ Nuevo cliente';bn.onclick=()=>fxConAct(()=>fxCliente(null,()=>pinta()));}else if(FX.tab==='gas'){bn.textContent='＋ Nuevo gasto';bn.onclick=()=>fxGasto(null,()=>pinta());}else if(FX.tab==='banco'){bn.textContent='＋ Subir extracto';bn.onclick=()=>fxImportar(()=>pinta());}else if(FX.tab==='tick'){bn.textContent='＋ Nuevo ticket';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{tipo:'simplificada'}));}else if(FX.tab==='rec'){bn.textContent='＋ Nueva recurrente';bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{modo:'rec'}));}else if(FX.tab==='lista'){bn.onclick=()=>fxConAct(()=>fxNueva(()=>pinta(),{tipo:'completa'}));}else bn.hidden=true;
+  const c=m.querySelector('.fx-c');({ini:c=>fxPortada(c,pinta),tick:c=>fxLista(c,'tickets'),prov:c=>{FX.gfil='prov';FX.gprov='';fxProveedores(c);},lista:fxLista,pend:fxPendientes,rec:fxRecurrentes,pres:fxPres,cli:fxClientes,gas:fxGastos,banco:fxBanco,gest:fxGestoria,res:fxResultados,comp:fxComparar,vf:fxVF,aj:c=>fxAjustes(c,async()=>{I=await fxInicio(true).catch(()=>I);pinta();}).then(()=>{if(prin&&c.isConnected){c.prepend(fxHoldedCard((I&&I.config.actividades)||[{id:'principal'}]));fxBuzonAjustes().then(x=>c.insertBefore(x,c.children[1]||null));}})})[FX.tab](c);};
  pinta();}
 // ── Periodo (compartido por Facturas, Gastos, Banco, Gestoría y Resultados): un desplegable con lo habitual
 // (hoy, este mes, el mes pasado, este trimestre, el trimestre pasado, este año o entre dos fechas) y flechas para ir al anterior o al siguiente ──
@@ -18001,7 +18018,7 @@ async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='ticket
  // Lo hecho en Holded (p. ej., las facturas de Vilfer) entra solo: como mucho una vez cada 2 min, sin esperar más de 8 s
  {let t0=0;try{t0=+sessionStorage.getItem('f365_holauto')||0;}catch(e){}if(Date.now()-t0>120000){try{sessionStorage.setItem('f365_holauto',Date.now());}catch(e){}await Promise.race([agPost('fac-holded-auto',{}).catch(()=>null),new Promise(ok=>setTimeout(ok,8000))]);}}
  const [desde,hasta]=fxPerIni();
- const r=await (await fetch(`/api/schedule?action=fac-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}${FX.serie?'&serie='+FX.serie:''}${FX.q?'&q='+encodeURIComponent(FX.q):''}&actividad=${FX.act}&clase=${clase}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}${FX.serie?'&serie='+FX.serie:''}${FX.q?'&q='+encodeURIComponent(FX.q):''}&actividad=${fxVer()==='todo'?'':FX.act}&clase=${clase}`)).json().catch(()=>({}));
  const L=r.facturas||[],S=Object.fromEntries(I.series.map(s=>[s.id,s]));
  const sum=k=>L.filter(x=>x.estado!=='anulada').reduce((t,x)=>t+x[k],0);
  const SS=fxSeries(I).filter(s=>s.tipo===(TK?'simplificada':'completa')||s.tipo==='rectificativa');if(FX.serie&&!SS.some(s=>s.id===FX.serie))FX.serie='';
@@ -18009,11 +18026,42 @@ async function fxLista(c,clase){clase=clase||'facturas';const TK=clase==='ticket
   <input class="fx-in fx-bus" type="search" placeholder="Buscar por nº, nombre o NIF" value="${escH(FX.q)}"></div>
   <div class="fx-res"><div><small>${TK?'Tickets':'Facturas'}</small><b>${L.length}</b></div><div><small>Base</small><b>${fxEur(sum('base'))}</b></div><div><small>IVA</small><b>${fxEur(sum('cuota'))}</b></div><div><small>Total</small><b>${fxEur(sum('total'))}</b></div></div>
   <div class="card fx-l">${L.length?L.map(x=>`<button type="button" class="fx-f${x.estado==='anulada'?' anul':''}" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}${!['mes','dia','semana'].includes(FX.per.t)?'/'+x.fecha.slice(2,4):''}${x.tipo==='rectificativa'?' · <em class="fx-est no">Rectificativa'+(x.rectifica_codigo?' de '+escH(x.rectifica_codigo):'')+'</em>':''}</small></span>
-   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}${x.fecha_cobro&&x.fecha_cobro!==x.fecha?` · <em class="fx-otro">cobrado el ${+x.fecha_cobro.slice(8)}/${+x.fecha_cobro.slice(5,7)}</em>`:''}${x.rectificada?' · rectificada':(x.pagos||{}).estado==='pendiente'?' · <em class="fx-pend">Pendiente de pago</em>':''}${x.sustituida_por?' · sustituida por '+escH(x.sustituida_por):''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">No hay facturas en este periodo'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
+   <span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}${FX.ver==='todo'&&(FX._acts||[]).length>1?`<i class="fx-tagact">${escH(fxActNom((FX._acts||[]).find(a=>a.id===(x.actividad||'principal'))||{id:x.actividad||'principal'}))}</i>`:''}</b><small>${escH((x.cliente||{}).nif||'')}${x.prueba?' · prueba (nº de Holded)':''}${x.fecha_cobro&&x.fecha_cobro!==x.fecha?` · <em class="fx-otro">cobrado el ${+x.fecha_cobro.slice(8)}/${+x.fecha_cobro.slice(5,7)}</em>`:''}${x.rectificada?' · rectificada':(x.pagos||{}).estado==='pendiente'?' · <em class="fx-pend">Pendiente de pago</em>':''}${x.sustituida_por?' · sustituida por '+escH(x.sustituida_por):''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">No hay facturas en este periodo'+(FX.serie||FX.q?' con este filtro':'')+'.</div>'}</div>`;
  c.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>fxLista(c,clase)));
  c.querySelector('.fx-perw').replaceWith(fxPeriodo(()=>fxLista(c,clase)));
  {const se=c.querySelector('.fx-ser');if(se)se.onchange=e=>{FX.serie=e.target.value;fxLista(c,clase);};}
  const bi=c.querySelector('.fx-bus');let t;bi.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FX.q=bi.value.trim();fxLista(c,clase).then(()=>{const n=c.querySelector('.fx-bus');n.focus();n.setSelectionRange(n.value.length,n.value.length);});},400);};}
+// ── Facturación › Inicio: lo de cada día a mano (nueva factura, gasto, por cobrar, gestoría) y lo último ──
+async function fxPortada(c,repinta){
+ const soloAdm=!esDireccion(),hoy=fxHoy(),an=+hoy.slice(0,4),tq=Math.ceil(+hoy.slice(5,7)/3),dT=`${an}-${String((tq-1)*3+1).padStart(2,'0')}-01`,hT=new Date(Date.UTC(an,tq*3,0)).toISOString().slice(0,10);
+ const desde30=new Date(Date.now()-30*864e5).toISOString().slice(0,10),ver=fxVer(),TR=['1.er','2.º','3.er','4.º'][tq-1]+' trimestre';
+ c.innerHTML=`<div class="fxp-g">
+  ${soloAdm?'':`<div class="fxp-c fxp-nueva"><span class="fxp-ic"><svg viewBox="0 0 24 24"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M12 11.5v6M9 14.5h6"/></svg></span><b>Nueva factura o ticket</b><small>Para un paciente o un cliente</small><div class="fxp-bts"><button type="button" data-t="simplificada">Ticket</button><button type="button" data-t="completa">Factura</button></div></div>`}
+  <button type="button" class="fxp-c fxp-gas"><span class="fxp-ic"><svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg></span><b>Subir un gasto</b><small>Foto o PDF de la factura del proveedor: se rellena sola</small></button>
+  <button type="button" class="fxp-c fxp-pend"><span class="fxp-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><b>Por cobrar</b><small class="fxp-v">Cargando…</small></button>
+  ${soloAdm?'':`<button type="button" class="fxp-c fxp-ges"><span class="fxp-ic"><svg viewBox="0 0 24 24"><path d="M4.5 19.5h15M7 16.5v-5M12 16.5v-9M17 16.5v-7"/></svg></span><b>Para la gestoría</b><small class="fxp-gv">${TR} · resumen, Excel y envío</small></button>`}
+ </div>
+ <div class="fxp-av"></div>
+ ${soloAdm?'':`<div class="card fxp-ult"><div class="fxp-h"><b>Lo último facturado</b><button type="button" class="fxp-todas">Ver todas ›</button></div><div class="fxp-l"><div class="fac-vacio">Cargando…</div></div></div>`}`;
+ c.querySelectorAll('.fxp-nueva [data-t]').forEach(b=>b.onclick=()=>fxConAct(()=>fxNueva(()=>repinta(),{tipo:b.dataset.t})));
+ c.querySelector('.fxp-gas').onclick=()=>fxGasto(null,()=>repinta());
+ c.querySelector('.fxp-pend').onclick=()=>FX.ir('pend');
+ {const g=c.querySelector('.fxp-ges');if(g)g.onclick=()=>{FX.per={t:'trim',d:hoy};try{sessionStorage.setItem('f365_fx_per',JSON.stringify(FX.per));}catch(e){}FX.ir('gest');};}
+ {const t=c.querySelector('.fxp-todas');if(t)t.onclick=()=>FX.ir('tick');}
+ const P=fetch(`/api/schedule?action=fac-pendientes&pwd=${encodeURIComponent(apiPwd)}&actividad=${ver}`).then(r=>r.json()).catch(()=>({}));
+ const L=soloAdm?Promise.resolve({}):fetch(`/api/schedule?action=fac-lista&pwd=${encodeURIComponent(apiPwd)}&desde=${desde30}&hasta=${hoy}&actividad=${ver==='todo'?'':ver}`).then(r=>r.json()).catch(()=>({}));
+ const Gs=soloAdm?Promise.resolve({}):fetch(`/api/schedule?action=fac-gestoria&pwd=${encodeURIComponent(apiPwd)}&desde=${dT}&hasta=${hT}&actividad=`).then(r=>r.json()).catch(()=>({}));
+ P.then(r=>{if(!c.isConnected)return;const F=(r.facturas||[]),tot=F.reduce((t,x)=>t+(+x.falta||0),0);c.querySelector('.fxp-v').innerHTML=F.length?`<em>${fxEur(tot)}</em> · ${F.length} factura${F.length>1?'s':''}`:'Nadie os debe nada';});
+ Gs.then(r=>{if(!c.isConnected||!r.ok)return;const av=[];const R=r.resumen||{};
+  const gv=c.querySelector('.fxp-gv');if(gv&&R.resultado!=null)gv.innerHTML=`${TR} · IVA ${R.resultado>=0?'a ingresar':'a compensar'} aprox. <em>${fxEur(Math.abs(R.resultado))}</em>`;
+  if(r.avisos&&r.avisos.falta)av.push(`<button type="button" class="fxp-a" data-ir="falta"><b>${r.avisos.falta}</b> gasto${r.avisos.falta>1?'s':''} sin la factura subida ›</button>`);
+  if(r.avisos&&r.avisos.banco)av.push(`<button type="button" class="fxp-a" data-ir="banco"><b>${r.avisos.banco}</b> movimiento${r.avisos.banco>1?'s':''} del banco por revisar ›</button>`);
+  const box=c.querySelector('.fxp-av');box.innerHTML=av.join('');
+  box.querySelectorAll('[data-ir]').forEach(b=>b.onclick=()=>{if(b.dataset.ir==='falta'){FX.gfil='falta';FX.ir('gas');}else{FX.best='pendiente';FX.ir('banco');}});});
+ L.then(r=>{if(!c.isConnected)return;const box=c.querySelector('.fxp-l');if(!box)return;const F=((r.facturas||r.lista||[])).slice().sort((a,b)=>(b.fecha+b.codigo).localeCompare(a.fecha+a.codigo)).slice(0,6);
+  box.innerHTML=F.length?F.map(x=>`<button type="button" class="fx-f" data-id="${x.id}"><span class="fx-cod"><b>${escH(x.codigo)}</b><small>${+x.fecha.slice(8)}/${+x.fecha.slice(5,7)}</small></span><span class="fx-cli"><b>${escH(capTit((x.cliente||{}).nombre||'—'))}${FX.ver==='todo'&&(FX._acts||[]).length>1?`<i class="fx-tagact">${escH(fxActNom((FX._acts||[]).find(a=>a.id===(x.actividad||'principal'))||{id:x.actividad||'principal'}))}</i>`:''}</b><small>${x.prueba?'copia de Holded':''}</small></span><span class="fx-tot">${fxEur(x.total)}</span></button>`).join(''):'<div class="fac-vacio">Nada en los últimos 30 días.</div>';
+  box.querySelectorAll('.fx-f[data-id]').forEach(b=>b.onclick=()=>fxDetalle(b.dataset.id,()=>repinta()));});
+}
 // Comparar con Holded: primero el resumen del periodo (un día por fila, si cuadra o no) y, al tocar un día, su detalle
 async function fxComparar(c,dia){if(!dia&&!FX.cmpDia)return fxCompararRango(c);if(dia)FX.cmpDia=dia;return fxCompararDia(c,FX.cmpDia);}
 async function fxCompararRango(c){FX.cmpDia='';const [desde,hasta]=fxPerIni();c.innerHTML='<div class="fx-fil"><span class="fx-perw"></span></div><div class="card"><div class="fac-vacio">Cargando…</div></div>';
@@ -18261,7 +18309,7 @@ async function fxNueva(listo,op){op=op||{};const PRES=op.modo==='pres',REC=op.mo
   if(!r.ok){toast(r.error||'No se ha podido emitir',false);return;}mm.remove();toast('Factura '+r.codigo+' emitida',true);window.open(fxUrl(r.id,r.k),'_blank','noopener');listo&&listo();};}
 // ── Proveedores (dentro de Gastos): cuánto se le ha pagado a cada uno este año ──
 async function fxProveedores(c){const [desde,hasta]=fxPerIni();c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
- const r=await (await fetch(`/api/schedule?action=fac-gas-provs&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}&desde=${desde}&hasta=${hasta}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-gas-provs&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}&desde=${desde}&hasta=${hasta}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const L=r.proveedores;
  c.innerHTML=`<div class="fx-fil"><span class="fx-perw"></span></div>
@@ -18282,7 +18330,7 @@ async function fxGasCfg(){if(FXG.cats.length)return;const r=await (await fetch(`
 async function fxGastos(c){const [desde,hasta]=fxPerIni();if(FX.gfil==='prov'&&!FX.gprov)return fxProveedores(c);
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  const todo=FX.per.t!=='dia'&&FX.per.t!=='mes',PV=FX.gfil==='prov'?FX.gprov:'';
- const r=await (await fetch(`/api/schedule?action=fac-gas-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}&desde=${desde}&hasta=${hasta}${PV?'&prov='+encodeURIComponent(PV):FX.gfil&&FX.gfil!=='prov'?'&filtro='+FX.gfil:''}${FX.gq?'&q='+encodeURIComponent(FX.gq):''}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-gas-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}&desde=${desde}&hasta=${hasta}${PV?'&prov='+encodeURIComponent(PV):FX.gfil&&FX.gfil!=='prov'?'&filtro='+FX.gfil:''}${FX.gq?'&q='+encodeURIComponent(FX.gq):''}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  FXG.cats=r.categorias;FXG.ctas=r.cuentas;
  const L=r.gastos,sum=k=>L.reduce((t,x)=>t+x[k],0),CT=Object.fromEntries(r.cuentas.map(x=>[x.id,x.nombre]));
@@ -18582,7 +18630,7 @@ function fxBajar(blob,nombre){const f=new File([blob],nombre,{type:blob.type});i
  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nombre;a.dataset.vz='1';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);}
 async function fxGestoria(c){const hoy=fxHoy();if(FX.gtodo==null)FX.gtodo=1;
  const [desde,hasta]=fxPerIni({t:'trim',d:hoy}),periodo=fxPerTxt(FX.per),an=+desde.slice(0,4),tq=Math.ceil(+desde.slice(5,7)/3);
- let I={};try{I=await fxInicio();}catch(e){}const A=(I.config||{}).actividades||[],aN=fxActNom(A.find(x=>x.id===FX.act)||{id:'principal'}),act=FX.gtodo||A.length<2?'':FX.act;
+ let I={};try{I=await fxInicio();}catch(e){}const A=(I.config||{}).actividades||[],aN=fxActNom(A.find(x=>x.id===FX.act)||{id:'principal'}),act=FX.ver==='todo'||FX.gtodo||A.length<2?'':FX.act;
  c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
  const r=await (await fetch(`/api/schedule?action=fac-gestoria&pwd=${encodeURIComponent(apiPwd)}&desde=${desde}&hasta=${hasta}&actividad=${act}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
@@ -18724,7 +18772,7 @@ async function fxEnviar(id,btn,listo,op){op=op||{};btn.disabled=true;const d=awa
   abrirWA(t,op.recordar?`Hola${d.pila?' '+d.pila:''}, soy ${yo} de ${d.marca}. Te recuerdo que la factura ${d.numero} (${d.total}) está pendiente de pago. Aquí la tienes:\n${d.url}${d.pagar?'\n\nY si quieres pagarla con tarjeta:\n'+d.pagar:''}\n\nSi ya la has pagado, no hagas caso. ¡Gracias!`:`Hola${d.pila?' '+d.pila:''}, soy ${yo} de ${d.marca}. Aquí tienes ${d.tipo==='factura'?'tu '+d.nomDoc:'el presupuesto'} ${d.numero} (${d.total}):\n${d.url}${d.pagar?'\n\nPuedes pagarla con tarjeta aquí:\n'+d.pagar:''}`);};}
 // ── Facturas que se repiten (dentro de Facturas): se emiten solas el día que toca ──
 async function fxRecurrentes(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
- const r=await (await fetch(`/api/schedule?action=fac-rec-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-rec-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const L=r.recurrentes,CAD={1:'cada mes',2:'cada 2 meses',3:'cada 3 meses',6:'cada 6 meses',12:'cada año'};
  c.innerHTML=`<p class="fx-p">Se hacen solas por la mañana del día que toca${L.some(x=>x.enviar)?' y, si lo has marcado, se mandan por email':''}. Os llega un aviso al móvil.</p>
@@ -18739,7 +18787,7 @@ async function fxRecurrentes(c){c.innerHTML='<div class="card"><div class="fac-v
   m.querySelector('.fxr-b').onclick=async()=>{if(!await pregunta('¿Borrar esta factura que se repite? Las que ya se hicieron no cambian.',{si:'Borrar',no:'Cancelar',peligro:1}))return;await agPost('fac-rec-borrar',{id:x.id}).catch(()=>{});m.remove();toast('Borrada',true);fxRecurrentes(c);};});}
 // ── Cobros pendientes (dentro de Facturas): lo que os deben, lo más antiguo arriba ──
 async function fxPendientes(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
- const r=await (await fetch(`/api/schedule?action=fac-pendientes&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-pendientes&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const L=r.facturas,tot=L.reduce((t,x)=>t+x.falta,0),vie=L.filter(x=>x.dias>30).reduce((t,x)=>t+x.falta,0);
  c.innerHTML=`<div class="fx-fil"></div>
@@ -18756,7 +18804,7 @@ async function fxPendientes(c){c.innerHTML='<div class="card"><div class="fac-va
 const FX_EST={pendiente:['Pendiente','pend'],aceptado:['Aceptado','ok'],rechazado:['Rechazado','no'],facturado:['Facturado','fac']};
 const fxPresUrl=(id,k)=>`/api/schedule?action=fac-pres-ver&id=${id}&k=${encodeURIComponent(k)}&pdf=1`;
 async function fxPres(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
- const r=await (await fetch(`/api/schedule?action=fac-pres-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}${FX.pest?'&estado='+FX.pest:''}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-pres-lista&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}${FX.pest?'&estado='+FX.pest:''}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const L=r.presupuestos,hoy=fxHoy();
  c.innerHTML=`<div class="fx-fil">${fxSel('fx-pes',[['','Todos los presupuestos'],['pendiente','Pendientes'],['aceptado','Aceptados'],['rechazado','Rechazados'],['facturado','Facturados']],FX.pest||'','Estado')}</div>
@@ -18776,7 +18824,7 @@ async function fxPresDet(id,listo){const r=await (await fetch(`/api/schedule?act
  const fa=mm.querySelector('.fx-pfac');if(fa)fa.onclick=()=>{mm.remove();fxNueva(listo,{presId:P.id,datos:{cliente:Cl,lineas:P.lineas,nota:P.nota?P.nota+'\nPresupuesto '+P.codigo:'Presupuesto '+P.codigo}});};}
 // ── Clientes guardados ──
 async function fxClientes(c){c.innerHTML='<div class="card"><div class="fac-vacio">Cargando…</div></div>';
- const r=await (await fetch(`/api/schedule?action=fac-clientes&todos=1&pwd=${encodeURIComponent(apiPwd)}&actividad=${FX.act}`)).json().catch(()=>({}));
+ const r=await (await fetch(`/api/schedule?action=fac-clientes&todos=1&pwd=${encodeURIComponent(apiPwd)}&actividad=${fxVer()}`)).json().catch(()=>({}));
  if(!r.ok){c.innerHTML=`<div class="card"><div class="fac-vacio">${escH(r.error||'No se ha podido cargar')}</div></div>`;return;}
  const L=r.clientes;
  c.innerHTML=`<div class="fx-fil"><input class="fx-in fx-bus" type="search" placeholder="Buscar cliente"></div><p class="fx-p">Se guardan solos al hacer una factura o un presupuesto a mano. Al escribir el nombre en una factura nueva, se rellenan sus datos.</p>

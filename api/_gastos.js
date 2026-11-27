@@ -76,7 +76,7 @@ async function guardarGasto(o) {
   return { id };
 }
 const gastoFila = g => { ['base', 'cuota', 'irpf', 'irpf_tipo', 'total', 'isp_cuota'].forEach(k => { g[k] = Number(g[k]); }); g.falta = !g.archivo && !SIN_DOC.has(g.categoria); return g; };
-async function gastos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ['(actividad=$1 or comun)'];
+async function gastos(f) { const D = await db(); const p = [f.actividad || 'principal'], w = ["($1='todo' or actividad=$1 or comun)"]; // 'todo' = toda la empresa
   if (esFecha(f.desde)) { p.push(f.desde); w.push(`fecha>=$${p.length}`); } if (esFecha(f.hasta)) { p.push(f.hasta); w.push(`fecha<=$${p.length}`); }
   if (f.categoria) { p.push(f.categoria); w.push(`categoria=$${p.length}`); }
   if (f.q) { p.push('%' + String(f.q).toLowerCase() + '%'); w.push(`(lower(proveedor->>'nombre') like $${p.length} or lower(coalesce(numero,'')) like $${p.length} or lower(coalesce(concepto,'')) like $${p.length} or lower(coalesce(proveedor->>'nif','')) like $${p.length})`); }
@@ -102,7 +102,7 @@ async function esperados(actividad, hoy) { const D = await db(); hoy = hoy || is
 // Proveedores: resumen por proveedor (del año) y cambiar el nombre o el NIF en todos sus gastos
 async function listaProveedores(actividad, desde, hasta) { const D = await db();
   return (await D.query(`select proveedor->>'nombre' nombre, max(proveedor->>'nif') nif, count(*)::int n, sum(total)::float total, max(fecha)::text ultima, (array_agg(categoria order by fecha desc))[1] categoria, bool_or(cada>0) repite, bool_or(isp<>'') extranjero
-    from fac_gastos where (actividad=$1 or comun) and fecha between $2 and $3 group by proveedor->>'nombre' order by sum(total) desc`, [actividad || 'principal', esFecha(desde) ? desde : '2000-01-01', esFecha(hasta) ? hasta : '2099-12-31'])).rows; }
+    from fac_gastos where ($1='todo' or actividad=$1 or comun) and fecha between $2 and $3 group by proveedor->>'nombre' order by sum(total) desc`, [actividad || 'principal', esFecha(desde) ? desde : '2000-01-01', esFecha(hasta) ? hasta : '2099-12-31'])).rows; }
 async function cambiarProveedor(de, a) { const D = await db(), P = provLimpio(a); if (!P.nombre) throw new Error('Pon el nombre');
   const r = await D.query(`update fac_gastos set proveedor = proveedor || $2::jsonb where proveedor->>'nombre'=$1`, [String(de || ''), JSON.stringify({ nombre: P.nombre, nif: P.nif })]); return r.rowCount; }
 async function noRepite(id) { const D = await db(); await D.query(`update fac_gastos set cada=0 where id=$1`, [id]); }

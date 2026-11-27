@@ -22,7 +22,7 @@ async function guardar(o) { const D = await db();
   const id = 'rec' + crypto.randomBytes(8).toString('hex');
   await D.query(`insert into fac_recurrentes(id,actividad,serie,cliente,lineas,nota,cada,proxima,hasta,activa,enviar,pagada,por) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [id, ...v, txt(o.por, 60) || null]); return { id }; }
 async function lista(actividad) { const D = await db();
-  return (await D.query(`select r.*, r.proxima::text proxima, r.hasta::text hasta, s.nombre serie_nombre from fac_recurrentes r left join fac_series s on s.id=r.serie where r.actividad=$1 order by r.activa desc, r.proxima asc`, [actividad || 'principal'])).rows
+  return (await D.query(`select r.*, r.proxima::text proxima, r.hasta::text hasta, s.nombre serie_nombre from fac_recurrentes r left join fac_series s on s.id=r.serie where ($1='todo' or r.actividad=$1) order by r.activa desc, r.proxima asc`, [actividad || 'principal'])).rows
     .map(r => Object.assign(r, { total: FACX.calcular(r.lineas).total })); }
 async function borrar(id) { const D = await db(); await D.query(`delete from fac_recurrentes where id=$1`, [id]); }
 // Las que tocan hoy (o antes, si algún día no se pudo): se emiten con la fecha de hoy y se pasa a la siguiente
