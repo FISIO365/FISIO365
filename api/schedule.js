@@ -3224,7 +3224,8 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     lineas.push({ concepto, uds, precio });
   }
   if (!lineas.length) throw new Error('Falta la línea 1 (concepto, nº de sesiones y precio)');
-  const notas = String(f[FF.notas] || '').trim();
+  // La línea automática «Sesión X de N del pack…» es solo para nosotros: no sale en el ticket
+  const notas = String(f[FF.notas] || '').split('\n').filter(l => !/^Sesión \d+ de \d+ del pack/.test(l.trim())).join('\n').trim();
   if (Math.round(lineas.reduce((t, l) => t + l.uds * l.precio, 0) * 100) <= 0) throw new Error('El total tiene que ser mayor que 0');
   // Desde el día del cambio, la factura la hace el panel (sin Holded)
   const MODO = await FACX.modo().catch(() => ({})), propio = !!MODO.propio;
@@ -3272,7 +3273,7 @@ async function emitirFactura(recId, quien, fisioSel, descuento) {
     const otras = (await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Emitida',{PACK GRUPO}='${grupoP}')`)}`).catch(() => [])).filter(r => r.id !== recId);
     const tot = Number(pr0[FF_PK.total] || 0), antes = Number(pr0[FF_PK.antes] || 0), pagado = antes + hoyImp + otras.reduce((t, r) => t + Number(r.fields['TOTAL'] || 0), 0);
     const que = pagado >= tot - 0.009 ? (grupoP === recId && !antes && !otras.length ? '' : ' · pago del resto') : ' · pago a cuenta';
-    const it = { name: (f[FF_PS] && grupoP !== recId ? con : `${con} · pack de ${nS} sesiones${que}`).slice(0, 150) /* pack que se factura sesión a sesión: cada ticket, solo el nombre de la sesión */, units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
+    const it = { name: (f[FF_PS] && grupoP !== recId ? 'Sesión de fisioterapia' : `${con} · pack de ${nS} sesiones${que}`).slice(0, 150) /* pack que se factura sesión a sesión: cada ticket pone solo «Sesión de fisioterapia» */, units: 1, price: hoyImp }; if (taxes) it.taxes = taxes; items = [it]; }
   if (descuento) { const it = { name: descuento.texto, units: 1, price: -Math.abs(descuento.importe) }; if (taxes) it.taxes = taxes; items.push(it); }
   let num, borrador;
   if (propio) {
