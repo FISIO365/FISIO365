@@ -3337,6 +3337,27 @@ async function holdedDeFilas(pac, ya, conBorradores, respaldo) { const filas = a
       out.push({ id: hid, tipo: 'salesreceipt', numero: /^borrador/i.test(num) ? '' : num, borrador: !num || /^borrador/i.test(num), fecha: Math.floor(Date.parse(String(f['FECHA DE COBRO'] || f['FECHA'] || '').slice(0, 10) + 'T12:00:00Z') / 1000) || 0, total: Number(f['TOTAL'] || 0), pagada: true, concepto: (f['CONCEPTO 1'] && f['CONCEPTO 1'].name) || f['CONCEPTO 1'] || '', delPanel: true }); }); }
   return out; }
 async function propiasDe(pac) { try { const L = await FACX.lista({ paciente: pac }); return L.filter(x => !x.prueba && x.estado === 'emitida').map(x => ({ id: x.id, tipo: 'propia', k: FACX.firma(x.id), numero: x.codigo, borrador: false, fecha: Math.floor(Date.parse(String(x.fecha).slice(0, 10) + 'T12:00:00Z') / 1000), total: Number(x.total), pagada: (x.pagos || {}).estado !== 'pendiente', concepto: '' })); } catch (e) { return []; } }
+// Rectificativas de Holded (tickets y facturas) de los contactos del paciente: la factura que corrigen sale como «Rectificada».
+// Se busca por el enlace de Holded (from.id); si no lo trae, por el número citado en el texto; y si no, por importe y fecha cuando solo encaja una.
+// Y los cobros anulados en el panel (fila de FACTURAS en «Anulada») salen como «Anulada».
+async function marcarRectificadas(facturas, ids, pac) {
+  const rects = [];
+  await Promise.all(ids.map(async cid => { for (const t of ['receipt-notes', 'credit-notes']) { const L = await holdedTodos(`/${t}?limit=100&contact_id=${encodeURIComponent(cid)}`, 3).catch(() => []);
+    L.forEach(d => { if (d && d.id && d.document_number && (!d.contact_id || d.contact_id === cid)) rects.push(d); }); } }));
+  const porId = new Map(facturas.map(f => [String(f.id), f])), libres = () => facturas.filter(f => !f.borrador && !f.rectificada && f.tipo !== 'propia');
+  const pon = (f, d) => { f.rectificada = d.document_number || 'sí'; };
+  const sinEnlace = [];
+  for (const d of rects) { const de = d.from && (d.from.id || d.from._id) ? String(d.from.id || d.from._id) : '';
+    if (de && porId.has(de)) { pon(porId.get(de), d); continue; }
+    const txt = [d.description, d.desc, d.notes, ...(d.lines || []).map(l => (l.name || '') + ' ' + (l.desc || l.description || ''))].join(' ');
+    const f = libres().find(f => f.numero && new RegExp('(^|\\D)' + String(f.numero).replace(/[^\w]/g, '') + '(\\D|$)').test(txt));
+    if (f) { pon(f, d); continue; } sinEnlace.push(d); }
+  sinEnlace.forEach(d => { const fd = d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T23:59:00Z') / 1000) : Infinity, imp = importeAbs(d);
+    const c = libres().filter(f => Math.abs(Number(f.total) - imp) < 0.01 && f.fecha <= fd); if (c.length === 1) pon(c[0], d); });
+  try { const an = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Anulada',{PacienteId}='${pac}',{HOLDED ID}!='')`)}&fields[]=${encodeURIComponent('HOLDED ID')}`);
+    const A = new Set(an.map(r => String(r.fields['HOLDED ID'] || ''))); facturas.forEach(f => { if (!f.rectificada && A.has(String(f.id))) f.anulada = true; }); } catch (e) {}
+  return facturas;
+}
 async function listarFacturas(ids, conBorradores) {
   let facturas = [];
   // Tickets de venta (lo habitual: llevan DNI y sirven como factura) y, por si acaso, facturas completas
@@ -8800,6 +8821,7 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         const ids = await contactosDelPaciente(pac); const facturas = await listarFacturas(ids, true).catch(e => { ids.fallo = ids.fallo || e; return []; });
         // Los cobros del panel de este paciente cuyo ticket no ha salido por su contacto de Holded (otro DNI/email, a nombre de otro…)
         facturas.push(...await holdedDeFilas(pac, new Set(facturas.map(x => x.id)), true, !!ids.fallo).catch(() => [])); facturas.sort((a, b) => b.fecha - a.fecha);
+        await marcarRectificadas(facturas, ids, pac).catch(e => console.log('rectificadas', e.message));
         // Tickets borrados en Holded → su fila de FACTURAS pasa a «Anulada» y deja de contar en el saldo
         let saldo2 = saldo;
         if (ids.length) try {
@@ -9162,7 +9184,8 @@ ${fuera ? `<p style="font-size:13px;color:#9a3d1d">${fuera} facturas de gastos n
         return res.status(200).json({ ok: true, nombre: 'Factura_' + String(doc.document_number || id).replace(/[^\w-]/g, '_') + '.pdf', pdf });
       }
       let fallo = ids.fallo; const h0 = await listarFacturas(ids).catch(e => { fallo = e; return []; }); h0.push(...await holdedDeFilas(patientId, new Set(h0.map(x => x.id)), false, !!fallo).catch(() => []));
-      const facturas = h0.concat(propias).sort((a, b) => b.fecha - a.fecha);
+      await marcarRectificadas(h0, ids, patientId).catch(() => {});
+      const facturas = h0.filter(f => !f.rectificada && !f.anulada).concat(propias).sort((a, b) => b.fecha - a.fecha);
       return res.status(200).json({ ok: true, facturas });
     } catch (e) {
       return res.status(500).json({ ok: false, error: 'No se han podido cargar las facturas' });
