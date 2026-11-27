@@ -3354,6 +3354,11 @@ async function marcarRectificadas(facturas, ids, pac) {
     if (f) { pon(f, d); continue; } sinEnlace.push(d); }
   sinEnlace.forEach(d => { const fd = d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T23:59:00Z') / 1000) : Infinity, imp = importeAbs(d);
     const c = libres().filter(f => Math.abs(Number(f.total) - imp) < 0.01 && f.fecha <= fd); if (c.length === 1) pon(c[0], d); });
+  // Las copias de Holded que ya tiene Facturación (traídas): ahí se sabe si están rectificadas o anuladas
+  try { const hs = facturas.filter(f => f.tipo !== 'propia' && /^[a-f0-9]{24}$/i.test(String(f.id))).map(f => String(f.id));
+    if (hs.length) { const D = await FACX.db(); const r = (await D.query(`select holded, estado, (tipo<>'rectificativa' and ${FACX.RECT_ENTERA('fac_facturas')}) rect, (select x.codigo from fac_facturas x where x.rectifica=fac_facturas.id and x.estado='emitida' limit 1) rnum from fac_facturas where holded = any($1)`, [hs])).rows;
+      r.forEach(x => { const f = porId.get(String(x.holded)); if (!f || f.rectificada) return; if (x.estado === 'anulada') f.anulada = true; else if (x.rect) f.rectificada = x.rnum || 'sí'; }); } } catch (e) { console.log('rectificadas db', e.message); }
+  console.log('[rectificadas]', pac, JSON.stringify(rects.map(d => ({ id: d.id, n: d.document_number, from: d.from || d.from_id || null, f: d.date, t: d.total, ds: String(d.description || d.notes || '').slice(0, 60) }))), facturas.filter(f => f.rectificada || f.anulada).map(f => f.numero).join(','));
   try { const an = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Anulada',{PacienteId}='${pac}',{HOLDED ID}!='')`)}&fields[]=${encodeURIComponent('HOLDED ID')}`);
     const A = new Set(an.map(r => String(r.fields['HOLDED ID'] || ''))); facturas.forEach(f => { if (!f.rectificada && A.has(String(f.id))) f.anulada = true; }); } catch (e) {}
   return facturas;
