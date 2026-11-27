@@ -86,6 +86,7 @@ async function filas(tb) {
       c.rows = new Map(); let mx = 0;
       r.rows.forEach(x => { c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
       c.hasta = mx ? new Date(mx) : new Date(0); c.t = Date.now();
+      try { console.log(`[pg-carga] ${tb} ${r.rows.length} filas ${r.rows.reduce((t, x) => t + (typeof x.fields === 'string' ? x.fields.length : JSON.stringify(x.fields || {}).length), 0)} B`); } catch (e) {} // para medir el tráfico de Supabase
     } else {
       const desde = new Date(c.hasta.getTime() - MARGEN);
       const r = await D.query(`select id, fields, creado, modificado, orden, false as borrado from registros where tabla = $1 and modificado > $2
