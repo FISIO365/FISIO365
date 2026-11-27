@@ -43,7 +43,7 @@ async function leer(h, desde, hasta) {
     h.holdedTodos(`/receipt-notes?${q}`, 30).catch(() => []), h.holdedTodos(`/credit-notes?${q}`, 30).catch(() => []),
     h.holdedTodos(`/purchases?${q}`, 60).catch(() => [])]);
   const todas = [].concat(tk.map(d => ['simplificada', d]), fa.map(d => ['completa', d]), rn.map(d => ['rect-simplificada', d]), cn.map(d => ['rect-completa', d]))
-    .filter(([, d]) => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })());
+    .filter(([, d]) => d && d.id && !/cancel|void|anulad/i.test(String(d.status || '')) && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })());
   const ventas = todas.filter(([, d]) => d.document_number), borradores = todas.filter(([, d]) => !d.document_number); // borradores: salen en la lista como «Borrador» hasta que se aprueban en Holded
   return { ventas, borradores, compras: co.filter(d => d && d.id && (() => { const f = fecha(h, d); return f >= desde && f <= hasta; })()) };
 }

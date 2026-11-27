@@ -113,7 +113,7 @@ async function ingresosHoldedDias(desde, hasta) {
   // Los tickets que salen de un cobro del panel cuentan el día que se cobraron (aunque en Holded se aprobaran otro día y lleven esa fecha)
   // Cuentan por la fecha del ticket (la de emisión). Aparte se apunta cuánto de cada día es de cobros de días anteriores (borradores aprobados después)
   const fC = await fechasCobroHolded(desde, hasta), fCob = {}, otros = {};
-  const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id);
+  const suma = (L, sg) => L.forEach(d => { if (!d || !d.id || vistos.has(d.id) || anuladoH(d)) return; vistos.add(d.id);
     const f = (sg > 0 && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > hasta || /\btest\b|prueba/i.test(d.contact_name || '')) return;
     dias[f] = Math.round(((dias[f] || 0) + sg * importeAbs(d)) * 100) / 100;
     const c = sg > 0 && fC[String(d.id)]; if (c && c < f) otros[f] = Math.round(((otros[f] || 0) + importeAbs(d)) * 100) / 100; });
@@ -153,7 +153,7 @@ async function vendidoPorFisio(desde, hasta) {
   const deFact = t => { const m = String(t || '').match(/Fisioterapeuta:\s*([^·\n<]+)/i); return m ? clave(m[1]) : ''; };
   const mv = (f, n) => { const x = new Date(f + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
   const [tk, rn, PS, pacT, cit, cont, grp, fx] = await Promise.all([
-    HOLDED_KEY ? holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40) : [],
+    HOLDED_KEY ? holdedTodos(`/sales-receipts?limit=200&start_date=${desde}&end_date=${hasta}`, 40).then(L => L.filter(d => !anuladoH(d))) : [],
     HOLDED_KEY ? holdedTodos(`/receipt-notes?limit=200&start_date=${desde}&end_date=${hasta}`, 20).catch(() => []) : [],
     packsPorSesion(desde, hasta).catch(() => ({ tickets: new Set(), cobros: [], filas: new Set() })),
     capTodos(PACIENTES, 'fields[]=DNI&fields[]=EMAIL&fields[]=WHATSAPP&fields[]=TELF&fields[]=FULL%20NAME'),
@@ -243,6 +243,7 @@ async function cobrosHolded(pacT, yaPanel, desde, hasta) {
   console.log('cobrosHolded', JSON.stringify({ tickets: tk.length, contactos: cont.length, ligados: Object.keys(contPac).length, ok, sinPac, sinSes, claves: Object.keys(e), linea: Object.keys(l), nombresLinea: tk.slice(0, 8).map(t => (t.lines || t.products || t.items || []).map(x => x.name || x.desc).join(' + ')) }));
   return out;
 }
+const anuladoH = d => /cancel|void|anulad/i.test(String((d && d.status) || '')); // ticket anulado en Holded (sin rectificativa)
 const docTipo = t => t === 'invoice' ? 'invoices' : 'sales-receipts';
 // Las facturas traídas de Holded que salen «pendientes»: si en Holded ya están cobradas, se marcan pagadas aquí también
 async function pagosDeHolded(max, hasta) { if (!HOLDED_KEY) return 0; const FX1 = require('./_facturacion'), D = await FX1.db(); let n = 0;
@@ -3327,7 +3328,8 @@ async function holdedDeFilas(pac, ya, conBorradores, respaldo) { const filas = a
     .sort((a, b) => String(b.f['FECHA DE COBRO'] || b.f['FECHA'] || '').localeCompare(String(a.f['FECHA DE COBRO'] || a.f['FECHA'] || '')));
   const todas = falta.slice(); falta.splice(respaldo ? 25 : 8); const fallan = new Set();
   await Promise.all(falta.map(async x => { const c = _hdCache.get(x.hid); if (c && Date.now() - c.t < 600e3) { if (c.v && (c.v.numero || conBorradores)) out.push(c.v); return; }
-    let no404 = 0; for (const tipoDoc of ['salesreceipt', 'invoice']) { const d = await holded('/' + docTipo(tipoDoc) + '/' + x.hid).catch(e => { if (/ 404 /.test(e.message)) no404++; else fallan.add(x.hid); return null; }); if (!d || !d.id) { if (tipoDoc === 'invoice') { _hdCache.set(x.hid, { t: Date.now(), v: null }); if (no404 === 2) _hdBorrados.add(x.hid); } continue; }
+    let no404 = 0; for (const tipoDoc of ['salesreceipt', 'invoice']) { const d = await holded('/' + docTipo(tipoDoc) + '/' + x.hid).catch(e => { if (/ 404 /.test(e.message)) no404++; else fallan.add(x.hid); return null; }); if (d && d.id && anuladoH(d)) { _hdCache.set(x.hid, { t: Date.now(), v: null }); break; }
+      if (!d || !d.id) { if (tipoDoc === 'invoice') { _hdCache.set(x.hid, { t: Date.now(), v: null }); if (no404 === 2) _hdBorrados.add(x.hid); } continue; }
       _hdCache.set(x.hid, { t: Date.now(), v: { id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' } });
     if (d.document_number || conBorradores) out.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' }); break; } }));
   // Si Holded no contesta (fallo suyo, no un 404), la factura sale igual con lo que guarda el panel: así la ficha nunca se queda vacía
@@ -3348,7 +3350,7 @@ async function marcarRectificadas(facturas, ids, pac) {
   const pon = (f, d) => { f.rectificada = d.document_number || 'sí'; };
   const sinEnlace = [];
   // El listado no trae de qué ticket sale: se abre cada rectificativa (son pocas) para leer su enlace
-  await Promise.all(rects.map(async (d, i) => { if (d.from && (d.from.id || d.from._id)) return; for (const t of ['receipt-notes', 'credit-notes']) { const x = await holded('/' + t + '/' + d.id).catch(() => null); if (x && x.id) { rects[i] = Object.assign({}, d, x); if (!global._rectLog) { global._rectLog = 1; console.log('[rectificadas] detalle', JSON.stringify(x).slice(0, 1500)); } break; } } }));
+  await Promise.all(rects.map(async (d, i) => { if (d.from && (d.from.id || d.from._id)) return; for (const t of ['receipt-notes', 'credit-notes']) { const x = await holded('/' + t + '/' + d.id).catch(() => null); if (x && x.id) { rects[i] = Object.assign({}, d, x); break; } } }));
   for (const d of rects) { const de = d.from && (d.from.id || d.from._id) ? String(d.from.id || d.from._id) : '';
     if (de && porId.has(de)) { pon(porId.get(de), d); continue; }
     const txt = [d.description, d.desc, d.notes, ...(d.lines || []).map(l => (l.name || '') + ' ' + (l.desc || l.description || ''))].join(' ');
@@ -3360,7 +3362,6 @@ async function marcarRectificadas(facturas, ids, pac) {
   try { const hs = facturas.filter(f => f.tipo !== 'propia' && /^[a-f0-9]{24}$/i.test(String(f.id))).map(f => String(f.id));
     if (hs.length) { const D = await FACX.db(); const r = (await D.query(`select holded, estado, (tipo<>'rectificativa' and ${FACX.RECT_ENTERA('fac_facturas')}) rect, (select x.codigo from fac_facturas x where x.rectifica=fac_facturas.id and x.estado='emitida' limit 1) rnum from fac_facturas where holded = any($1)`, [hs])).rows;
       r.forEach(x => { const f = porId.get(String(x.holded)); if (!f || f.rectificada) return; if (x.estado === 'anulada') f.anulada = true; else if (x.rect) f.rectificada = x.rnum || 'sí'; }); } } catch (e) { console.log('rectificadas db', e.message); }
-  console.log('[rectificadas]', pac, JSON.stringify(rects.map(d => ({ id: d.id, n: d.document_number, from: d.from || d.from_id || null, f: d.date, t: d.total, ds: String(d.description || d.notes || '').slice(0, 60) }))), facturas.filter(f => f.rectificada || f.anulada).map(f => f.numero).join(','));
   try { const an = await capTodos(FACTURAS_TABLE, `filterByFormula=${encodeURIComponent(`AND({ESTADO}='Anulada',{PacienteId}='${pac}',{HOLDED ID}!='')`)}&fields[]=${encodeURIComponent('HOLDED ID')}`);
     const A = new Set(an.map(r => String(r.fields['HOLDED ID'] || ''))); facturas.forEach(f => { if (!f.rectificada && A.has(String(f.id))) f.anulada = true; }); } catch (e) {}
   return facturas;
@@ -3371,8 +3372,7 @@ async function listarFacturas(ids, conBorradores) {
   for (const cid of ids) for (const tipoDoc of ['salesreceipt', 'invoice']) {
     const docs = await holdedTodos('/' + docTipo(tipoDoc) + '?limit=100&contact_id=' + encodeURIComponent(cid), 5).catch(e => { if (tipoDoc === 'salesreceipt') throw e; return []; });
     docs.forEach(d => {
-      if (d.contact_id !== cid || (!d.document_number && !conBorradores)) return; // solo suyos y ya aprobados (el panel ve también los borradores)
-      if (!d.document_number) console.log('[borrador-holded]', d.id, JSON.stringify({ status: d.status, draft: d.draft, cancelled: d.cancelled, voided: d.voided, approved: d.approved_at, estado: d.state, anulado: d.annulled, keys: Object.keys(d).join(',') }));
+      if (d.contact_id !== cid || (!d.document_number && !conBorradores) || anuladoH(d)) return; // solo suyos y ya aprobados (el panel ve también los borradores)
       facturas.push({ id: d.id, tipo: tipoDoc, numero: d.document_number || '', borrador: !d.document_number, fecha: d.date ? Math.floor(Date.parse(String(d.date).slice(0, 10) + 'T12:00:00Z') / 1000) : 0, total: importeDoc(d), pagada: d.status === 'completed', concepto: ((d.lines || [])[0] || {}).name || d.description || '' });
     });
   }
@@ -7080,7 +7080,7 @@ f.onsubmit=function(ev){ev.preventDefault();var er=f.querySelector('.er'),bt=f.q
         const vistos = new Set(), L = [];
         const fCob = {}, fC = await fechasCobroHolded(desde, q.hasta);
         const mete = (lista, rect) => lista.forEach(d => { if (!d || !d.id || vistos.has(d.id)) return; vistos.add(d.id); const f = (!rect && fCob[String(d.id)]) || String(d.date || '').slice(0, 10); if (f < desde || f > q.hasta) return;
-          const motivo = /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
+          const motivo = anuladoH(d) ? 'Anulado en Holded' : /\btest\b|prueba/i.test(d.contact_name || '') ? 'Paciente de prueba' : '';
           L.push({ f, hid: String(d.id), num: d.document_number || d.docNumber || d.doc_number || d.number || '', pac: d.contact_name || '', imp: (rect ? -1 : 1) * importeAbs(d), estado: String(d.status || ''), rect, borrador: !rect && !(d.document_number || d.docNumber || d.doc_number || d.number), cuenta: !motivo, motivo, cobro: !rect && fC[String(d.id)] && fC[String(d.id)] < f ? fC[String(d.id)] : '' }); });
         // Packs cobrados enteros «con factura por sesión»: cuenta el pack entero el día que se pagó; los tickets de sus sesiones no
         const PS = await packsPorSesion(desde, q.hasta).catch(() => ({ tickets: new Set(), cobros: [] }));
