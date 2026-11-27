@@ -81,7 +81,7 @@ async function filas(tb) {
   if (c.cargando) return c.cargando;
   c.cargando = (async () => {
     const D = db();
-    if (!c.hasta || Date.now() - c.t > 15 * 60000) { // primera carga (o cada 15 min, por seguridad)
+    if (!c.hasta || Date.now() - c.t > 6 * 3600000) { // primera carga (o cada 6 h, por seguridad). Antes cada 15 min: descargaba tablas enteras sin parar y gastaba el tráfico de Supabase; los cambios ya llegan con la consulta de abajo (todas las escrituras ponen modificado)
       const r = await D.query('select id, fields, creado, modificado, orden from registros where tabla = $1', [tb]);
       c.rows = new Map(); let mx = 0;
       r.rows.forEach(x => { c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
