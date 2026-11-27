@@ -76,25 +76,48 @@ alter table cambios enable row level security;`;
 // por si una escritura de otra instancia se confirmó tarde).
 const CACHE = {};
 const MARGEN = 30000;
+// Copia comprimida de cada tabla (tabla «instantaneas»): una instancia nueva baja la copia en gzip (≈6 veces menos)
+// y luego solo los cambios desde entonces. Ahorra casi todo el tráfico de salida de Supabase (cada instancia nueva
+// de Vercel se bajaba las tablas enteras: pacientes ≈5 MB, citas ≈4 MB…). La copia la rehace quien la encuentre vieja.
+const SNAP_EDAD = 20 * 60000;
+let _snapIni = null;
+const snapIni = D => _snapIni || (_snapIni = D.query(`create table if not exists instantaneas (tabla text primary key, hasta timestamptz not null, datos bytea not null, t timestamptz not null default now()); alter table instantaneas enable row level security`).catch(e => { _snapIni = null; throw e; }));
+async function snapLeer(D, tb) {
+  try { await snapIni(D); const r = (await D.query('select hasta, datos from instantaneas where tabla = $1', [tb])).rows[0]; if (!r) return null;
+    const L = JSON.parse(require('zlib').gunzipSync(r.datos).toString('utf8'));
+    return { hasta: new Date(r.hasta), rows: L.map(x => ({ id: x[0], fields: x[1] || {}, creado: new Date(x[2]), modificado: new Date(x[3]), orden: Number(x[4]) })) };
+  } catch (e) { return null; } }
+function snapGuardar(D, tb, c) { // sin esperar: no frena la respuesta
+  try { const L = []; c.rows.forEach(x => L.push([x.id, x.fields, +x.creado, +x.modificado, x.orden]));
+    const z = require('zlib').gzipSync(Buffer.from(JSON.stringify(L)), { level: 6 }); c.snapT = Date.now();
+    snapIni(D).then(() => D.query(`insert into instantaneas (tabla, hasta, datos, t) values ($1,$2,$3,now()) on conflict (tabla) do update set hasta = excluded.hasta, datos = excluded.datos, t = now() where instantaneas.hasta <= excluded.hasta`, [tb, c.hasta, z])).catch(() => {});
+  } catch (e) {} }
 async function filas(tb) {
   const c = CACHE[tb] || (CACHE[tb] = { rows: new Map(), hasta: null, cargando: null, t: 0 });
   if (c.cargando) return c.cargando;
   c.cargando = (async () => {
     const D = db();
-    if (!c.hasta || Date.now() - c.t > 6 * 3600000) { // primera carga (o cada 6 h, por seguridad). Antes cada 15 min: descargaba tablas enteras sin parar y gastaba el tráfico de Supabase; los cambios ya llegan con la consulta de abajo (todas las escrituras ponen modificado)
-      const r = await D.query('select id, fields, creado, modificado, orden from registros where tabla = $1', [tb]);
-      c.rows = new Map(); let mx = 0;
-      r.rows.forEach(x => { c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
-      c.hasta = mx ? new Date(mx) : new Date(0); c.t = Date.now();
-      try { console.log(`[pg-carga] ${tb} ${r.rows.length} filas ${r.rows.reduce((t, x) => t + (typeof x.fields === 'string' ? x.fields.length : JSON.stringify(x.fields || {}).length), 0)} B`); } catch (e) {} // para medir el tráfico de Supabase
-    } else {
-      const desde = new Date(c.hasta.getTime() - MARGEN);
-      const r = await D.query(`select id, fields, creado, modificado, orden, false as borrado from registros where tabla = $1 and modificado > $2
-        union all select id, null, null, t, null, true from borrados where tabla = $1 and t > $2`, [tb, desde]);
-      let mx = c.hasta.getTime();
-      r.rows.forEach(x => { if (x.borrado) { const ya = c.rows.get(x.id); if (!ya || +new Date(x.modificado) >= +ya.modificado) c.rows.delete(x.id); } else c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
-      c.hasta = new Date(mx);
+    if (!c.hasta || Date.now() - c.t > 6 * 3600000) { // primera carga (o cada 6 h, por seguridad)
+      const sn = !global.__PG_TEST__ && await snapLeer(D, tb);
+      if (sn && Date.now() - sn.hasta < 6 * 3600000) { c.rows = new Map(); sn.rows.forEach(x => c.rows.set(x.id, x)); c.hasta = sn.hasta; c.t = Date.now(); c.snapT = Date.now() - 1; c.deSnap = true; }
+      else {
+        const r = await D.query('select id, fields, creado, modificado, orden from registros where tabla = $1', [tb]);
+        c.rows = new Map(); let mx = 0;
+        r.rows.forEach(x => { c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
+        c.hasta = mx ? new Date(mx) : new Date(0); c.t = Date.now();
+        try { console.log(`[pg-carga] ${tb} ${r.rows.length} filas ${r.rows.reduce((t, x) => t + (typeof x.fields === 'string' ? x.fields.length : JSON.stringify(x.fields || {}).length), 0)} B`); } catch (e) {}
+        if (!global.__PG_TEST__ && r.rows.length > 20) snapGuardar(D, tb, c);
+        return c.rows;
+      }
     }
+    const desde = new Date(c.hasta.getTime() - MARGEN);
+    const r = await D.query(`select id, fields, creado, modificado, orden, false as borrado from registros where tabla = $1 and modificado > $2
+      union all select id, null, null, t, null, true from borrados where tabla = $1 and t > $2`, [tb, desde]);
+    let mx = c.hasta.getTime();
+    r.rows.forEach(x => { if (x.borrado) { const ya = c.rows.get(x.id); if (!ya || +new Date(x.modificado) >= +ya.modificado) c.rows.delete(x.id); } else c.rows.set(x.id, fila(x)); mx = Math.max(mx, +new Date(x.modificado)); });
+    c.hasta = new Date(mx);
+    // La copia comprimida se rehace cada 20 min como mucho, si hay cambios (así la siguiente instancia nueva baja menos)
+    if (!global.__PG_TEST__ && c.rows.size > 20 && r.rows.length && Date.now() - (c.snapT || 0) > SNAP_EDAD) snapGuardar(D, tb, c);
     return c.rows;
   })();
   try { return await c.cargando; } finally { c.cargando = null; }
